@@ -10,9 +10,21 @@ const isConfigured =
   supabaseUrl !== "your-supabase-url" &&
   supabaseUrl.startsWith("http");
 
+let client: ReturnType<typeof createBrowserClient<Database>> | null = null;
+
 export function createClient() {
   if (!isConfigured) {
     return null;
   }
-  return createBrowserClient<Database>(supabaseUrl!, supabaseKey!);
+  if (!client) {
+    client = createBrowserClient<Database>(supabaseUrl!, supabaseKey!, {
+      auth: {
+        lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
+          // Bypass the navigator.locks API to prevent "lock stolen" errors
+          return await fn();
+        },
+      },
+    });
+  }
+  return client;
 }

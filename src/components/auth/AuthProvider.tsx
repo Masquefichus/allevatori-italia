@@ -23,13 +23,11 @@ export function useAuth() {
 
 export default function AuthProvider({
   children,
-  initialProfile,
 }: {
   children: React.ReactNode;
-  initialProfile: Profile | null;
 }) {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(initialProfile);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,24 +37,29 @@ export default function AuthProvider({
       return;
     }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        setProfile(data);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    // Check session from localStorage directly to avoid lock issues
+    const storageKey = `sb-nveyyjefsrdyjdtwwxda-auth-token`;
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const session = JSON.parse(stored);
+        if (session?.user) {
+          setUser(session.user);
+          // Fetch profile
+          supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single()
+            .then(({ data }) => {
+              setProfile(data);
+              setLoading(false);
+            });
+          return;
+        }
+      } catch {}
+    }
+    setLoading(false);
   }, []);
 
   return (
