@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Star, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Star, X, LogIn } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
+import { createClient } from "@/lib/supabase/client";
 
 interface ReviewFormProps {
   breederId: string;
@@ -12,6 +13,21 @@ interface ReviewFormProps {
 
 export default function ReviewForm({ breederId, breederName }: ReviewFormProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) { setIsLoggedIn(false); return; }
+    // getSession usa localStorage — rispecchia lo stato reale del client
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+    // Ascolta i cambi di sessione (login/logout in tempo reale)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState("");
@@ -39,28 +55,64 @@ export default function ReviewForm({ breederId, breederName }: ReviewFormProps) 
     setError(null);
 
     try {
-      const res = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ breeder_id: breederId, rating, title, content }),
-      });
+      const supabase = createClient();
+      if (!supabase) {
+        setError("Errore di configurazione. Riprova più tardi.");
+        return;
+      }
 
-      if (res.status === 401) {
+      // Verifica che l'utente sia loggato
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         setError("Devi essere autenticato per lasciare una recensione.");
         return;
       }
-      if (res.status === 409) {
+
+      // Controlla se ha già recensito questo allevatore
+      const { data: existing } = await supabase
+        .from("reviews")
+        .select("id")
+        .eq("breeder_id", breederId)
+        .eq("author_id", user.id)
+        .maybeSingle();
+
+      if (existing) {
         setError("Hai già scritto una recensione per questo allevatore.");
         return;
       }
-      if (!res.ok) {
-        setError("Errore nell'invio. Riprova più tardi.");
+
+      // Inserisce la recensione (auto-approvata)
+      const { error: insertError } = await supabase
+        .from("reviews")
+        .insert({
+          breeder_id: breederId,
+          author_id: user.id,
+          rating,
+          title: title || null,
+          content,
+          is_approved: true,
+        });
+
+      if (insertError) {
+        if (insertError.message.includes("duplicate key") || insertError.code === "23505") {
+          setError("Hai già scritto una recensione per questo allevatore.");
+        } else {
+          setError(`Errore: ${insertError.message}`);
+        }
         return;
       }
 
+      // Aggiorna review_count e average_rating via endpoint server (service role)
+      await fetch("/api/reviews/stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ breeder_id: breederId }),
+      });
+
       setSuccess(true);
-    } catch {
-      setError("Errore di rete. Riprova più tardi.");
+    } catch (err) {
+      setError("Errore imprevisto. Riprova più tardi.");
+      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -75,6 +127,22 @@ export default function ReviewForm({ breederId, breederName }: ReviewFormProps) 
     setError(null);
     setSuccess(false);
   };
+
+  // Ancora in caricamento — non mostrare nulla
+  if (isLoggedIn === null) return null;
+
+  // Non loggato — mostra pulsante di accesso
+  if (!isLoggedIn) {
+    return (
+      <a
+        href="/accedi"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted text-sm text-muted-foreground hover:bg-muted/80 transition-colors"
+      >
+        <LogIn className="h-4 w-4 shrink-0" />
+        Accedi per recensire
+      </a>
+    );
+  }
 
   return (
     <>
@@ -185,6 +253,17 @@ export default function ReviewForm({ breederId, breederName }: ReviewFormProps) 
                     </p>
                   )}
 
+                  {rating === 0 && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      ⭐ Seleziona almeno una stella per procedere.
+                    </p>
+                  )}
+                  {rating > 0 && !content.trim() && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      ✏️ Scrivi il testo della recensione per procedere.
+                    </p>
+                  )}
+
                   <div className="flex gap-3 pt-1">
                     <Button
                       type="button"
@@ -197,7 +276,7 @@ export default function ReviewForm({ breederId, breederName }: ReviewFormProps) 
                     <Button
                       type="submit"
                       className="flex-1"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || rating === 0 || !content.trim()}
                     >
                       {isSubmitting ? "Invio in corso..." : "Invia recensione"}
                     </Button>

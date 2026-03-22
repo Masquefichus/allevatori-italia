@@ -4,7 +4,6 @@ import { Search, SlidersHorizontal, MapPin } from "lucide-react";
 import Card, { CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import { regioni } from "@/data/regioni";
-import { razze } from "@/data/razze";
 import { SITE_NAME } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -42,6 +41,17 @@ export default async function AllevatoriPage({
   query = query.order("is_premium", { ascending: false });
 
   const { data: breeders, count } = await query;
+
+  // Risolvi breed_ids → nomi razze in una query sola
+  const allBreedIds = [...new Set((breeders ?? []).flatMap((b) => b.breed_ids ?? []))];
+  const breedMap: Record<string, string> = {};
+  if (allBreedIds.length > 0) {
+    const { data: breedRows } = await supabase
+      .from("breeds")
+      .select("id, name_it")
+      .in("id", allBreedIds);
+    (breedRows ?? []).forEach((b) => { breedMap[b.id] = b.name_it; });
+  }
 
   return (
     <div className="min-h-screen bg-muted">
@@ -150,19 +160,21 @@ export default async function AllevatoriPage({
                   ? `${count} allevator${count === 1 ? "e" : "i"} trovat${count === 1 ? "o" : "i"}`
                   : "Nessun allevatore trovato"}
               </p>
-              <form method="GET">
+              <form method="GET" className="flex items-center gap-2">
                 {params.q && <input type="hidden" name="q" value={params.q} />}
                 {params.region && <input type="hidden" name="region" value={params.region} />}
                 <select
                   name="sort"
                   defaultValue={params.sort ?? "rating"}
-                  onChange={(e) => (e.currentTarget.form as HTMLFormElement)?.submit()}
                   className="text-sm border border-border rounded-lg px-3 py-1.5 bg-white"
                 >
                   <option value="rating">Piu rilevanti</option>
                   <option value="reviews">Piu recensioni</option>
                   <option value="newest">Piu recenti</option>
                 </select>
+                <button type="submit" className="text-sm px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90">
+                  Ordina
+                </button>
               </form>
             </div>
 
@@ -223,9 +235,9 @@ export default async function AllevatoriPage({
                         )}
                         {breeder.breed_ids && breeder.breed_ids.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
-                            {(breeder.breed_ids as string[]).slice(0, 3).map((breed: string) => (
-                              <Badge key={breed} variant="outline">
-                                {breed}
+                            {(breeder.breed_ids as string[]).slice(0, 3).map((id: string) => (
+                              <Badge key={id} variant="outline">
+                                {breedMap[id] ?? id}
                               </Badge>
                             ))}
                           </div>

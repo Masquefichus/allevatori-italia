@@ -173,6 +173,8 @@ export default function ProfiloPage() {
     if (err) {
       setError(err.message);
     } else {
+      // Assicura che il ruolo nel profilo utente sia impostato a "breeder"
+      await supabase.from("profiles").update({ role: "breeder" }).eq("id", user.id);
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
