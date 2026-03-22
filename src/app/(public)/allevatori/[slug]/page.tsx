@@ -17,6 +17,8 @@ import Button from "@/components/ui/Button";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Rating from "@/components/ui/Rating";
+import ReviewForm from "@/components/breeders/ReviewForm";
+import { createClient } from "@/lib/supabase/server";
 import { SITE_NAME } from "@/lib/constants";
 
 interface BreederPageProps {
@@ -37,8 +39,16 @@ export async function generateMetadata({
 export default async function BreederProfilePage({ params }: BreederPageProps) {
   const { slug } = await params;
 
-  // Demo data - in production, fetch from Supabase
-  const breeder = {
+  // Fetch real breeder from Supabase, fallback to demo data if not found
+  const supabase = await createClient();
+  const { data: supabaseBreeder } = await supabase
+    .from("breeder_profiles")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  const breeder = supabaseBreeder ?? {
+    id: null,
     kennel_name: "Allevamento Del Sole",
     slug,
     description:
@@ -56,7 +66,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
     enci_verified: true,
     fci_affiliated: true,
     year_established: 2005,
-    breeds: ["Labrador Retriever", "Golden Retriever"],
+    breed_ids: ["Labrador Retriever", "Golden Retriever"],
     specializations: ["Compagnia", "Esposizione", "Pet Therapy"],
     certifications: [
       "Displasia dell'anca (HD)",
@@ -185,7 +195,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
-                  {breeder.breeds.map((breed) => (
+                  {(breeder.breed_ids ?? []).map((breed) => (
                     <div
                       key={breed}
                       className="flex items-center gap-3 p-3 bg-muted rounded-lg"
@@ -227,9 +237,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
                   <h2 className="text-lg font-semibold">
                     Recensioni ({breeder.review_count})
                   </h2>
-                  <Button variant="outline" size="sm">
-                    Scrivi una recensione
-                  </Button>
+                  <ReviewForm breederId={breeder.id ?? ""} breederName={breeder.kennel_name} />
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
