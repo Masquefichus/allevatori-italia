@@ -37,29 +37,30 @@ export default function AuthProvider({
       return;
     }
 
-    // Check session from localStorage directly to avoid lock issues
-    const storageKey = `sb-nveyyjefsrdyjdtwwxda-auth-token`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const session = JSON.parse(stored);
-        if (session?.user) {
-          setUser(session.user);
-          // Fetch profile
-          supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single()
-            .then(({ data }) => {
-              setProfile(data);
-              setLoading(false);
-            });
-          return;
-        }
-      } catch {}
-    }
-    setLoading(false);
+    const fetchProfile = async (userId: string) => {
+      const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
+      setProfile(data);
+    };
+
+    // Carica sessione iniziale
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) fetchProfile(session.user.id);
+      setLoading(false);
+    });
+
+    // Ascolta login / logout / token refresh in tempo reale
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
