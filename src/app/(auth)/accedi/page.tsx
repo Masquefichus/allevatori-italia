@@ -32,25 +32,50 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    const supabase = createClient();
-    if (!supabase) {
-      setError("Supabase non configurato. Aggiorna le variabili d'ambiente in .env.local.");
-      setLoading(false);
-      return;
-    }
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (error) {
-      setError("Email o password non validi. Riprova.");
-      setLoading(false);
-      return;
-    }
+      if (!supabaseUrl || !supabaseKey) {
+        setError("Supabase non configurato.");
+        setLoading(false);
+        return;
+      }
 
-    router.push(redirect);
-    router.refresh();
+      // Direct API call to avoid Supabase JS client lock issues
+      const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": supabaseKey,
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error_description || data.msg || "Email o password errati");
+        setLoading(false);
+        return;
+      }
+
+      // Store session directly in localStorage (Supabase client reads from here)
+      const storageKey = `sb-nveyyjefsrdyjdtwwxda-auth-token`;
+      localStorage.setItem(storageKey, JSON.stringify({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at,
+        expires_in: data.expires_in,
+        token_type: data.token_type,
+        user: data.user,
+      }));
+
+      window.location.href = "/dashboard";
+    } catch (err) {
+      setError("Errore di connessione. Riprova.");
+      setLoading(false);
+    }
   };
 
   return (

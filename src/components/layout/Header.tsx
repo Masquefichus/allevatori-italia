@@ -6,23 +6,15 @@ import { Menu, X, User, LogOut, LayoutDashboard, Dog } from "lucide-react";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
 import Button from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import type { Profile } from "@/types/database";
+import { useAuth } from "@/components/auth/AuthProvider";
 
-interface HeaderProps {
-  user: Profile | null;
-}
-
-export default function Header({ user }: HeaderProps) {
+export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const router = useRouter();
+  const { user, profile, loading } = useAuth();
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
-    router.refresh();
+  const handleLogout = () => {
+    localStorage.removeItem(`sb-nveyyjefsrdyjdtwwxda-auth-token`);
+    window.location.href = "/";
   };
 
   return (
@@ -52,7 +44,9 @@ export default function Header({ user }: HeaderProps) {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-3">
-            {user ? (
+            {loading ? (
+              <div className="w-20 h-8" />
+            ) : (user || profile) ? (
               <div className="flex items-center gap-3">
                 <Link href="/dashboard">
                   <Button variant="ghost" size="sm">
@@ -63,7 +57,7 @@ export default function Header({ user }: HeaderProps) {
                 <div className="relative group">
                   <button className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
                     <User className="h-5 w-5" />
-                    {user.full_name}
+                    {profile?.full_name || user?.email || "Account"}
                   </button>
                   <div className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                     <Link
@@ -123,7 +117,7 @@ export default function Header({ user }: HeaderProps) {
               </Link>
             ))}
             <div className="pt-3 border-t border-border space-y-2">
-              {user ? (
+              {profile ? (
                 <>
                   <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="outline" size="sm" className="w-full">

@@ -1,0 +1,20 @@
+-- Drop everything first
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_review_change ON reviews;
+DROP TRIGGER IF EXISTS set_updated_at ON profiles;
+DROP TRIGGER IF EXISTS set_updated_at ON breeder_profiles;
+DROP TRIGGER IF EXISTS set_updated_at ON listings;
+DROP TRIGGER IF EXISTS set_updated_at ON reviews;
+DROP TRIGGER IF EXISTS set_updated_at ON subscriptions;
+DROP FUNCTION IF EXISTS handle_new_user();
+DROP FUNCTION IF EXISTS update_breeder_rating();
+DROP FUNCTION IF EXISTS update_updated_at();
+DROP TABLE IF EXISTS favorites CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS conversations CASCADE;
+DROP TABLE IF EXISTS subscriptions CASCADE;
+DROP TABLE IF EXISTS reviews CASCADE;
+DROP TABLE IF EXISTS listings CASCADE;
+DROP TABLE IF EXISTS breeder_profiles CASCADE;
+DROP TABLE IF EXISTS breeds CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;

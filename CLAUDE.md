@@ -56,6 +56,7 @@ src/
 
 - **Italian localization**: All UI text is in Italian. URLs use Italian slugs (e.g., `/allevatori`, `/razze`, `/accedi`).
 - **Supabase null guards**: `createClient()` returns `null` when Supabase is not configured. Always check for `null` before calling `.auth` or querying.
+- **Auth session**: Login uses direct Supabase REST API + localStorage to avoid navigator.locks conflicts. AuthProvider reads session from localStorage, not `onAuthStateChange`.
 - **Server components by default**: Pages are server components. Use `'use client'` only when needed (forms, interactive UI).
 - **Route groups**: `(auth)`, `(public)`, `(dashboard)`, `(admin)` — each with its own layout.
 - **RLS policies**: All database tables use Row Level Security. See the migration file for policy definitions.

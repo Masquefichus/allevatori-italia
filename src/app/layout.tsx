@@ -5,7 +5,6 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import AuthProvider from "@/components/auth/AuthProvider";
 import { WebsiteJsonLd, OrganizationJsonLd } from "@/components/seo/JsonLd";
-import { createClient } from "@/lib/supabase/server";
 import { SITE_NAME, SITE_DESCRIPTION } from "@/lib/constants";
 
 const inter = Inter({
@@ -29,30 +28,11 @@ export const metadata: Metadata = {
   ],
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  let profile = null;
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      profile = data;
-    }
-  } catch {
-    // Supabase not configured yet - continue without auth
-  }
-
   return (
     <html lang="it">
       <head>
@@ -60,9 +40,9 @@ export default async function RootLayout({
         <OrganizationJsonLd />
       </head>
       <body className={`${inter.variable} antialiased font-sans`}>
-        <AuthProvider initialProfile={profile}>
+        <AuthProvider>
           <div className="min-h-screen flex flex-col">
-            <Header user={profile} />
+            <Header />
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
