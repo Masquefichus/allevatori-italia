@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV } from "@/lib/constants";
 import { Shield } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function AdminLayout({
   children,
@@ -12,6 +14,22 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, profile, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.replace("/accedi");
+      } else if (profile && profile.role !== "admin") {
+        router.replace("/dashboard");
+      }
+    }
+  }, [loading, user, profile, router]);
+
+  if (loading || !user || (profile && profile.role !== "admin")) {
+    return <div className="min-h-screen bg-muted" />;
+  }
 
   return (
     <div className="min-h-screen bg-muted">

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
   LayoutDashboard,
   User,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DASHBOARD_NAV } from "@/lib/constants";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -30,6 +32,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace(`/accedi?redirect=${pathname}`);
+    }
+  }, [loading, user, pathname, router]);
+
+  if (loading || !user) {
+    return <div className="min-h-screen bg-muted" />;
+  }
 
   return (
     <div className="min-h-screen bg-muted">
