@@ -27,7 +27,7 @@ export default function RecoverPasswordPage() {
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/callback?next=/dashboard/impostazioni`,
+      redirectTo: `${window.location.origin}/reimposta-password`,
     });
 
     if (error) {
