@@ -10,11 +10,18 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const { user, profile, loading } = useAuth();
 
-  const handleLogout = () => {
-    localStorage.removeItem(`sb-nveyyjefsrdyjdtwwxda-auth-token`);
-    window.location.href = "/";
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient();
+      if (supabase) await supabase.auth.signOut();
+    } catch (_) {
+      // ignora errori — il redirect avviene comunque
+    } finally {
+      window.location.href = "/";
+    }
   };
 
   return (
@@ -54,26 +61,39 @@ export default function Header() {
                     Dashboard
                   </Button>
                 </Link>
-                <div className="relative group">
-                  <button className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                <div className="relative">
+                  <button
+                    onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  >
                     <User className="h-5 w-5" />
                     {profile?.full_name || user?.email || "Account"}
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                    <Link
-                      href="/dashboard/impostazioni"
-                      className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
-                    >
-                      Impostazioni
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted flex items-center gap-2"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Esci
-                    </button>
-                  </div>
+                  {accountMenuOpen && (
+                    <>
+                      {/* Overlay per chiudere cliccando fuori */}
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setAccountMenuOpen(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg z-20">
+                        <Link
+                          href="/dashboard/impostazioni"
+                          className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
+                          onClick={() => setAccountMenuOpen(false)}
+                        >
+                          Impostazioni
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted flex items-center gap-2"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Esci
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (

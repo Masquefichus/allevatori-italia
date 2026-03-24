@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -17,6 +19,9 @@ import Button from "@/components/ui/Button";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Rating from "@/components/ui/Rating";
+import ReviewForm from "@/components/breeders/ReviewForm";
+import ChatModal from "@/components/chat/ChatModal";
+import { createClient } from "@/lib/supabase/server";
 import { SITE_NAME } from "@/lib/constants";
 
 interface BreederPageProps {
@@ -37,8 +42,30 @@ export async function generateMetadata({
 export default async function BreederProfilePage({ params }: BreederPageProps) {
   const { slug } = await params;
 
-  // Demo data - in production, fetch from Supabase
-  const breeder = {
+  // Fetch real breeder from Supabase, fallback to demo data if not found
+  const supabase = await createClient();
+  const { data: supabaseBreeder } = await supabase
+    .from("breeder_profiles")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  // Resolve breed UUIDs → names
+  let resolvedBreedNames: string[] = [];
+  if (supabaseBreeder?.breed_ids?.length) {
+    const { data: breedRows } = await supabase
+      .from("breeds")
+      .select("id, name_it")
+      .in("id", supabaseBreeder.breed_ids);
+    if (breedRows) {
+      resolvedBreedNames = supabaseBreeder.breed_ids
+        .map((id: string) => breedRows.find((b) => b.id === id)?.name_it)
+        .filter(Boolean) as string[];
+    }
+  }
+
+  const breeder = supabaseBreeder ?? {
+    id: null,
     kennel_name: "Allevamento Del Sole",
     slug,
     description:
@@ -56,7 +83,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
     enci_verified: true,
     fci_affiliated: true,
     year_established: 2005,
-    breeds: ["Labrador Retriever", "Golden Retriever"],
+    breed_ids: ["Labrador Retriever", "Golden Retriever"],
     specializations: ["Compagnia", "Esposizione", "Pet Therapy"],
     certifications: [
       "Displasia dell'anca (HD)",
@@ -69,32 +96,26 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
     review_count: 24,
   };
 
-  const reviews = [
-    {
-      id: "1",
-      author: "Marco R.",
-      rating: 5,
-      date: "15 Febbraio 2026",
-      content:
-        "Esperienza fantastica! Il nostro Labrador e arrivato sano, vaccinato e gia socializzato. L'allevatore ci ha seguito anche dopo l'acquisto con consigli preziosi.",
-    },
-    {
-      id: "2",
-      author: "Giulia M.",
-      rating: 5,
-      date: "3 Gennaio 2026",
-      content:
-        "Allevamento serio e professionale. I cani sono tenuti benissimo e si vede l'amore che mettono nel loro lavoro. Consigliatissimo!",
-    },
-    {
-      id: "3",
-      author: "Luca P.",
-      rating: 4,
-      date: "20 Dicembre 2025",
-      content:
-        "Ottima esperienza complessiva. Cucciolo bellissimo con tutti i documenti in regola. Unica nota: tempi di attesa un po' lunghi, ma ne e valsa la pena.",
-    },
-  ];
+  // Fetch real reviews from Supabase
+  const { data: reviewRows } = supabaseBreeder
+    ? await supabase
+        .from("reviews")
+        .select("id, rating, title, content, created_at, author:profiles(full_name)")
+        .eq("breeder_id", supabaseBreeder.id)
+        .eq("is_approved", true)
+        .order("created_at", { ascending: false })
+    : { data: [] };
+
+  const reviews = (reviewRows ?? []) as Array<{
+    id: string;
+    rating: number;
+    title: string | null;
+    content: string | null;
+    created_at: string;
+    author: { full_name: string } | null;
+  }>;
+
+  const reviewCount = supabaseBreeder ? reviews.length : breeder.review_count;
 
   return (
     <div className="min-h-screen bg-muted">
@@ -185,7 +206,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
-                  {breeder.breeds.map((breed) => (
+                  {(supabaseBreeder ? resolvedBreedNames : (breeder.breed_ids ?? [])).map((breed) => (
                     <div
                       key={breed}
                       className="flex items-center gap-3 p-3 bg-muted rounded-lg"
@@ -225,38 +246,49 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold">
-                    Recensioni ({breeder.review_count})
+                    Recensioni ({reviewCount})
                   </h2>
-                  <Button variant="outline" size="sm">
-                    Scrivi una recensione
-                  </Button>
+                  <ReviewForm breederId={breeder.id ?? ""} breederName={breeder.kennel_name} />
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {reviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="border-b border-border last:border-0 pb-6 last:pb-0"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center text-sm font-semibold text-primary-dark">
-                          {review.author.charAt(0)}
+                {reviews.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Nessuna recensione ancora. Sii il primo a recensire questo allevatore!
+                  </p>
+                ) : (
+                  reviews.map((review) => {
+                    const authorName = review.author?.full_name ?? "Utente";
+                    const date = new Date(review.created_at).toLocaleDateString("it-IT", {
+                      day: "numeric", month: "long", year: "numeric",
+                    });
+                    return (
+                      <div
+                        key={review.id}
+                        className="border-b border-border last:border-0 pb-6 last:pb-0"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center text-sm font-semibold text-primary-dark">
+                              {authorName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{authorName}</p>
+                              <p className="text-xs text-muted-foreground">{date}</p>
+                            </div>
+                          </div>
+                          <Rating value={review.rating} size="sm" />
                         </div>
-                        <div>
-                          <p className="font-medium text-sm">{review.author}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {review.date}
-                          </p>
-                        </div>
+                        {review.title && (
+                          <p className="font-medium text-sm mb-1">{review.title}</p>
+                        )}
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {review.content}
+                        </p>
                       </div>
-                      <Rating value={review.rating} size="sm" />
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {review.content}
-                    </p>
-                  </div>
-                ))}
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
           </div>
@@ -299,12 +331,14 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 )}
-                <div className="pt-3 border-t border-border">
-                  <Button className="w-full" size="lg">
-                    <MessageCircle className="h-4 w-4" />
-                    Invia Messaggio
-                  </Button>
-                </div>
+                {supabaseBreeder?.user_id && (
+                  <div className="pt-3 border-t border-border">
+                    <ChatModal
+                      breederUserId={supabaseBreeder.user_id}
+                      breederName={breeder.kennel_name}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
 

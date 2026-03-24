@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   User,
@@ -11,39 +11,64 @@ import {
   Star,
   Crown,
   Settings,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DASHBOARD_NAV } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-const iconMap: Record<string, React.ElementType> = {
-  LayoutDashboard,
-  User,
-  Megaphone,
-  MessageCircle,
-  Star,
-  Crown,
-  Settings,
-};
+const BREEDER_NAV = [
+  { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
+  { href: "/dashboard/profilo", label: "Profilo Allevamento", icon: User },
+  { href: "/dashboard/annunci", label: "Annunci", icon: Megaphone },
+  { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
+  { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
+  { href: "/dashboard/abbonamento", label: "Abbonamento", icon: Crown },
+  { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
+];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const USER_NAV = [
+  { href: "/dashboard", label: "La mia area", icon: Search },
+  { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
+  { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
+];
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [role, setRole] = useState<"breeder" | "user" | null>(null);
 
+  // Auth guard: redirect unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
       router.replace(`/accedi?redirect=${pathname}`);
     }
   }, [loading, user, pathname, router]);
 
+  // Fetch role from Supabase for role-based navigation
+  useEffect(() => {
+    const fetchRole = async () => {
+      if (!user) return;
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      setRole(profile?.role ?? "user");
+    };
+    if (user) {
+      fetchRole();
+    }
+  }, [user]);
+
   if (loading || !user) {
     return <div className="min-h-screen bg-muted" />;
   }
+
+  const nav = role === "breeder" ? BREEDER_NAV : USER_NAV;
 
   return (
     <div className="min-h-screen bg-muted">
@@ -52,29 +77,37 @@ export default function DashboardLayout({
           {/* Sidebar */}
           <aside className="w-full lg:w-64 shrink-0">
             <nav className="bg-white rounded-xl border border-border p-2 space-y-1">
-              {DASHBOARD_NAV.map((item) => {
-                const Icon = iconMap[item.icon] || LayoutDashboard;
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== "/dashboard" &&
-                    pathname.startsWith(item.href));
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-primary-light text-primary-dark"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
+              {role === null ? (
+                /* Skeleton mentre carica il ruolo */
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-9 rounded-lg bg-muted animate-pulse mx-1"
+                  />
+                ))
+              ) : (
+                nav.map((item) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary-light text-primary-dark"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })
+              )}
             </nav>
           </aside>
 
