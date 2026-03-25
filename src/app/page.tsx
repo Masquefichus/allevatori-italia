@@ -38,6 +38,7 @@ export default function HomePage() {
                   type="text"
                   placeholder="Cerca per razza, allevatore..."
                   className="w-full py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                  suppressHydrationWarning
                 />
               </div>
               <div className="flex items-center gap-2 px-3 border-t sm:border-t-0 sm:border-l border-gray-200">

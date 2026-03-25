@@ -26,6 +26,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
+  const errorParam = searchParams.get("error");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,9 +72,9 @@ function LoginForm() {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
+            {(error || errorParam === "auth") && (
               <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg">
-                {error}
+                {error || "Il link di reset non è valido o è scaduto. Richiedine uno nuovo."}
               </div>
             )}
 

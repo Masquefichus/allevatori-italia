@@ -29,14 +29,6 @@ function ReimpostaPasswordForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const tokenHash = searchParams.get("token_hash");
-    const type = searchParams.get("type");
-
-    if (!tokenHash || type !== "recovery") {
-      router.replace("/accedi?error=auth");
-      return;
-    }
-
     const supabase = createClient();
     if (!supabase) {
       setError("Supabase non configurato.");
@@ -44,15 +36,65 @@ function ReimpostaPasswordForm() {
       return;
     }
 
-    supabase.auth
-      .verifyOtp({ token_hash: tokenHash, type: "recovery" })
-      .then(({ error }) => {
-        if (error) {
-          router.replace("/accedi?error=auth");
-        } else {
-          setVerifying(false);
-        }
-      });
+    // PKCE Authorization Code flow: ?code=...
+    const code = searchParams.get("code");
+    if (code) {
+      supabase.auth
+        .exchangeCodeForSession(code)
+        .then(({ error }) => {
+          if (error) {
+            router.replace("/accedi?error=auth");
+          } else {
+            setVerifying(false);
+          }
+        });
+      return;
+    }
+
+    // PKCE OTP flow: ?token_hash=...&type=recovery
+    const tokenHash = searchParams.get("token_hash");
+    const type = searchParams.get("type");
+    if (tokenHash && type === "recovery") {
+      supabase.auth
+        .verifyOtp({ token_hash: tokenHash, type: "recovery" })
+        .then(({ error }) => {
+          if (error) {
+            router.replace("/accedi?error=auth");
+          } else {
+            setVerifying(false);
+          }
+        });
+      return;
+    }
+
+    // Legacy implicit flow: #access_token=...&type=recovery
+    const hash = window.location.hash.substring(1);
+    const hashParams = new URLSearchParams(hash);
+    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
+    const hashType = hashParams.get("type");
+    if (accessToken && refreshToken && hashType === "recovery") {
+      supabase.auth
+        .setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ error }) => {
+          if (error) {
+            router.replace("/accedi?error=auth");
+          } else {
+            window.history.replaceState(null, "", window.location.pathname);
+            setVerifying(false);
+          }
+        });
+      return;
+    }
+
+    // Fallback: check if a session already exists (e.g. set by /api/auth/callback)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setVerifying(false);
+      } else {
+        router.replace("/accedi?error=auth");
+      }
+    });
   }, [searchParams, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
