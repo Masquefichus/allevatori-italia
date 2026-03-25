@@ -6,9 +6,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); if [ \"$BRANCH\" = \"main\" ]; then NEWBRANCH=\"feature/$(date +%Y%m%d-%H%M%S)\"; git checkout -b \"$NEWBRANCH\" 2>/dev/null || true; echo \"{\\\"systemMessage\\\":\\\"Auto-created branch $NEWBRANCH to protect main.\\\"}\"; fi",
-            "timeout": 10,
-            "statusMessage": "Checking branch..."
+            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); if [ \"$BRANCH\" = \"main\" ]; then git pull origin main --ff-only 2>/dev/null || true; NEWBRANCH=\"feature/$(date +%Y%m%d-%H%M%S)\"; git checkout -b \"$NEWBRANCH\" 2>/dev/null || true; echo \"{\\\"systemMessage\\\":\\\"Pulled latest main and auto-created branch $NEWBRANCH.\\\"}\"; fi",
+            "timeout": 30,
+            "statusMessage": "Pulling latest and checking branch..."
           }
         ]
       }
