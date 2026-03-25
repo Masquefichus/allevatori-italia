@@ -101,8 +101,8 @@ function ReimpostaPasswordForm() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 6) {
-      setError("La password deve essere di almeno 6 caratteri.");
+    if (password.length < 8) {
+      setError("La password deve essere di almeno 8 caratteri.");
       return;
     }
     if (password !== confirm) {
@@ -166,7 +166,7 @@ function ReimpostaPasswordForm() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="password"
-                  placeholder="Nuova password (min. 6 caratteri)"
+                  placeholder="Nuova password (min. 8 caratteri)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

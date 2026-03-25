@@ -5,11 +5,67 @@ import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { User, Lock, Bell, Trash2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ImpostazioniPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess(false);
+
+    if (newPassword.length < 8) {
+      setPasswordError("La nuova password deve essere di almeno 8 caratteri.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Le password non coincidono.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    const supabase = createClient();
+    if (!supabase) {
+      setPasswordError("Supabase non configurato.");
+      setPasswordLoading(false);
+      return;
+    }
+
+    // Verify current password by re-authenticating
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) {
+      setPasswordError("Sessione non valida. Riaccedi.");
+      setPasswordLoading(false);
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (signInError) {
+      setPasswordError("La password attuale non è corretta.");
+      setPasswordLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      setPasswordError(error.message);
+    } else {
+      setPasswordSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+    setPasswordLoading(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -41,31 +97,46 @@ export default function ImpostazioniPage() {
             <h2 className="font-semibold">Cambia Password</h2>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            label="Password attuale"
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            placeholder="La tua password attuale"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            {passwordError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">
+                {passwordError}
+              </div>
+            )}
+            {passwordSuccess && (
+              <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-lg">
+                Password aggiornata con successo.
+              </div>
+            )}
             <Input
-              label="Nuova password"
+              label="Password attuale"
               type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Minimo 8 caratteri"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="La tua password attuale"
+              required
             />
-            <Input
-              label="Conferma nuova password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Ripeti la password"
-            />
-          </div>
-          <Button>Aggiorna Password</Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Nuova password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Minimo 8 caratteri"
+                required
+              />
+              <Input
+                label="Conferma nuova password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Ripeti la password"
+                required
+              />
+            </div>
+            <Button type="submit" isLoading={passwordLoading}>Aggiorna Password</Button>
+          </form>
         </CardContent>
       </Card>
 
