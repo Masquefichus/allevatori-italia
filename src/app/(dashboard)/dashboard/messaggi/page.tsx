@@ -92,6 +92,8 @@ export default function MessaggiPage() {
     setActiveConvId(conv.id);
     setActiveOtherUserId(conv.other_user_id);
     setActiveOtherName(conv.other_user_name);
+    setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, unread: false } : c));
+    setFiltered(prev => prev.map(c => c.id === conv.id ? { ...c, unread: false } : c));
   };
 
   const formatTime = (iso: string | null) => {
