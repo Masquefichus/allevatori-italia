@@ -152,6 +152,7 @@ export default function BreederProfileClient({
   breeder: initialBreeder, breeds: initialBreeds, allBreeds,
   listings, reviews, isOwner, ChatModalComponent, ReviewFormComponent,
 }: Props) {
+  const [tab, setTab] = useState<"panoramica" | "cucciolate" | "aggiornamenti">("panoramica");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -331,6 +332,27 @@ export default function BreederProfileClient({
               </div>
             )}
           </div>
+
+          {/* Tabs */}
+          <div className="flex gap-0 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mt-6 border-t border-border overflow-x-auto">
+            {([
+              { id: "panoramica", label: "Panoramica" },
+              { id: "cucciolate", label: "Cucciolate" },
+              { id: "aggiornamenti", label: "Aggiornamenti" },
+            ] as const).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`px-5 py-3.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors -mb-px ${
+                  tab === t.id
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -423,7 +445,72 @@ export default function BreederProfileClient({
               </div>
             )}
 
-            {!editing && (
+            {!editing && tab === "cucciolate" && (
+              <section>
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="font-serif text-2xl text-foreground">
+                    {totalPuppies > 0 ? `${totalPuppies} cuccioli disponibili` : "Cucciolate"}
+                  </h2>
+                  {totalPuppies > 0 && (
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                      <span className="text-emerald-700 font-medium">Disponibile</span>
+                    </div>
+                  )}
+                </div>
+                {activeListings.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-border px-6 py-14 text-center text-muted-foreground">
+                    <Dog className="h-10 w-10 mx-auto mb-3 text-border" />
+                    <p className="font-medium text-foreground mb-1">Nessun cucciolo disponibile al momento</p>
+                    <p className="text-sm">Contatta l&apos;allevatore per sapere quando sarà disponibile la prossima cucciolata.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activeListings.map((listing) => {
+                      const breed = breeds.find((b) => b.id === listing.breed_id);
+                      const price = formatPrice(listing.price_min, listing.price_max, listing.price_on_request);
+                      const img = listing.images?.[0];
+                      return (
+                        <div key={listing.id} className="bg-white rounded-2xl border border-border overflow-hidden flex flex-col sm:flex-row">
+                          <div className="sm:w-48 aspect-video sm:aspect-square shrink-0 bg-muted overflow-hidden">
+                            {img
+                              ? <Image src={img} alt={listing.title ?? "Cucciolo"} width={192} height={192} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full flex items-center justify-center text-4xl">🐶</div>}
+                          </div>
+                          <div className="p-5 flex flex-col justify-between flex-1">
+                            <div>
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <h3 className="font-semibold text-foreground">{listing.title ?? breed?.name_it ?? "Cucciolo"}</h3>
+                                {price && <span className="text-base font-bold text-primary whitespace-nowrap">{price}</span>}
+                              </div>
+                              <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground mb-3">
+                                {listing.available_puppies != null && <span>{listing.available_puppies} disponibili</span>}
+                                {listing.gender_available && <span>· {listing.gender_available}</span>}
+                                {listing.litter_date && <span>· Nati il {new Date(listing.litter_date).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}</span>}
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {listing.pedigree_included && <Badge variant="outline">Pedigree</Badge>}
+                                {listing.vaccinated && <Badge variant="outline">Vaccinato</Badge>}
+                                {listing.microchipped && <Badge variant="outline">Microchip</Badge>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {!editing && tab === "aggiornamenti" && (
+              <div className="bg-white rounded-2xl border border-border px-6 py-14 text-center text-muted-foreground">
+                <p className="font-medium text-foreground mb-1">Nessun aggiornamento ancora</p>
+                <p className="text-sm">L&apos;allevatore non ha ancora pubblicato aggiornamenti.</p>
+              </div>
+            )}
+
+            {!editing && tab === "panoramica" && (
               <>
                 {/* About */}
                 {breeder.description && (
@@ -433,53 +520,15 @@ export default function BreederProfileClient({
                   </section>
                 )}
 
-                {/* Active listings */}
-                {activeListings.length > 0 && (
-                  <section>
-                    <div className="flex items-center justify-between mb-5">
-                      <h2 className="font-serif text-2xl text-foreground">
-                        {totalPuppies > 0 ? `${totalPuppies} cuccioli disponibili` : "Cucciolate"}
-                      </h2>
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                        <span className="text-emerald-700 font-medium">Disponibile</span>
-                      </div>
+                {/* Availability callout */}
+                {totalPuppies > 0 && (
+                  <button onClick={() => setTab("cucciolate")} className="w-full bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center justify-between text-left hover:bg-emerald-100 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="font-medium text-emerald-800">{totalPuppies} cuccioli disponibili ora</span>
                     </div>
-                    <div className="space-y-4">
-                      {activeListings.map((listing) => {
-                        const breed = breeds.find((b) => b.id === listing.breed_id);
-                        const price = formatPrice(listing.price_min, listing.price_max, listing.price_on_request);
-                        const img = listing.images?.[0];
-                        return (
-                          <div key={listing.id} className="bg-white rounded-2xl border border-border overflow-hidden flex flex-col sm:flex-row">
-                            <div className="sm:w-48 aspect-video sm:aspect-square shrink-0 bg-muted overflow-hidden">
-                              {img
-                                ? <Image src={img} alt={listing.title ?? "Cucciolo"} width={192} height={192} className="w-full h-full object-cover" />
-                                : <div className="w-full h-full flex items-center justify-center text-4xl">🐶</div>}
-                            </div>
-                            <div className="p-5 flex flex-col justify-between flex-1">
-                              <div>
-                                <div className="flex items-start justify-between gap-2 mb-2">
-                                  <h3 className="font-semibold text-foreground">{listing.title ?? breed?.name_it ?? "Cucciolo"}</h3>
-                                  {price && <span className="text-base font-bold text-primary whitespace-nowrap">{price}</span>}
-                                </div>
-                                <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground mb-3">
-                                  {listing.available_puppies != null && <span>{listing.available_puppies} disponibili</span>}
-                                  {listing.gender_available && <span>· {listing.gender_available}</span>}
-                                  {listing.litter_date && <span>· Nati il {new Date(listing.litter_date).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}</span>}
-                                </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {listing.pedigree_included && <Badge variant="outline">Pedigree</Badge>}
-                                  {listing.vaccinated && <Badge variant="outline">Vaccinato</Badge>}
-                                  {listing.microchipped && <Badge variant="outline">Microchip</Badge>}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
+                    <ChevronRight className="h-4 w-4 text-emerald-600 shrink-0" />
+                  </button>
                 )}
 
                 {/* Price range */}
