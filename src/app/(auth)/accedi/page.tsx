@@ -3,10 +3,12 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+
 import { Dog, Mail, Lock } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card, { CardContent } from "@/components/ui/Card";
+import Turnstile from "@/components/ui/Turnstile";
 import { createClient } from "@/lib/supabase/client";
 import { SITE_NAME } from "@/lib/constants";
 
@@ -23,6 +25,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
@@ -41,15 +44,32 @@ function LoginForm() {
         return;
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      // Verifica CAPTCHA solo se il widget ha prodotto un token
+      if (turnstileToken) {
+        const captchaRes = await fetch("/api/turnstile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: turnstileToken }),
+        });
+        if (!captchaRes.ok) {
+          setError("Verifica CAPTCHA fallita. Riprova.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+      console.log("LOGIN DATA:", JSON.stringify(data?.session?.user?.email));
+      console.log("LOGIN ERROR:", signInError?.message);
 
       if (signInError) {
-        setError("Email o password errati.");
+        setError(signInError.message);
         setLoading(false);
         return;
       }
 
-      window.location.href = redirect;
+      router.push(redirect);
     } catch {
       setError("Errore di connessione. Riprova.");
       setLoading(false);
@@ -107,20 +127,14 @@ function LoginForm() {
                 <input type="checkbox" className="rounded" />
                 <span className="text-muted-foreground">Ricordami</span>
               </label>
-              <Link
-                href="/recupera-password"
-                className="text-primary hover:underline"
-              >
+              <Link href="/recupera-password" className="text-primary hover:underline">
                 Password dimenticata?
               </Link>
             </div>
 
-            <Button
-              type="submit"
-              isLoading={loading}
-              className="w-full"
-              size="lg"
-            >
+            <Turnstile onVerify={setTurnstileToken} onExpire={() => setTurnstileToken(null)} />
+
+            <Button type="submit" isLoading={loading} disabled={!turnstileToken} className="w-full" size="lg">
               Accedi
             </Button>
           </form>

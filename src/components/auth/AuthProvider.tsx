@@ -43,11 +43,13 @@ export default function AuthProvider({
     };
 
     // Carica sessione iniziale
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+        if (session?.user) fetchProfile(session.user.id);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
 
     // Ascolta login / logout / token refresh in tempo reale
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

@@ -13,6 +13,7 @@ import Badge from "@/components/ui/Badge";
 import Rating from "@/components/ui/Rating";
 import { SITE_NAME } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { regioni } from "@/data/regioni";
 
 interface Breed { id: string; name_it: string; slug: string; }
@@ -48,7 +49,7 @@ interface Props {
   allBreeds: Breed[];
   listings: Listing[];
   reviews: Review[];
-  isOwner: boolean;
+  breederUserId: string | null;
   ChatModalComponent: React.ReactNode;
   ReviewFormComponent: React.ReactNode;
 }
@@ -150,9 +151,11 @@ function Field({ label, value, onChange, placeholder, type = "text", multiline =
 // ── Main component ────────────────────────────────────────────────────────────
 export default function BreederProfileClient({
   breeder: initialBreeder, breeds: initialBreeds, allBreeds,
-  listings, reviews, isOwner, ChatModalComponent, ReviewFormComponent,
+  listings, reviews, breederUserId, ChatModalComponent, ReviewFormComponent,
 }: Props) {
-  const [tab, setTab] = useState<"panoramica" | "cucciolate" | "aggiornamenti">("panoramica");
+  const { user } = useAuth();
+  const isOwner = !!user && !!breederUserId && user.id === breederUserId;
+  const [tab, setTab] = useState<Tab>("panoramica");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
