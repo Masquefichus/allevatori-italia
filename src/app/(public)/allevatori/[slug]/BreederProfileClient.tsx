@@ -250,7 +250,7 @@ export default function BreederProfileClient({
     <div className="min-h-screen bg-background">
 
       {/* ── Header: name + tabs ──────────────────────────────────────────── */}
-      <div className="bg-white border-b border-border">
+      <div className="bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Name + edit button */}
