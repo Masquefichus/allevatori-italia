@@ -409,7 +409,7 @@ export default function BreederProfileClient({
                           className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary"
                           disabled={!provinceOptions.length}>
                           <option value="">Seleziona provincia</option>
-                          {provinceOptions.map((p) => <option key={p} value={p}>{p}</option>)}
+                          {provinceOptions.map((p) => <option key={p.sigla} value={p.nome}>{p.nome} ({p.sigla})</option>)}
                         </select>
                       </div>
                       <div>
