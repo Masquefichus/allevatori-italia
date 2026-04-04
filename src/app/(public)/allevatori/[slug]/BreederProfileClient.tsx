@@ -249,92 +249,28 @@ export default function BreederProfileClient({
   return (
     <div className="min-h-screen bg-background">
 
-      {/* ── Header ────────────────────────────────────────────────────────── */}
+      {/* ── Header: name + tabs ──────────────────────────────────────────── */}
       <div className="bg-white border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-start gap-5">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            {/* Avatar */}
-            <div className="w-20 h-20 rounded-full border-2 border-border shrink-0 overflow-hidden bg-primary flex items-center justify-center text-white text-xl font-semibold">
-              {breeder.logo_url
-                ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={80} height={80} className="w-full h-full object-cover" />
-                : initials}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="font-serif text-2xl md:text-3xl text-foreground leading-tight">{breeder.kennel_name}</h1>
-                {breeder.is_premium && (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium bg-secondary/10 text-secondary px-2.5 py-1 rounded-full">
-                    <Star className="h-3 w-3 fill-secondary" /> Top Allevatore
-                  </span>
-                )}
-                {breeder.enci_verified && (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full">
-                    <Shield className="h-3 w-3" /> ENCI Verificato
-                  </span>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mb-2">
-                {location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{location}</span>}
-                {breeder.year_established && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />Dal {breeder.year_established}</span>}
-                {breeds.length > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Dog className="h-3.5 w-3.5" />
-                    {breeds.map((b) => b.name_it).join(", ")}
-                  </span>
-                )}
-              </div>
-
-              {breeder.average_rating > 0 && (
-                <div className="flex items-center gap-2">
-                  <Rating value={breeder.average_rating} size="sm" />
-                  <span className="text-sm font-medium text-foreground">{breeder.average_rating.toFixed(1)}</span>
-                  <span className="text-sm text-muted-foreground">({breeder.review_count} recensioni)</span>
-                </div>
-              )}
-            </div>
-
-            {/* Owner edit button */}
+          {/* Name + edit button */}
+          <div className="flex items-start justify-between pt-8 pb-5">
+            <h1 className="font-serif text-4xl md:text-5xl text-foreground leading-tight">{breeder.kennel_name}</h1>
             {isOwner && !editing && (
-              <Button size="md" variant="outline" onClick={startEditing} className="shrink-0 hidden md:flex">
+              <Button size="md" variant="outline" onClick={startEditing} className="shrink-0 hidden md:flex mt-2">
                 <Pencil className="h-4 w-4" /> Modifica
               </Button>
             )}
             {isOwner && editing && (
-              <div className="hidden md:flex gap-2 shrink-0">
-                <Button size="md" onClick={handleSave} isLoading={saving}>
-                  <Save className="h-4 w-4" /> Salva
-                </Button>
-                <Button size="md" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Stats strip */}
-          <div className="flex gap-6 mt-6 pt-5 border-t border-border text-sm">
-            <div>
-              <span className="font-bold text-foreground text-lg">{totalPuppies}</span>
-              <span className="text-muted-foreground ml-1">cuccioli disponibili</span>
-            </div>
-            <div>
-              <span className="font-bold text-foreground text-lg">{listings.length}</span>
-              <span className="text-muted-foreground ml-1">cucciolate</span>
-            </div>
-            {breeder.review_count > 0 && (
-              <div>
-                <span className="font-bold text-foreground text-lg">{breeder.review_count}</span>
-                <span className="text-muted-foreground ml-1">recensioni</span>
+              <div className="hidden md:flex gap-2 shrink-0 mt-2">
+                <Button size="md" onClick={handleSave} isLoading={saving}><Save className="h-4 w-4" /> Salva</Button>
+                <Button size="md" variant="outline" onClick={() => setEditing(false)} disabled={saving}><X className="h-4 w-4" /></Button>
               </div>
             )}
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-0 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mt-6 border-t border-border overflow-x-auto">
+          <div className="flex gap-0 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 overflow-x-auto">
             {([
               { id: "panoramica", label: "Panoramica" },
               { id: "cucciolate", label: "Cucciolate" },
@@ -343,7 +279,7 @@ export default function BreederProfileClient({
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-5 py-3.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors -mb-px ${
+                className={`px-1 py-3.5 mr-6 text-sm font-medium border-b-2 whitespace-nowrap transition-colors -mb-px ${
                   tab === t.id
                     ? "border-foreground text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground"
@@ -366,11 +302,113 @@ export default function BreederProfileClient({
         </div>
       )}
 
+      {/* ── Photo grid + contact card ─────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Photo grid (left 2/3) */}
+          <div className="lg:col-span-2">
+            {gallery.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2 rounded-2xl overflow-hidden h-72 md:h-96">
+                <div className="col-span-2 row-span-2 overflow-hidden bg-muted">
+                  <Image src={gallery[0]} alt={breeder.kennel_name} width={600} height={500} className="w-full h-full object-cover" />
+                </div>
+                <div className="overflow-hidden bg-muted">
+                  {gallery[1] && <Image src={gallery[1]} alt="" width={300} height={250} className="w-full h-full object-cover" />}
+                </div>
+                <div className="relative overflow-hidden bg-muted">
+                  {gallery[2] && <Image src={gallery[2]} alt="" width={300} height={250} className="w-full h-full object-cover" />}
+                  {gallery.length > 3 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-end justify-end p-3">
+                      <span className="text-white text-xs font-medium bg-black/60 rounded-lg px-2.5 py-1.5">
+                        Vedi tutte le foto
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-muted h-72 md:h-96 flex items-center justify-center text-muted-foreground">
+                <Dog className="h-12 w-12 text-border" />
+              </div>
+            )}
+          </div>
+
+          {/* Contact card (right 1/3) */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl border border-border p-6 shadow-sm space-y-5 h-full flex flex-col justify-between">
+              {/* Breeder identity */}
+              <div className="flex flex-col items-center text-center gap-2">
+                <div className="w-16 h-16 rounded-full border-2 border-border overflow-hidden bg-primary flex items-center justify-center text-white text-lg font-semibold mb-1">
+                  {breeder.logo_url
+                    ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={64} height={64} className="w-full h-full object-cover" />
+                    : initials}
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">{breeder.kennel_name}</p>
+                  {breeds.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Allevatore di{" "}
+                      {breeds.map((b, i) => (
+                        <span key={b.id}>
+                          <Link href={`/razze/${b.slug}`} className="underline hover:text-primary">{b.name_it}</Link>
+                          {i < breeds.length - 1 && ", "}
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                </div>
+                {location && (
+                  <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />{location}
+                  </p>
+                )}
+                {breeder.average_rating > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <Rating value={breeder.average_rating} size="sm" />
+                    <span className="text-sm text-muted-foreground">({breeder.review_count})</span>
+                  </div>
+                )}
+              </div>
+
+              {/* CTAs */}
+              {isOwner ? (
+                <div className="space-y-2">
+                  {!editing ? (
+                    <Button className="w-full" variant="outline" onClick={startEditing}>
+                      <Pencil className="h-4 w-4" /> Modifica profilo
+                    </Button>
+                  ) : (
+                    <>
+                      <Button className="w-full" onClick={handleSave} isLoading={saving}>
+                        <Save className="h-4 w-4" /> Salva modifiche
+                      </Button>
+                      <Button className="w-full" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
+                        <X className="h-4 w-4" /> Annulla
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {priceLabel && (
+                    <p className="text-center font-bold text-lg text-foreground">{priceLabel}</p>
+                  )}
+                  <div className="w-full">{ChatModalComponent}</div>
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-1">
+                    <Shield className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Pagamenti protetti da {SITE_NAME}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── Body ──────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-
-          {/* ── Main column ──────────────────────────────────────────── */}
           <div className="lg:col-span-2 space-y-10">
 
             {/* EDIT FORM */}
@@ -680,149 +718,6 @@ export default function BreederProfileClient({
             )}
           </div>
 
-          {/* ── Sidebar ──────────────────────────────────────────────────── */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-4">
-
-              {/* Main action card */}
-              <div className="bg-white rounded-2xl border border-border p-6 shadow-sm space-y-5">
-
-                {isOwner ? (
-                  !editing ? (
-                    <Button className="w-full" variant="outline" onClick={startEditing}>
-                      <Pencil className="h-4 w-4" /> Modifica profilo
-                    </Button>
-                  ) : (
-                    <div className="space-y-2">
-                      <Button className="w-full" onClick={handleSave} isLoading={saving}>
-                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salva modifiche
-                      </Button>
-                      <Button className="w-full" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-                        <X className="h-4 w-4" /> Annulla
-                      </Button>
-                    </div>
-                  )
-                ) : (
-                  <>
-                    {priceLabel && (
-                      <div>
-                        <div className="text-2xl font-bold text-foreground">{priceLabel}</div>
-                        <p className="text-xs text-muted-foreground mt-0.5">Prezzo indicativo per cucciolo</p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${totalPuppies > 0 ? "bg-emerald-500" : "bg-border"}`} />
-                      <span className={`font-medium ${totalPuppies > 0 ? "text-emerald-700" : "text-muted-foreground"}`}>
-                        {totalPuppies > 0 ? `${totalPuppies} cuccioli disponibili` : "Nessun cucciolo disponibile"}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="w-full">{ChatModalComponent}</div>
-                    </div>
-
-                    <div className="border-t border-border pt-4 flex items-start gap-2.5">
-                      <Shield className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        Pagamenti protetti da {SITE_NAME}. Acquista con fiducia.
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Contact card */}
-              {!editing && (breeder.phone || breeder.whatsapp || breeder.email_public || breeder.website || breeder.facebook_url || breeder.instagram_url) && (
-                <div className="bg-white rounded-2xl border border-border p-5 space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">Contatti</h3>
-                  {breeder.phone && (
-                    <a href={`tel:${breeder.phone}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />{breeder.phone}
-                    </a>
-                  )}
-                  {breeder.whatsapp && (
-                    <a href={`https://wa.me/${breeder.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <MessageCircle className="h-4 w-4 text-muted-foreground shrink-0" />WhatsApp
-                    </a>
-                  )}
-                  {breeder.email_public && (
-                    <a href={`mailto:${breeder.email_public}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <Mail className="h-4 w-4 text-muted-foreground shrink-0" />{breeder.email_public}
-                    </a>
-                  )}
-                  {breeder.website && (
-                    <a href={breeder.website} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <span className="flex items-center gap-3"><Globe className="h-4 w-4 text-muted-foreground shrink-0" />Sito web</span>
-                      <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                    </a>
-                  )}
-                  {breeder.facebook_url && (
-                    <a href={breeder.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <span className="flex items-center gap-3"><Facebook className="h-4 w-4 text-muted-foreground shrink-0" />Facebook</span>
-                      <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                    </a>
-                  )}
-                  {breeder.instagram_url && (
-                    <a href={breeder.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <span className="flex items-center gap-3"><Instagram className="h-4 w-4 text-muted-foreground shrink-0" />Instagram</span>
-                      <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {/* Details card */}
-              <div className="bg-white rounded-2xl border border-border p-5 space-y-3">
-                <h3 className="text-sm font-semibold text-foreground">Dettagli</h3>
-                <div className="space-y-2.5 text-sm">
-                  {breeder.enci_number && (
-                    <div className="flex justify-between gap-4">
-                      <span className="text-muted-foreground">Numero ENCI</span>
-                      <span className="font-medium text-foreground">{breeder.enci_number}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">FCI</span>
-                    <span className="font-medium text-foreground">{breeder.fci_affiliated ? "Affiliato" : "—"}</span>
-                  </div>
-                  {breeder.year_established && (
-                    <div className="flex justify-between gap-4">
-                      <span className="text-muted-foreground">Attivo dal</span>
-                      <span className="font-medium text-foreground">{breeder.year_established}</span>
-                    </div>
-                  )}
-                  {breeder.region && (
-                    <div className="flex justify-between gap-4">
-                      <span className="text-muted-foreground">Regione</span>
-                      <span className="font-medium text-foreground">{breeder.region}</span>
-                    </div>
-                  )}
-                  {breeds.length > 0 && (
-                    <div className="flex justify-between gap-4">
-                      <span className="text-muted-foreground">Razze</span>
-                      <span className="font-medium text-foreground text-right">{breeds.map((b) => b.name_it).join(", ")}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Breed links */}
-              {breeds.length > 0 && (
-                <div className="bg-white rounded-2xl border border-border p-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Razze allevate</h3>
-                  <div className="space-y-1">
-                    {breeds.map((b) => (
-                      <Link key={b.id} href={`/razze/${b.slug}`} className="flex items-center justify-between text-sm text-foreground hover:text-primary py-1.5 transition-colors">
-                        <span className="flex items-center gap-2"><Dog className="h-3.5 w-3.5 text-muted-foreground" />{b.name_it}</span>
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>
