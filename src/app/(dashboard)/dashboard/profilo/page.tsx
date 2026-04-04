@@ -7,7 +7,6 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import { regioni } from "@/data/regioni";
-import { razze } from "@/data/razze";
 import { SPECIALIZATIONS, HEALTH_CERTIFICATIONS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
@@ -35,6 +34,8 @@ export default function ProfiloPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [selectedBreeds, setSelectedBreeds] = useState<string[]>([]); // breed slugs
   const [breedSlugToId, setBreedSlugToId] = useState<Record<string, string>>({}); // slug → UUID
+  const [allBreeds, setAllBreeds] = useState<{ id: string; slug: string; name_it: string }[]>([]);
+  const [breedQuery, setBreedQuery] = useState("");
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
   const [selectedCerts, setSelectedCerts] = useState<string[]>([]);
 
@@ -60,17 +61,18 @@ export default function ProfiloPage() {
 
     // Load breed slug→UUID map and existing profile in parallel
     Promise.all([
-      supabase.from("breeds").select("id, slug"),
+      supabase.from("breeds").select("id, slug, name_it").order("name_it"),
       supabase.from("breeder_profiles").select("*").eq("user_id", user.id).maybeSingle(),
     ]).then(([breedsRes, profileRes]) => {
       // Build slug→UUID map
       const slugMap: Record<string, string> = {};
       const idToSlug: Record<string, string> = {};
-      (breedsRes.data || []).forEach((b: { id: string; slug: string }) => {
+      (breedsRes.data || []).forEach((b: { id: string; slug: string; name_it: string }) => {
         slugMap[b.slug] = b.id;
         idToSlug[b.id] = b.slug;
       });
       setBreedSlugToId(slugMap);
+      setAllBreeds(breedsRes.data || []);
 
       const data = profileRes.data;
       if (data) {
@@ -445,29 +447,64 @@ export default function ProfiloPage() {
         </Card>
 
         {/* Razze Allevate */}
-        <Card>
-          <CardHeader>
+        <div className="bg-white rounded-xl border border-border overflow-visible">
+          <div className="px-6 pt-5 pb-2">
             <h2 className="font-semibold">Razze Allevate</h2>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {razze.slice(0, 30).map((breed) => (
-                <label
-                  key={breed.slug}
-                  className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted"
-                >
-                  <input
-                    type="checkbox"
-                    className="rounded"
-                    checked={selectedBreeds.includes(breed.slug)}
-                    onChange={() => toggleItem(selectedBreeds, setSelectedBreeds, breed.slug)}
-                  />
-                  {breed.name_it}
-                </label>
-              ))}
+          </div>
+          <div className="px-6 pb-5 space-y-3">
+            {/* Selected chips */}
+            {selectedBreeds.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedBreeds.map((slug) => {
+                  const breed = allBreeds.find((b) => b.slug === slug);
+                  return (
+                    <span key={slug} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-sm px-3 py-1 rounded-full">
+                      {breed?.name_it ?? slug}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBreeds((prev) => prev.filter((s) => s !== slug))}
+                        className="ml-1 text-primary/60 hover:text-primary"
+                      >×</button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+            {/* Search input + dropdown */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Cerca una razza..."
+                value={breedQuery}
+                onChange={(e) => setBreedQuery(e.target.value)}
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              {breedQuery.trim() && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {allBreeds
+                    .filter((b) => b.name_it.toLowerCase().includes(breedQuery.toLowerCase()) && !selectedBreeds.includes(b.slug))
+                    .map((breed) => (
+                      <button
+                        key={breed.slug}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setSelectedBreeds((prev) => [...prev, breed.slug]);
+                          setBreedQuery("");
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                      >
+                        {breed.name_it}
+                      </button>
+                    ))}
+                  {allBreeds.filter((b) => b.name_it.toLowerCase().includes(breedQuery.toLowerCase()) && !selectedBreeds.includes(b.slug)).length === 0 && (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">Nessuna razza trovata</p>
+                  )}
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Specializzazioni */}
         <Card>
