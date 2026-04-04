@@ -10,6 +10,7 @@ import {
   Star,
   Settings,
   Search,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +27,7 @@ const BREEDER_NAV = [
 const USER_NAV = [
   { href: "/dashboard", label: "La mia area", icon: Search },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
+  { href: "/dashboard/salvati", label: "Salvati", icon: Heart },
   { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 

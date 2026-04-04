@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   MapPin, Phone, Mail, Globe, Shield, Star, Calendar,
   CheckCircle, Facebook, Instagram, ExternalLink,
-  Dog, MessageCircle, Pencil, X, Save, Loader2, ChevronRight,
+  Dog, MessageCircle, Pencil, X, Save, Loader2, ChevronRight, Heart,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -160,6 +160,39 @@ export default function BreederProfileClient({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingFav, setSavingFav] = useState(false);
+
+  useEffect(() => {
+    if (!user || isOwner) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    (supabase as any)
+      .from("favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("breeder_id", initialBreeder.id)
+      .maybeSingle()
+      .then(({ data }: { data: { id: string } | null }) => {
+        setIsSaved(!!data);
+      });
+  }, [user, isOwner, initialBreeder.id]);
+
+  async function toggleFavorite() {
+    if (!user) { window.location.href = `/accedi?redirect=${window.location.pathname}`; return; }
+    const supabase = createClient();
+    if (!supabase) return;
+    setSavingFav(true);
+    if (isSaved) {
+      await (supabase as any).from("favorites").delete().eq("user_id", user.id).eq("breeder_id", initialBreeder.id);
+      setIsSaved(false);
+    } else {
+      await (supabase as any).from("favorites").insert({ user_id: user.id, breeder_id: initialBreeder.id });
+      setIsSaved(true);
+    }
+    setSavingFav(false);
+  }
 
   const [breeder, setBreeder] = useState(initialBreeder);
   const [breeds, setBreeds] = useState(initialBreeds);
@@ -398,6 +431,18 @@ export default function BreederProfileClient({
                     <p className="text-center font-bold text-lg text-foreground">{priceLabel}</p>
                   )}
                   <div className="w-full">{ChatModalComponent}</div>
+                  <button
+                    onClick={toggleFavorite}
+                    disabled={savingFav}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                      isSaved
+                        ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                        : "border-border bg-white text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <Heart className={`h-4 w-4 ${isSaved ? "fill-rose-500 text-rose-500" : ""}`} />
+                    {isSaved ? "Salvato" : "Salva allevatore"}
+                  </button>
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-1">
                     <Shield className="h-3.5 w-3.5 text-emerald-600" />
                     <span>Pagamenti protetti da {SITE_NAME}</span>
