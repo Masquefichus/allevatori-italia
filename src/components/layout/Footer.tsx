@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Dog } from "lucide-react";
 import { SITE_NAME } from "@/lib/constants";
+import FooterAuth from "./FooterAuth";
 
 export default function Footer() {
   return (
@@ -22,12 +23,12 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Chi siamo */}
+          {/* Piattaforma */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Chi siamo</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">Piattaforma</h3>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/chi-siamo" className="hover:text-white transition-colors">La nostra storia</Link></li>
-              <li><Link href="/chi-siamo" className="hover:text-white transition-colors">La nostra missione</Link></li>
+              <li><Link href="/come-funziona" className="hover:text-white transition-colors">Come funziona</Link></li>
+              <li><Link href="/per-allevatori" className="hover:text-white transition-colors">Per allevatori</Link></li>
               <li><Link href="/contatti" className="hover:text-white transition-colors">Contatti</Link></li>
             </ul>
           </div>
@@ -42,14 +43,11 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Per allevatori */}
+          {/* Account */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Per allevatori</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">Account</h3>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/per-allevatori" className="hover:text-white transition-colors">Perché unirsi</Link></li>
-              <li><Link href="/registrati" className="hover:text-white transition-colors">Registrati</Link></li>
-              <li><Link href="/accedi" className="hover:text-white transition-colors">Accedi</Link></li>
-              <li><Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
+              <FooterAuth />
             </ul>
           </div>
 

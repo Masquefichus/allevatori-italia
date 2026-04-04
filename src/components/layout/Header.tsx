@@ -51,9 +51,7 @@ export default function Header() {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-3">
-            {loading ? (
-              <div className="w-20 h-8" />
-            ) : (user || profile) ? (
+            {!loading && (user || profile) ? (
               <div className="flex items-center gap-3">
                 <Link href="/dashboard">
                   <Button variant="ghost" size="sm">

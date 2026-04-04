@@ -1,12 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "");
+    if (!token) {
+      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
+    }
 
-    if (!user) {
+    const admin = createAdminClient();
+    const { data: { user }, error: authError } = await admin.auth.getUser(token);
+    if (authError || !user) {
       return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
     }
 
@@ -19,7 +24,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Nessun file fornito" }, { status: 400 });
     }
 
-    // Validate file type
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -28,7 +32,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Max 5MB
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         { error: "File troppo grande. Dimensione massima: 5MB" },
@@ -39,16 +42,13 @@ export async function POST(request: Request) {
     const ext = file.name.split(".").pop();
     const fileName = `${folder}/${user.id}/${Date.now()}.${ext}`;
 
-    const { data, error } = await supabase.storage
+    const { data, error } = await admin.storage
       .from(bucket)
-      .upload(fileName, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+      .upload(fileName, file, { cacheControl: "3600", upsert: true });
 
     if (error) throw error;
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = admin.storage
       .from(bucket)
       .getPublicUrl(data.path);
 

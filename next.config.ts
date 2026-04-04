@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "www.fci.be",
       },
+      {
+        // Supabase Storage — user uploaded images
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
     ],
   },
 };

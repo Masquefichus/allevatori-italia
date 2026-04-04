@@ -74,14 +74,8 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
 
   const reviews = (reviewRows ?? []) as unknown as Parameters<typeof BreederProfileClient>[0]["reviews"];
 
-  // Check if the logged-in user owns this profile
-  const { data: { user } } = await supabase.auth.getUser();
-  const isOwner = !!user && user.id === breeder.user_id;
-
-  // Fetch all breeds for the edit mode picker
-  const { data: allBreedRows } = isOwner
-    ? await supabase.from("breeds").select("id, name_it, slug").order("name_it")
-    : { data: null };
+  // Fetch all breeds for the edit mode picker (always load, client decides if owner)
+  const { data: allBreedRows } = await supabase.from("breeds").select("id, name_it, slug").order("name_it");
   const allBreeds = (allBreedRows ?? []) as { id: string; name_it: string; slug: string }[];
 
   return (
@@ -105,7 +99,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
         allBreeds={allBreeds}
         listings={listings}
         reviews={reviews}
-        isOwner={isOwner}
+        breederUserId={breeder.user_id}
         ChatModalComponent={
           breeder.user_id ? (
             <ChatModal breederUserId={breeder.user_id} breederName={breeder.kennel_name} />

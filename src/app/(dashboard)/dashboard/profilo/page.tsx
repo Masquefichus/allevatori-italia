@@ -199,17 +199,30 @@ export default function ProfiloPage() {
     const supabase = createClient();
     if (!supabase) { setUploadingLogo(false); return; }
 
-    const ext = file.name.split(".").pop();
-    const path = `logos/${user.id}/${Date.now()}.${ext}`;
-    const { data, error } = await supabase.storage
-      .from("images")
-      .upload(path, file, { upsert: true });
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) {
+      setErrors({ submit: "Sessione scaduta. Rieffettua il login." });
+      setUploadingLogo(false);
+      return;
+    }
 
-    if (error) {
-      setErrors({ submit: `Errore upload: ${error.message}` });
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bucket", "images");
+    formData.append("folder", "logos");
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      setErrors({ submit: `Errore upload: ${result.error}` });
     } else {
-      const { data: { publicUrl } } = supabase.storage.from("images").getPublicUrl(data.path);
-      setLogoUrl(publicUrl);
+      setLogoUrl(result.url);
     }
     setUploadingLogo(false);
   };

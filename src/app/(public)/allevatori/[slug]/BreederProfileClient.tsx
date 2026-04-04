@@ -14,6 +14,7 @@ import Badge from "@/components/ui/Badge";
 import Rating from "@/components/ui/Rating";
 import { SITE_NAME } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { regioni } from "@/data/regioni";
 
 type Tab = "panoramica" | "cuccioli" | "salute" | "recensioni";
@@ -51,7 +52,7 @@ interface Props {
   allBreeds: Breed[];
   listings: Listing[];
   reviews: Review[];
-  isOwner: boolean;
+  breederUserId: string | null;
   ChatModalComponent: React.ReactNode;
   ReviewFormComponent: React.ReactNode;
 }
@@ -143,8 +144,10 @@ function BreedPicker({ allBreeds, selectedIds, onChange }: {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function BreederProfileClient({
   breeder: initialBreeder, breeds: initialBreeds, allBreeds,
-  listings, reviews, isOwner, ChatModalComponent, ReviewFormComponent,
+  listings, reviews, breederUserId, ChatModalComponent, ReviewFormComponent,
 }: Props) {
+  const { user } = useAuth();
+  const isOwner = !!user && !!breederUserId && user.id === breederUserId;
   const [tab, setTab] = useState<Tab>("panoramica");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);

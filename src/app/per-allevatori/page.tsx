@@ -15,6 +15,7 @@ import {
 import Button from "@/components/ui/Button";
 import Card, { CardContent } from "@/components/ui/Card";
 import { SITE_NAME } from "@/lib/constants";
+import PerAllevatoriCTA from "./PerAllevatoriCTA";
 
 export const metadata: Metadata = {
   title: `Per Allevatori | ${SITE_NAME}`,
@@ -163,12 +164,7 @@ export default function PerAllevatoriPage() {
             con acquirenti seri, proteggere i propri pagamenti e far crescere la propria reputazione.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/registrati">
-              <Button size="lg">
-                Registrati gratuitamente
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <PerAllevatoriCTA />
             <Link href="/come-funziona">
               <Button size="lg" variant="outline">
                 Come funziona per le famiglie
@@ -253,12 +249,7 @@ export default function PerAllevatoriPage() {
             ))}
           </div>
           <div className="text-center mt-14">
-            <Link href="/registrati">
-              <Button size="lg">
-                Inizia ora — è gratuito
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <PerAllevatoriCTA />
           </div>
         </div>
       </section>
@@ -308,12 +299,7 @@ export default function PerAllevatoriPage() {
             Unirsi significa far parte di qualcosa di più grande — e avere al proprio fianco
             una piattaforma che ti supporta in ogni passo.
           </p>
-          <Link href="/registrati">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-none">
-              Unisciti alla community
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          <PerAllevatoriCTA variant="white" />
         </div>
       </section>
 
@@ -346,12 +332,7 @@ export default function PerAllevatoriPage() {
           <p className="text-muted-foreground mb-8">
             Registrati gratuitamente e unisciti alla rete degli allevatori certificati in Italia.
           </p>
-          <Link href="/registrati">
-            <Button size="lg">
-              Registrati ora
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          <PerAllevatoriCTA />
         </div>
       </section>
 
