@@ -206,7 +206,8 @@ export default function BreederProfileClient({
       breed_ids: selectedBreedIds,
     };
 
-    const { error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from("breeder_profiles")
       .update(updates)
       .eq("id", breeder.id);

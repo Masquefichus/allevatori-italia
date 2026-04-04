@@ -38,8 +38,8 @@ export default function InformazioniPage() {
           refresh_token: session.refresh_token,
         });
 
-        const { data } = await supabase
-          .from("profiles")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await (supabase.from("profiles") as any)
           .select("*")
           .eq("id", session.user.id)
           .single();
@@ -80,8 +80,8 @@ export default function InformazioniPage() {
         refresh_token: session.refresh_token,
       });
 
-      const { error: updateError } = await supabase
-        .from("profiles")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateError } = await (supabase.from("profiles") as any)
         .update({
           full_name: form.full_name,
           phone: form.phone,

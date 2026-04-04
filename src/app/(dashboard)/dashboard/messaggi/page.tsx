@@ -36,8 +36,8 @@ export default function MessaggiPage() {
     if (!user) return;
     setCurrentUserId(user.id);
 
-    const { data: convRows } = await supabase
-      .from("conversations")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: convRows } = await (supabase.from("conversations") as any)
       .select("id, participant_1, participant_2, last_message_at")
       .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
       .order("last_message_at", { ascending: false, nullsFirst: false });
@@ -45,14 +45,17 @@ export default function MessaggiPage() {
     if (!convRows || convRows.length === 0) { setLoading(false); return; }
 
     const enriched: Conversation[] = await Promise.all(
-      convRows.map(async (conv) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      convRows.map(async (conv: any) => {
         const otherId = conv.participant_1 === user.id ? conv.participant_2 : conv.participant_1;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sb = supabase as any;
         const [{ data: profile }, { data: lastMsgArr }, { count: unreadCount }] = await Promise.all([
-          supabase.from("profiles").select("full_name").eq("id", otherId).single(),
-          supabase.from("messages").select("content, sender_id").eq("conversation_id", conv.id)
+          sb.from("profiles").select("full_name").eq("id", otherId).single(),
+          sb.from("messages").select("content, sender_id").eq("conversation_id", conv.id)
             .order("created_at", { ascending: false }).limit(1),
-          supabase.from("messages").select("*", { count: "exact", head: true })
+          sb.from("messages").select("*", { count: "exact", head: true })
             .eq("conversation_id", conv.id).eq("is_read", false).neq("sender_id", user.id),
         ]);
 

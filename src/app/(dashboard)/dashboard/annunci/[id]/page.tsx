@@ -66,7 +66,8 @@ export default function ModificaAnnuncioPage() {
           .from("listings")
           .select("*")
           .eq("id", id)
-          .single();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .single() as { data: any };
 
         if (data) {
           setTitle(data.title || "");
@@ -144,8 +145,8 @@ export default function ModificaAnnuncioPage() {
         status: newStatus,
       };
 
-      const { error } = await supabase
-        .from("listings")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from("listings") as any)
         .update(updateData)
         .eq("id", id);
 

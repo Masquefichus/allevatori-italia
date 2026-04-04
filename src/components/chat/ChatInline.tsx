@@ -44,7 +44,7 @@ export default function ChatInline({
       .order("created_at", { ascending: true });
 
     if (data) {
-      setMessages(data as Message[]);
+      setMessages(data as unknown as Message[]);
       // Marca come letti
       await supabase
         .from("messages")

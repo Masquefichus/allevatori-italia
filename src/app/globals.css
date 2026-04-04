@@ -42,6 +42,10 @@ body {
   color: var(--foreground);
 }
 
+a, button, [role="button"], select, label[for], summary {
+  cursor: pointer;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

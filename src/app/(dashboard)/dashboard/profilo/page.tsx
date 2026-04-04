@@ -61,8 +61,10 @@ export default function ProfiloPage() {
 
     // Load breed slug→UUID map and existing profile in parallel
     Promise.all([
-      supabase.from("breeds").select("id, slug, name_it").order("name_it"),
-      supabase.from("breeder_profiles").select("*").eq("user_id", user.id).maybeSingle(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any).from("breeds").select("id, slug, name_it").order("name_it"),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any).from("breeder_profiles").select("*").eq("user_id", user.id).maybeSingle(),
     ]).then(([breedsRes, profileRes]) => {
       // Build slug→UUID map
       const slugMap: Record<string, string> = {};
@@ -147,8 +149,10 @@ export default function ProfiloPage() {
       certifications: selectedCerts,
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sbAny = supabase as any;
     if (profileId) {
-      const { error } = await supabase
+      const { error } = await sbAny
         .from("breeder_profiles")
         .update(payload)
         .eq("id", profileId)
@@ -162,7 +166,7 @@ export default function ProfiloPage() {
       }
     } else {
       const slug = slugify(kennelName);
-      const { data, error } = await supabase
+      const { data, error } = await sbAny
         .from("breeder_profiles")
         .insert({ ...payload, user_id: user.id, slug, is_approved: false, is_premium: false })
         .select()
@@ -172,7 +176,7 @@ export default function ProfiloPage() {
         setErrors({ submit: error.message });
       } else {
         setProfileId(data.id);
-        await supabase.from("profiles").update({ role: "breeder" }).eq("id", user.id);
+        await sbAny.from("profiles").update({ role: "breeder" }).eq("id", user.id);
         setSuccess(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }

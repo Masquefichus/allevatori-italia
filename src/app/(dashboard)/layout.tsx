@@ -52,7 +52,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!user) return;
       const supabase = createClient();
       if (!supabase) return;
-      const { data: profile } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: profile } = await (supabase as any)
         .from("profiles")
         .select("role")
         .eq("id", user.id)
