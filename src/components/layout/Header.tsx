@@ -25,24 +25,24 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-border sticky top-0 z-50">
+    <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <Dog className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold text-foreground">
+            <Dog className="h-7 w-7 text-primary" />
+            <span className="text-lg font-semibold text-foreground tracking-tight">
               {SITE_NAME}
             </span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-7">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.label}
               </Link>

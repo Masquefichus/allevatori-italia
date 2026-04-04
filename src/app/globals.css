@@ -1,22 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #dbeafe;
-  --secondary: #f59e0b;
-  --secondary-dark: #d97706;
-  --accent: #10b981;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --border: #e5e7eb;
-  --destructive: #ef4444;
-  --success: #22c55e;
+  --background: #FAF7F2;
+  --foreground: #1c1917;
+  --primary: #283E52;
+  --primary-dark: #1a2e3d;
+  --primary-light: #dce8f0;
+  --secondary: #C4773B;
+  --secondary-dark: #a8622e;
+  --accent: #5c8a5e;
+  --muted: #F0EBE3;
+  --muted-foreground: #78716c;
+  --border: #E2D8CE;
+  --destructive: #dc2626;
+  --success: #3d7a41;
 }
 
 @theme inline {
+  --font-family-serif: var(--font-dm-serif), Georgia, serif;
+  --font-family-sans: var(--font-inter), system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
@@ -30,7 +32,8 @@
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-success: var(--success);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-dm-serif);
   --font-mono: var(--font-geist-mono);
 }
 

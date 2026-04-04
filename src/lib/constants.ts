@@ -4,9 +4,9 @@ export const SITE_DESCRIPTION =
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export const NAV_LINKS = [
-  { href: "/allevatori", label: "Allevatori" },
+  { href: "/come-funziona", label: "Come funziona" },
   { href: "/razze", label: "Razze" },
-  { href: "/regioni", label: "Regioni" },
+  { href: "/per-allevatori", label: "Per allevatori" },
 ] as const;
 
 export const DASHBOARD_NAV = [
@@ -15,7 +15,7 @@ export const DASHBOARD_NAV = [
   { href: "/dashboard/annunci", label: "Annunci", icon: "Megaphone" },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: "MessageCircle" },
   { href: "/dashboard/recensioni", label: "Recensioni", icon: "Star" },
-  { href: "/dashboard/abbonamento", label: "Abbonamento", icon: "Crown" },
+  { href: "/dashboard/abbonamento", label: "Commissioni", icon: "Crown" },
   { href: "/dashboard/impostazioni", label: "Impostazioni", icon: "Settings" },
 ] as const;
 

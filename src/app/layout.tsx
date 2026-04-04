@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -9,7 +9,13 @@ import { SITE_NAME, SITE_DESCRIPTION } from "@/lib/constants";
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-inter",
+});
+
+const dmSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-dm-serif",
 });
 
 export const metadata: Metadata = {
@@ -39,7 +45,7 @@ export default function RootLayout({
         <WebsiteJsonLd />
         <OrganizationJsonLd />
       </head>
-      <body className={`${inter.variable} antialiased font-sans`}>
+      <body className={`${inter.variable} ${dmSerif.variable} antialiased font-sans`}>
         <AuthProvider>
           <div className="min-h-screen flex flex-col">
             <Header />

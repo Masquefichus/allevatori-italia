@@ -13,11 +13,11 @@ export default function Badge({
 }: BadgeProps) {
   const variants = {
     default: "bg-muted text-muted-foreground",
-    primary: "bg-primary-light text-primary-dark",
-    secondary: "bg-amber-100 text-amber-800",
-    success: "bg-green-100 text-green-800",
-    destructive: "bg-red-100 text-red-800",
-    outline: "border border-border text-foreground bg-white",
+    primary: "bg-primary-light text-primary",
+    secondary: "bg-orange-100 text-orange-800",
+    success: "bg-emerald-50 text-emerald-800",
+    destructive: "bg-red-50 text-red-700",
+    outline: "border border-border text-foreground bg-transparent",
   };
 
   return (
