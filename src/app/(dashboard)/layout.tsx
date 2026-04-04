@@ -8,7 +8,6 @@ import {
   Megaphone,
   MessageCircle,
   Star,
-  Crown,
   Settings,
   Search,
 } from "lucide-react";
@@ -21,7 +20,6 @@ const BREEDER_NAV = [
   { href: "/dashboard/annunci", label: "Annunci", icon: Megaphone },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
   { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
-  { href: "/dashboard/abbonamento", label: "Abbonamento", icon: Crown },
   { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 
