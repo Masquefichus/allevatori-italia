@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
-  User,
   Megaphone,
   MessageCircle,
   Star,
@@ -19,7 +18,6 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 const BREEDER_NAV = [
   { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
-  { href: "/dashboard/profilo", label: "Profilo Allevamento", icon: User },
   { href: "/dashboard/annunci", label: "Annunci", icon: Megaphone },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
   { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
@@ -52,7 +50,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!user) return;
       const supabase = createClient();
       if (!supabase) return;
-      const { data: profile } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: profile } = await (supabase as any)
         .from("profiles")
         .select("role")
         .eq("id", user.id)

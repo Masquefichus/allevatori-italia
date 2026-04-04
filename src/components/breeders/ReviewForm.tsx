@@ -82,7 +82,8 @@ export default function ReviewForm({ breederId, breederName }: ReviewFormProps) 
       }
 
       // Inserisce la recensione (auto-approvata)
-      const { error: insertError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: insertError } = await (supabase as any)
         .from("reviews")
         .insert({
           breeder_id: breederId,

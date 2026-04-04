@@ -5,19 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   MapPin, Phone, Mail, Globe, Shield, Star, Calendar,
-  CheckCircle, Facebook, Instagram, ExternalLink, Heart,
-  Dog, MessageCircle, Pencil, X, Save, Loader2,
+  CheckCircle, Facebook, Instagram, ExternalLink,
+  Dog, MessageCircle, Pencil, X, Save, Loader2, ChevronRight,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
-import Card, { CardContent } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Rating from "@/components/ui/Rating";
 import { SITE_NAME } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { regioni } from "@/data/regioni";
-
-type Tab = "panoramica" | "cuccioli" | "salute" | "recensioni";
 
 interface Breed { id: string; name_it: string; slug: string; }
 interface Listing {
@@ -56,13 +53,6 @@ interface Props {
   ChatModalComponent: React.ReactNode;
   ReviewFormComponent: React.ReactNode;
 }
-
-const TABS = [
-  { id: "panoramica", label: "Panoramica" },
-  { id: "cuccioli", label: "Cuccioli" },
-  { id: "salute", label: "Salute" },
-  { id: "recensioni", label: "Recensioni" },
-] as const;
 
 function formatPrice(min: number | null, max: number | null, onRequest: boolean) {
   if (onRequest) return "Prezzo su richiesta";
@@ -141,6 +131,23 @@ function BreedPicker({ allBreeds, selectedIds, onChange }: {
   );
 }
 
+// ── Input helper ─────────────────────────────────────────────────────────────
+function Field({ label, value, onChange, placeholder, type = "text", multiline = false }: {
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; type?: string; multiline?: boolean;
+}) {
+  const cls = "w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30";
+  return (
+    <div>
+      <label className="text-sm text-muted-foreground mb-1 block">{label}</label>
+      {multiline
+        ? <textarea rows={4} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={cls + " resize-none"} />
+        : <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={cls} />
+      }
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function BreederProfileClient({
   breeder: initialBreeder, breeds: initialBreeds, allBreeds,
@@ -152,11 +159,11 @@ export default function BreederProfileClient({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [breeder, setBreeder] = useState(initialBreeder);
   const [breeds, setBreeds] = useState(initialBreeds);
 
-  // Edit form state
   const [form, setForm] = useState({
     kennel_name: initialBreeder.kennel_name ?? "",
     description: initialBreeder.description ?? "",
@@ -195,6 +202,7 @@ export default function BreederProfileClient({
     setSelectedBreedIds(breeder.breed_ids ?? []);
     setEditing(true);
     setSaveError(null);
+    setSaveSuccess(false);
   }
 
   async function handleSave() {
@@ -209,7 +217,8 @@ export default function BreederProfileClient({
       breed_ids: selectedBreedIds,
     };
 
-    const { error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from("breeder_profiles")
       .update(updates)
       .eq("id", breeder.id);
@@ -220,11 +229,12 @@ export default function BreederProfileClient({
       return;
     }
 
-    // Update local state so changes show immediately
     setBreeder((prev) => ({ ...prev, ...updates }));
     setBreeds(allBreeds.filter((b) => selectedBreedIds.includes(b.id)));
     setEditing(false);
     setSaving(false);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
   }
 
   const activeListings = listings.filter((l) => l.status === "attivo");
@@ -233,240 +243,236 @@ export default function BreederProfileClient({
   const globalPriceMin = prices.length ? Math.min(...prices.map((l) => l.price_min ?? l.price_max!)) : null;
   const globalPriceMax = prices.length ? Math.max(...prices.map((l) => l.price_max ?? l.price_min!)) : null;
   const priceLabel = formatPrice(globalPriceMin, globalPriceMax, prices.length === 0 && activeListings.length > 0);
-
   const gallery: string[] = breeder.gallery_urls ?? [];
   const initials = breeder.kennel_name?.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase() ?? "K";
-
-  // Province options for selected region
   const selectedRegionData = regioni.find((r) => r.nome === form.region);
   const provinceOptions = selectedRegionData?.province ?? [];
+  const location = [breeder.city, breeder.province, breeder.region].filter(Boolean).join(", ");
 
   return (
     <div className="min-h-screen bg-background">
 
-      {/* ── Cover ─────────────────────────────────────────────────────────── */}
-      {breeder.cover_image_url ? (
-        <div className="h-52 md:h-72 w-full overflow-hidden">
-          <Image src={breeder.cover_image_url} alt={breeder.kennel_name} width={1400} height={288} className="w-full h-full object-cover" />
-        </div>
-      ) : (
-        <div className="h-52 md:h-72 bg-gradient-to-br from-primary/10 to-muted" />
-      )}
+      {/* ── Header: name + tabs ──────────────────────────────────────────── */}
+      <div className="bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-      {/* ── Profile header ──────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row gap-6 -mt-10 pb-5 items-start">
-
-            <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-md shrink-0 overflow-hidden bg-primary flex items-center justify-center text-white text-xl font-semibold">
-              {breeder.logo_url
-                ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={80} height={80} className="w-full h-full object-cover" />
-                : initials}
-            </div>
-
-            <div className="flex-1 pt-2 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="font-serif text-2xl md:text-3xl text-foreground">{breeder.kennel_name}</h1>
-                {breeder.enci_verified && (
-                  <Badge variant="primary" className="flex items-center gap-1"><Shield className="h-3 w-3" /> ENCI Verificato</Badge>
-                )}
-                {breeder.is_premium && (
-                  <Badge variant="secondary" className="flex items-center gap-1"><Star className="h-3 w-3" /> Top Allevatore</Badge>
-                )}
+          {/* Name + edit button */}
+          <div className="flex items-start justify-between pt-8 pb-5">
+            <h1 className="font-serif text-4xl md:text-5xl text-foreground leading-tight">{breeder.kennel_name}</h1>
+            {isOwner && !editing && (
+              <Button size="md" variant="outline" onClick={startEditing} className="shrink-0 hidden md:flex mt-2">
+                <Pencil className="h-4 w-4" /> Modifica
+              </Button>
+            )}
+            {isOwner && editing && (
+              <div className="hidden md:flex gap-2 shrink-0 mt-2">
+                <Button size="md" onClick={handleSave} isLoading={saving}><Save className="h-4 w-4" /> Salva</Button>
+                <Button size="md" variant="outline" onClick={() => setEditing(false)} disabled={saving}><X className="h-4 w-4" /></Button>
               </div>
-              <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-2">
-                {(breeder.city || breeder.region) && (
-                  <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{[breeder.city, breeder.province].filter(Boolean).join(", ")}</span>
-                )}
-                {breeder.year_established && (
-                  <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />Dal {breeder.year_established}</span>
-                )}
-              </div>
-              {breeder.average_rating > 0 && <Rating value={breeder.average_rating} showValue count={breeder.review_count} />}
-            </div>
-
-            <div className="hidden md:flex gap-2 pt-4 shrink-0">
-              {isOwner ? (
-                editing ? (
-                  <>
-                    <Button size="md" onClick={handleSave} isLoading={saving}>
-                      <Save className="h-4 w-4" /> Salva
-                    </Button>
-                    <Button size="md" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-                      <X className="h-4 w-4" /> Annulla
-                    </Button>
-                  </>
-                ) : (
-                  <Button size="md" variant="outline" onClick={startEditing}>
-                    <Pencil className="h-4 w-4" /> Modifica profilo
-                  </Button>
-                )
-              ) : (
-                <>
-                  {ChatModalComponent}
-                  <Button variant="outline" size="md"><Heart className="h-4 w-4" /></Button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Stats bar */}
-          <div className="flex gap-8 pb-4 text-sm border-t border-border pt-4">
-            {[
-              { value: totalPuppies, label: "Cuccioli disponibili" },
-              { value: listings.length, label: "Cucciolate" },
-              { value: breeder.review_count ?? 0, label: "Recensioni verificate" },
-              ...(breeds.length > 0 ? [{ value: breeds.length, label: breeds.length === 1 ? "Razza" : "Razze" }] : []),
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <div className="font-bold text-lg text-foreground">{s.value}</div>
-                <div className="text-muted-foreground">{s.label}</div>
-              </div>
-            ))}
+            )}
           </div>
 
           {/* Tabs */}
           <div className="flex gap-0 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 overflow-x-auto">
-            {TABS.map((t) => (
+            {([
+              { id: "panoramica", label: "Panoramica" },
+              { id: "cucciolate", label: "Cucciolate" },
+              { id: "aggiornamenti", label: "Aggiornamenti" },
+            ] as const).map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-                  tab === t.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                className={`px-1 py-3.5 mr-6 text-sm font-medium border-b-2 whitespace-nowrap transition-colors -mb-px ${
+                  tab === t.id
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {t.label}
-                {t.id === "cuccioli" && totalPuppies > 0 && (
-                  <span className="ml-1.5 bg-primary text-white text-xs rounded-full px-1.5 py-0.5">{totalPuppies}</span>
-                )}
-                {t.id === "recensioni" && reviews.length > 0 && (
-                  <span className="ml-1.5 text-muted-foreground">({reviews.length})</span>
-                )}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Save error banner ───────────────────────────────────────────── */}
+      {/* ── Banners ───────────────────────────────────────────────────────── */}
       {saveError && (
         <div className="bg-red-50 border-b border-red-200 text-red-700 text-sm px-4 py-3 text-center">{saveError}</div>
       )}
+      {saveSuccess && (
+        <div className="bg-emerald-50 border-b border-emerald-200 text-emerald-700 text-sm px-4 py-3 text-center flex items-center justify-center gap-2">
+          <CheckCircle className="h-4 w-4" /> Profilo aggiornato con successo
+        </div>
+      )}
 
-      {/* ── Body ────────────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* ── Photo grid + contact card ─────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* ── Main column ─────────────────────────────────────────── */}
-          <div className="lg:col-span-2 space-y-8">
+          {/* Photo grid (left 2/3) */}
+          <div className="lg:col-span-2">
+            {gallery.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2 rounded-2xl overflow-hidden h-72 md:h-96">
+                <div className="col-span-2 row-span-2 overflow-hidden bg-muted">
+                  <Image src={gallery[0]} alt={breeder.kennel_name} width={600} height={500} className="w-full h-full object-cover" />
+                </div>
+                <div className="overflow-hidden bg-muted">
+                  {gallery[1] && <Image src={gallery[1]} alt="" width={300} height={250} className="w-full h-full object-cover" />}
+                </div>
+                <div className="relative overflow-hidden bg-muted">
+                  {gallery[2] && <Image src={gallery[2]} alt="" width={300} height={250} className="w-full h-full object-cover" />}
+                  {gallery.length > 3 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-end justify-end p-3">
+                      <span className="text-white text-xs font-medium bg-black/60 rounded-lg px-2.5 py-1.5">
+                        Vedi tutte le foto
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-muted h-72 md:h-96 flex items-center justify-center text-muted-foreground">
+                <Dog className="h-12 w-12 text-border" />
+              </div>
+            )}
+          </div>
 
-            {/* EDIT MODE panel */}
+          {/* Contact card (right 1/3) */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl border border-border p-6 shadow-sm space-y-5 h-full flex flex-col justify-between">
+              {/* Breeder identity */}
+              <div className="flex flex-col items-center text-center gap-2">
+                <div className="w-16 h-16 rounded-full border-2 border-border overflow-hidden bg-primary flex items-center justify-center text-white text-lg font-semibold mb-1">
+                  {breeder.logo_url
+                    ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={64} height={64} className="w-full h-full object-cover" />
+                    : initials}
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">{breeder.kennel_name}</p>
+                  {breeds.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Allevatore di{" "}
+                      {breeds.map((b, i) => (
+                        <span key={b.id}>
+                          <Link href={`/razze/${b.slug}`} className="underline hover:text-primary">{b.name_it}</Link>
+                          {i < breeds.length - 1 && ", "}
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                </div>
+                {location && (
+                  <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />{location}
+                  </p>
+                )}
+                {breeder.average_rating > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <Rating value={breeder.average_rating} size="sm" />
+                    <span className="text-sm text-muted-foreground">({breeder.review_count})</span>
+                  </div>
+                )}
+              </div>
+
+              {/* CTAs */}
+              {isOwner ? (
+                <div className="space-y-2">
+                  {!editing ? (
+                    <Button className="w-full" variant="outline" onClick={startEditing}>
+                      <Pencil className="h-4 w-4" /> Modifica profilo
+                    </Button>
+                  ) : (
+                    <>
+                      <Button className="w-full" onClick={handleSave} isLoading={saving}>
+                        <Save className="h-4 w-4" /> Salva modifiche
+                      </Button>
+                      <Button className="w-full" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
+                        <X className="h-4 w-4" /> Annulla
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {priceLabel && (
+                    <p className="text-center font-bold text-lg text-foreground">{priceLabel}</p>
+                  )}
+                  <div className="w-full">{ChatModalComponent}</div>
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-1">
+                    <Shield className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Pagamenti protetti da {SITE_NAME}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Body ──────────────────────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 space-y-10">
+
+            {/* EDIT FORM */}
             {editing && (
               <div className="space-y-6">
 
-                {/* Basic info */}
-                <Card>
-                  <CardContent className="p-6 space-y-4">
-                    <h3 className="font-semibold text-foreground">Informazioni base</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="md:col-span-2">
-                        <label className="text-sm text-muted-foreground mb-1 block">Nome allevamento *</label>
-                        <input value={form.kennel_name} onChange={(e) => setForm({ ...form, kennel_name: e.target.value })}
-                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
-                      </div>
-                      <div>
-                        <label className="text-sm text-muted-foreground mb-1 block">Numero ENCI</label>
-                        <input value={form.enci_number} onChange={(e) => setForm({ ...form, enci_number: e.target.value })}
-                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
-                      </div>
-                      <div>
-                        <label className="text-sm text-muted-foreground mb-1 block">Anno di fondazione</label>
-                        <input type="number" value={form.year_established} onChange={(e) => setForm({ ...form, year_established: e.target.value })}
-                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="text-sm text-muted-foreground mb-1 block">Descrizione</label>
-                        <textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
-                      </div>
+                <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
+                  <h3 className="font-semibold">Informazioni base</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <Field label="Nome allevamento *" value={form.kennel_name} onChange={(v) => setForm({ ...form, kennel_name: v })} />
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Location */}
-                <Card>
-                  <CardContent className="p-6 space-y-4">
-                    <h3 className="font-semibold text-foreground">Posizione</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm text-muted-foreground mb-1 block">Regione</label>
-                        <select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value, province: "" })}
-                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary">
-                          <option value="">Seleziona regione</option>
-                          {regioni.map((r) => <option key={r.slug} value={r.nome}>{r.nome}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm text-muted-foreground mb-1 block">Provincia</label>
-                        <select value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}
-                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary"
-                          disabled={!provinceOptions.length}>
-                          <option value="">Seleziona provincia</option>
-                          {provinceOptions.map((p) => <option key={p.sigla} value={p.nome}>{p.nome} ({p.sigla})</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm text-muted-foreground mb-1 block">Città</label>
-                        <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
-                      </div>
-                      <div>
-                        <label className="text-sm text-muted-foreground mb-1 block">Indirizzo</label>
-                        <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
-                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
-                      </div>
+                    <Field label="Numero ENCI" value={form.enci_number} onChange={(v) => setForm({ ...form, enci_number: v })} />
+                    <Field label="Anno di fondazione" type="number" value={form.year_established} onChange={(v) => setForm({ ...form, year_established: v })} />
+                    <div className="md:col-span-2">
+                      <Field label="Descrizione" value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline />
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
-                {/* Contacts */}
-                <Card>
-                  <CardContent className="p-6 space-y-4">
-                    <h3 className="font-semibold text-foreground">Contatti</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        { key: "phone", label: "Telefono", placeholder: "+39 02 1234567" },
-                        { key: "whatsapp", label: "WhatsApp", placeholder: "+39 333 1234567" },
-                        { key: "email_public", label: "Email pubblica", placeholder: "info@allevamento.it" },
-                        { key: "website", label: "Sito Web", placeholder: "https://www.allevamento.it" },
-                        { key: "facebook_url", label: "Facebook", placeholder: "URL pagina Facebook" },
-                        { key: "instagram_url", label: "Instagram", placeholder: "URL profilo Instagram" },
-                      ].map(({ key, label, placeholder }) => (
-                        <div key={key}>
-                          <label className="text-sm text-muted-foreground mb-1 block">{label}</label>
-                          <input
-                            value={form[key as keyof typeof form]}
-                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                            placeholder={placeholder}
-                            className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                      ))}
+                <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
+                  <h3 className="font-semibold">Posizione</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1 block">Regione</label>
+                      <select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value, province: "" })}
+                        className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
+                        <option value="">Seleziona regione</option>
+                        {regioni.map((r) => <option key={r.slug} value={r.nome}>{r.nome}</option>)}
+                      </select>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1 block">Provincia</label>
+                      <select value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}
+                        className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        disabled={!provinceOptions.length}>
+                        <option value="">Seleziona provincia</option>
+                        {provinceOptions.map((p) => <option key={p.sigla} value={p.nome}>{p.nome} ({p.sigla})</option>)}
+                      </select>
+                    </div>
+                    <Field label="Città" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+                    <Field label="Indirizzo" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
+                  </div>
+                </div>
 
-                {/* Breeds */}
-                <Card>
-                  <CardContent className="p-6 space-y-3">
-                    <h3 className="font-semibold text-foreground">Razze allevate</h3>
-                    <BreedPicker
-                      allBreeds={allBreeds}
-                      selectedIds={selectedBreedIds}
-                      onChange={setSelectedBreedIds}
-                    />
-                  </CardContent>
-                </Card>
+                <div className="bg-white rounded-2xl border border-border p-6 space-y-4">
+                  <h3 className="font-semibold">Contatti</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field label="Telefono" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} placeholder="+39 02 1234567" />
+                    <Field label="WhatsApp" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} placeholder="+39 333 1234567" />
+                    <Field label="Email pubblica" value={form.email_public} onChange={(v) => setForm({ ...form, email_public: v })} placeholder="info@allevamento.it" />
+                    <Field label="Sito Web" value={form.website} onChange={(v) => setForm({ ...form, website: v })} placeholder="https://..." />
+                    <Field label="Facebook" value={form.facebook_url} onChange={(v) => setForm({ ...form, facebook_url: v })} placeholder="URL pagina Facebook" />
+                    <Field label="Instagram" value={form.instagram_url} onChange={(v) => setForm({ ...form, instagram_url: v })} placeholder="URL profilo Instagram" />
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-border p-6 space-y-3">
+                  <h3 className="font-semibold">Razze allevate</h3>
+                  <BreedPicker allBreeds={allBreeds} selectedIds={selectedBreedIds} onChange={setSelectedBreedIds} />
+                </div>
 
                 {/* Mobile save */}
                 <div className="flex gap-3 md:hidden">
@@ -480,57 +486,182 @@ export default function BreederProfileClient({
               </div>
             )}
 
-            {/* PANORAMICA */}
-            {tab === "panoramica" && !editing && (
+            {!editing && tab === "cucciolate" && (
+              <section>
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="font-serif text-2xl text-foreground">
+                    {totalPuppies > 0 ? `${totalPuppies} cuccioli disponibili` : "Cucciolate"}
+                  </h2>
+                  {totalPuppies > 0 && (
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                      <span className="text-emerald-700 font-medium">Disponibile</span>
+                    </div>
+                  )}
+                </div>
+                {activeListings.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-border px-6 py-14 text-center text-muted-foreground">
+                    <Dog className="h-10 w-10 mx-auto mb-3 text-border" />
+                    <p className="font-medium text-foreground mb-1">Nessun cucciolo disponibile al momento</p>
+                    <p className="text-sm">Contatta l&apos;allevatore per sapere quando sarà disponibile la prossima cucciolata.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activeListings.map((listing) => {
+                      const breed = breeds.find((b) => b.id === listing.breed_id);
+                      const price = formatPrice(listing.price_min, listing.price_max, listing.price_on_request);
+                      const img = listing.images?.[0];
+                      return (
+                        <div key={listing.id} className="bg-white rounded-2xl border border-border overflow-hidden flex flex-col sm:flex-row">
+                          <div className="sm:w-48 aspect-video sm:aspect-square shrink-0 bg-muted overflow-hidden">
+                            {img
+                              ? <Image src={img} alt={listing.title ?? "Cucciolo"} width={192} height={192} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full flex items-center justify-center text-4xl">🐶</div>}
+                          </div>
+                          <div className="p-5 flex flex-col justify-between flex-1">
+                            <div>
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <h3 className="font-semibold text-foreground">{listing.title ?? breed?.name_it ?? "Cucciolo"}</h3>
+                                {price && <span className="text-base font-bold text-primary whitespace-nowrap">{price}</span>}
+                              </div>
+                              <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground mb-3">
+                                {listing.available_puppies != null && <span>{listing.available_puppies} disponibili</span>}
+                                {listing.gender_available && <span>· {listing.gender_available}</span>}
+                                {listing.litter_date && <span>· Nati il {new Date(listing.litter_date).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}</span>}
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {listing.pedigree_included && <Badge variant="outline">Pedigree</Badge>}
+                                {listing.vaccinated && <Badge variant="outline">Vaccinato</Badge>}
+                                {listing.microchipped && <Badge variant="outline">Microchip</Badge>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {!editing && tab === "aggiornamenti" && (
+              <div className="bg-white rounded-2xl border border-border px-6 py-14 text-center text-muted-foreground">
+                <p className="font-medium text-foreground mb-1">Nessun aggiornamento ancora</p>
+                <p className="text-sm">L&apos;allevatore non ha ancora pubblicato aggiornamenti.</p>
+              </div>
+            )}
+
+            {!editing && tab === "panoramica" && (
               <>
+                {/* About */}
                 {breeder.description && (
                   <section>
-                    <h2 className="font-serif text-2xl text-foreground mb-4">Chi siamo</h2>
+                    <h2 className="font-serif text-2xl text-foreground mb-4">Informazioni sull&apos;allevamento</h2>
                     <p className="text-muted-foreground leading-relaxed">{breeder.description}</p>
                   </section>
                 )}
 
-                {breeds.length > 0 && (
-                  <section>
-                    <h2 className="font-serif text-2xl text-foreground mb-4">Razze allevate</h2>
-                    <div className="flex flex-wrap gap-3">
-                      {breeds.map((b) => (
-                        <Link key={b.id} href={`/razze/${b.slug}`}>
-                          <div className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border rounded-full text-sm font-medium hover:border-primary hover:text-primary transition-colors">
-                            <Dog className="h-4 w-4 text-muted-foreground" /> {b.name_it}
-                          </div>
-                        </Link>
-                      ))}
+                {/* Availability callout */}
+                {totalPuppies > 0 && (
+                  <button onClick={() => setTab("cucciolate")} className="w-full bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center justify-between text-left hover:bg-emerald-100 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="font-medium text-emerald-800">{totalPuppies} cuccioli disponibili ora</span>
                     </div>
+                    <ChevronRight className="h-4 w-4 text-emerald-600 shrink-0" />
+                  </button>
+                )}
+
+                {/* Price range */}
+                {priceLabel && (
+                  <section className="bg-white rounded-2xl border border-border p-6">
+                    <h2 className="font-serif text-xl text-foreground mb-4">Prezzi</h2>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-3xl font-bold text-foreground">{priceLabel}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Prezzo indicativo per cucciolo. Il prezzo definitivo dipende dalla cucciolata.</p>
                   </section>
                 )}
 
+                {/* What's included */}
                 <section>
                   <h2 className="font-serif text-2xl text-foreground mb-4">Cosa è incluso</h2>
-                  <Card><CardContent className="p-6">
+                  <div className="bg-white rounded-2xl border border-border p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {["Pedigree ufficiale ENCI","Vaccinazioni di base","Sverminazione","Prima visita veterinaria","Microchip","Passaporto europeo","Contratto di vendita","Supporto post-adozione"].map((item) => (
+                      {[
+                        "Pedigree ufficiale ENCI",
+                        "Vaccinazioni di base",
+                        "Sverminazione",
+                        "Prima visita veterinaria",
+                        "Microchip",
+                        "Passaporto europeo",
+                        "Contratto di vendita",
+                        "Supporto post-adozione",
+                      ].map((item) => (
                         <div key={item} className="flex items-center gap-2.5 text-sm text-foreground">
-                          <CheckCircle className="h-4 w-4 text-success shrink-0" />{item}
+                          <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />{item}
                         </div>
                       ))}
                     </div>
-                  </CardContent></Card>
+                  </div>
                 </section>
 
+                {/* Training & socialization */}
                 <section>
-                  <h2 className="font-serif text-2xl text-foreground mb-4">Socializzazione</h2>
-                  <Card><CardContent className="p-6">
+                  <h2 className="font-serif text-2xl text-foreground mb-4">Socializzazione e addestramento</h2>
+                  <div className="bg-white rounded-2xl border border-border p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {["Esposizione a suoni e ambienti diversi","Abituazione ai viaggi in auto","Stimolazione tattile e sensoriale","Socializzazione con bambini","Socializzazione con altri cani","Incontri con persone diverse","Gestione quotidiana (orecchie, zampe, denti)","Tecniche di rinforzo positivo"].map((item) => (
+                      {[
+                        "Esposizione a suoni e ambienti diversi",
+                        "Abituazione ai viaggi in auto",
+                        "Stimolazione tattile e sensoriale",
+                        "Socializzazione con bambini",
+                        "Socializzazione con altri cani",
+                        "Incontri con persone diverse",
+                        "Gestione quotidiana (orecchie, zampe, denti)",
+                        "Tecniche di rinforzo positivo",
+                      ].map((item) => (
                         <div key={item} className="flex items-center gap-2.5 text-sm text-foreground">
                           <CheckCircle className="h-4 w-4 text-primary shrink-0" />{item}
                         </div>
                       ))}
                     </div>
-                  </CardContent></Card>
+                  </div>
                 </section>
 
+                {/* Health & certifications */}
+                <section>
+                  <h2 className="font-serif text-2xl text-foreground mb-4">Salute e certificazioni</h2>
+                  <div className="bg-white rounded-2xl border border-border divide-y divide-border">
+                    {[
+                      { label: "Certificazione ENCI", verified: breeder.enci_verified, detail: breeder.enci_verified ? `Verificata — N. ${breeder.enci_number ?? "N/D"}` : "Non verificata" },
+                      { label: "Affiliazione FCI", verified: breeder.fci_affiliated, detail: breeder.fci_affiliated ? "Affiliato" : "Non affiliato" },
+                    ].map(({ label, verified, detail }) => (
+                      <div key={label} className="flex items-center gap-4 px-6 py-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${verified ? "bg-emerald-50" : "bg-muted"}`}>
+                          <Shield className={`h-5 w-5 ${verified ? "text-emerald-600" : "text-muted-foreground"}`} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm text-foreground">{label}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">{detail}</div>
+                        </div>
+                        {verified && <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />}
+                      </div>
+                    ))}
+                    {(breeder.certifications ?? []).map((cert) => (
+                      <div key={cert} className="flex items-center gap-4 px-6 py-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                          <CheckCircle className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm text-foreground">{cert}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Gallery */}
                 {gallery.length > 0 && (
                   <section>
                     <h2 className="font-serif text-2xl text-foreground mb-4">Galleria</h2>
@@ -543,263 +674,51 @@ export default function BreederProfileClient({
                     </div>
                   </section>
                 )}
+
+                {/* Reviews */}
+                <section>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="font-serif text-2xl text-foreground">
+                      Recensioni {breeder.review_count > 0 && <span className="text-muted-foreground text-xl">({breeder.review_count})</span>}
+                    </h2>
+                    {ReviewFormComponent}
+                  </div>
+
+                  {reviews.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-border px-6 py-12 text-center text-muted-foreground">
+                      <Star className="h-8 w-8 mx-auto mb-3 text-border" />
+                      <p className="font-medium text-foreground mb-1">Nessuna recensione ancora</p>
+                      <p className="text-sm">Hai adottato da questo allevatore? Lascia la tua esperienza.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {reviews.map((review) => {
+                        const name = review.author?.full_name ?? "Utente";
+                        const date = new Date(review.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+                        return (
+                          <div key={review.id} className="bg-white rounded-2xl border border-border p-6">
+                            <div className="flex items-start justify-between gap-4 mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary shrink-0">
+                                  {name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm text-foreground">{name}</p>
+                                  <p className="text-xs text-muted-foreground">{date}</p>
+                                </div>
+                              </div>
+                              <Rating value={review.rating} size="sm" />
+                            </div>
+                            {review.title && <p className="font-semibold text-sm text-foreground mb-1">{review.title}</p>}
+                            {review.content && <p className="text-sm text-muted-foreground leading-relaxed">{review.content}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
               </>
             )}
-
-            {/* CUCCIOLI */}
-            {tab === "cuccioli" && !editing && (
-              <section>
-                <h2 className="font-serif text-2xl text-foreground mb-6">
-                  {totalPuppies > 0 ? `${totalPuppies} cuccioli disponibili` : "Cucciolate"}
-                </h2>
-                {activeListings.length === 0 ? (
-                  <Card><CardContent className="py-14 text-center text-muted-foreground">
-                    <Dog className="h-10 w-10 mx-auto mb-3 text-border" />
-                    <p className="font-medium text-foreground mb-1">Nessun cucciolo disponibile al momento</p>
-                    <p className="text-sm">Contatta l&apos;allevatore per sapere quando sarà disponibile la prossima cucciolata.</p>
-                  </CardContent></Card>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {activeListings.map((listing) => {
-                      const breed = breeds.find((b) => b.id === listing.breed_id);
-                      const price = formatPrice(listing.price_min, listing.price_max, listing.price_on_request);
-                      const img = listing.images?.[0];
-                      return (
-                        <Card key={listing.id} hover>
-                          {img
-                            ? <div className="aspect-video overflow-hidden"><Image src={img} alt={listing.title ?? "Cucciolo"} width={400} height={225} className="w-full h-full object-cover" /></div>
-                            : <div className="aspect-video bg-muted flex items-center justify-center text-4xl">🐶</div>}
-                          <CardContent className="p-5">
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <h3 className="font-semibold text-foreground">{listing.title ?? breed?.name_it ?? "Cucciolo"}</h3>
-                              {price && <span className="text-sm font-semibold text-primary whitespace-nowrap">{price}</span>}
-                            </div>
-                            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                              {listing.available_puppies != null && <span>{listing.available_puppies} disponibili</span>}
-                              {listing.gender_available && <span>· {listing.gender_available}</span>}
-                              {listing.litter_date && <span>· Nati il {new Date(listing.litter_date).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}</span>}
-                            </div>
-                            <div className="flex flex-wrap gap-1.5 mt-3">
-                              {listing.pedigree_included && <Badge variant="outline">Pedigree</Badge>}
-                              {listing.vaccinated && <Badge variant="outline">Vaccinato</Badge>}
-                              {listing.microchipped && <Badge variant="outline">Microchip</Badge>}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* SALUTE */}
-            {tab === "salute" && !editing && (
-              <section className="space-y-6">
-                <h2 className="font-serif text-2xl text-foreground mb-2">Test sanitari e certificazioni</h2>
-                <Card><CardContent className="p-6 space-y-4">
-                  {[
-                    { label: "Certificazione ENCI", verified: breeder.enci_verified, detail: breeder.enci_verified ? `Verificata — N. ${breeder.enci_number ?? "N/D"}` : "In attesa di verifica" },
-                    { label: "Affiliazione FCI", verified: breeder.fci_affiliated, detail: breeder.fci_affiliated ? "Affiliato" : "Non affiliato" },
-                  ].map(({ label, verified, detail }) => (
-                    <div key={label} className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${verified ? "bg-emerald-50" : "bg-muted"}`}>
-                        <Shield className={`h-5 w-5 ${verified ? "text-success" : "text-muted-foreground"}`} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm text-foreground">{label}</div>
-                        <div className="text-xs text-muted-foreground">{detail}</div>
-                      </div>
-                      {verified && <CheckCircle className="h-4 w-4 text-success" />}
-                    </div>
-                  ))}
-                </CardContent></Card>
-
-                {(breeder.certifications?.length ?? 0) > 0 && (
-                  <Card><CardContent className="p-6">
-                    <h3 className="font-semibold text-foreground mb-3">Certificazioni sanitarie</h3>
-                    <div className="space-y-2">
-                      {breeder.certifications!.map((cert) => (
-                        <div key={cert} className="flex items-center gap-2.5 text-sm text-foreground">
-                          <CheckCircle className="h-4 w-4 text-success shrink-0" />{cert}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent></Card>
-                )}
-              </section>
-            )}
-
-            {/* RECENSIONI */}
-            {tab === "recensioni" && !editing && (
-              <section>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-serif text-2xl text-foreground">
-                    {reviews.length > 0 ? `${reviews.length} recensioni verificate` : "Recensioni"}
-                  </h2>
-                  {ReviewFormComponent}
-                </div>
-                {reviews.length === 0 ? (
-                  <Card><CardContent className="py-14 text-center text-muted-foreground">
-                    <Star className="h-8 w-8 mx-auto mb-3 text-border" />
-                    <p className="font-medium text-foreground mb-1">Nessuna recensione ancora</p>
-                    <p className="text-sm">Hai adottato da questo allevatore? Lascia la tua esperienza.</p>
-                  </CardContent></Card>
-                ) : (
-                  <div className="space-y-4">
-                    {reviews.map((review) => {
-                      const name = review.author?.full_name ?? "Utente";
-                      const date = new Date(review.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
-                      return (
-                        <Card key={review.id}><CardContent className="p-6">
-                          <div className="flex items-start justify-between gap-4 mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center text-sm font-semibold text-primary shrink-0">
-                                {name.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-medium text-sm text-foreground">{name}</p>
-                                <p className="text-xs text-muted-foreground">{date}</p>
-                              </div>
-                            </div>
-                            <Rating value={review.rating} size="sm" />
-                          </div>
-                          {review.title && <p className="font-semibold text-sm text-foreground mb-1">{review.title}</p>}
-                          {review.content && <p className="text-sm text-muted-foreground leading-relaxed">{review.content}</p>}
-                        </CardContent></Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            )}
-
-          </div>
-
-          {/* ── Sidebar ─────────────────────────────────────────────── */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-border p-6 shadow-sm sticky top-20 space-y-5">
-
-              {/* Owner edit CTA in sidebar */}
-              {isOwner && !editing && (
-                <Button className="w-full" variant="outline" onClick={startEditing}>
-                  <Pencil className="h-4 w-4" /> Modifica profilo
-                </Button>
-              )}
-              {isOwner && editing && (
-                <div className="space-y-2">
-                  <Button className="w-full" onClick={handleSave} isLoading={saving}>
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salva modifiche
-                  </Button>
-                  <Button className="w-full" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-                    <X className="h-4 w-4" /> Annulla
-                  </Button>
-                </div>
-              )}
-
-              {!isOwner && (
-                <>
-                  {priceLabel && (
-                    <div>
-                      <div className="text-2xl font-bold text-foreground">{priceLabel}</div>
-                      <p className="text-xs text-muted-foreground mt-0.5">Prezzo indicativo per cucciolo</p>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className={`w-2 h-2 rounded-full ${totalPuppies > 0 ? "bg-success" : "bg-border"}`} />
-                    <span className="text-foreground font-medium">
-                      {totalPuppies > 0 ? `${totalPuppies} cuccioli disponibili` : "Nessun cucciolo disponibile"}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {ChatModalComponent}
-                    <Button variant="outline" className="w-full" onClick={() => setTab("cuccioli")}>
-                      <Dog className="h-4 w-4" /> Vedi cuccioli
-                    </Button>
-                  </div>
-                </>
-              )}
-
-              {/* Contact links */}
-              {!editing && (
-                <div className="space-y-2.5 pt-1">
-                  {breeder.phone && (
-                    <a href={`tel:${breeder.phone}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"><Phone className="h-4 w-4 text-muted-foreground" /></div>
-                      {breeder.phone}
-                    </a>
-                  )}
-                  {breeder.whatsapp && (
-                    <a href={`https://wa.me/${breeder.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"><MessageCircle className="h-4 w-4 text-muted-foreground" /></div>
-                      WhatsApp
-                    </a>
-                  )}
-                  {breeder.email_public && (
-                    <a href={`mailto:${breeder.email_public}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"><Mail className="h-4 w-4 text-muted-foreground" /></div>
-                      {breeder.email_public}
-                    </a>
-                  )}
-                  {breeder.website && (
-                    <a href={breeder.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"><Globe className="h-4 w-4 text-muted-foreground" /></div>
-                      Sito web <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
-                    </a>
-                  )}
-                  {breeder.facebook_url && (
-                    <a href={breeder.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"><Facebook className="h-4 w-4 text-muted-foreground" /></div>
-                      Facebook <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
-                    </a>
-                  )}
-                  {breeder.instagram_url && (
-                    <a href={breeder.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"><Instagram className="h-4 w-4 text-muted-foreground" /></div>
-                      Instagram <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto" />
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {!isOwner && (
-                <div className="pt-3 border-t border-border flex items-start gap-2.5">
-                  <Shield className="h-4 w-4 text-success mt-0.5 shrink-0" />
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    I pagamenti su {SITE_NAME} sono protetti e tracciati.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Details card */}
-            <Card><CardContent className="p-5 space-y-3">
-              <h3 className="font-semibold text-sm text-foreground">Dettagli</h3>
-              <div className="space-y-2.5 text-sm">
-                {breeder.enci_number && (
-                  <div className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Numero ENCI</span>
-                    <span className="font-medium text-foreground">{breeder.enci_number}</span>
-                  </div>
-                )}
-                <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">FCI</span>
-                  <span className="font-medium text-foreground">{breeder.fci_affiliated ? "Affiliato" : "—"}</span>
-                </div>
-                {breeder.year_established && (
-                  <div className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Attivo dal</span>
-                    <span className="font-medium text-foreground">{breeder.year_established}</span>
-                  </div>
-                )}
-                {breeder.region && (
-                  <div className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Regione</span>
-                    <span className="font-medium text-foreground">{breeder.region}</span>
-                  </div>
-                )}
-              </div>
-            </CardContent></Card>
           </div>
 
         </div>

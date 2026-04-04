@@ -11,7 +11,6 @@ export const NAV_LINKS = [
 
 export const DASHBOARD_NAV = [
   { href: "/dashboard", label: "Panoramica", icon: "LayoutDashboard" },
-  { href: "/dashboard/profilo", label: "Profilo", icon: "User" },
   { href: "/dashboard/annunci", label: "Annunci", icon: "Megaphone" },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: "MessageCircle" },
   { href: "/dashboard/recensioni", label: "Recensioni", icon: "Star" },

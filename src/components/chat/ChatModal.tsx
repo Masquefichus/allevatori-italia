@@ -58,7 +58,7 @@ export default function ChatModal({ breederUserId, breederName }: ChatModalProps
       .order("created_at", { ascending: true });
 
     if (!error && data) {
-      setMessages(data as Message[]);
+      setMessages(data as unknown as Message[]);
     }
   }, []);
 

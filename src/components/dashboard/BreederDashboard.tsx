@@ -181,9 +181,11 @@ export default async function BreederDashboard({ userId }: { userId: string }) {
           </div>
           {attractivenessScore < 100 && (
             <div className="pt-1">
-              <Link href="/dashboard/profilo" className="text-sm text-primary hover:underline font-medium">
-                Completa il profilo →
-              </Link>
+              {bp?.slug && (
+                <Link href={`/allevatori/${bp.slug}`} className="text-sm text-primary hover:underline font-medium">
+                  Modifica il profilo →
+                </Link>
+              )}
             </div>
           )}
         </CardContent>
