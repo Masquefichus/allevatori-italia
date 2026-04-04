@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SITE_NAME } from "@/lib/constants";
 import razzeEnriched from "@/data/razze-enriched.json";
 import type { RazzaEnricched } from "@/data/razze-types";
+import SaveBreedButton from "@/components/breeds/SaveBreedButton";
 
 const razze = razzeEnriched as RazzaEnricched[];
 
@@ -94,15 +95,18 @@ export default async function BreedDetailPage({ params }: BreedPageProps) {
               </div>
             </div>
 
-            <a
-              href={breed.fci_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Scheda FCI
-            </a>
+            <div className="shrink-0 flex flex-col items-end gap-2">
+              <SaveBreedButton breedSlug={breed.slug} breedName={breed.name_it} />
+              <a
+                href={breed.fci_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Scheda FCI
+              </a>
+            </div>
           </div>
         </div>
       </div>
