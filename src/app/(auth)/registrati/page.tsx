@@ -157,7 +157,7 @@ export default function RegisterPage() {
 
             <Turnstile onVerify={setTurnstileToken} onExpire={() => setTurnstileToken(null)} />
 
-            <Button type="submit" isLoading={loading} disabled={!turnstileToken} className="w-full" size="lg">
+            <Button type="submit" isLoading={loading} disabled={!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken} className="w-full" size="lg">
               {role === "breeder" ? "Registrati come Allevatore" : "Registrati"}
             </Button>
           </form>
