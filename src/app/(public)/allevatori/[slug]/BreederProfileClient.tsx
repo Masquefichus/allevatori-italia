@@ -568,7 +568,7 @@ export default function BreederProfileClient({
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-0 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 overflow-x-auto">
+          <div className="flex gap-0 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
             {([
               { id: "panoramica", label: "Panoramica" },
               { id: "cucciolate", label: "Cucciolate" },
