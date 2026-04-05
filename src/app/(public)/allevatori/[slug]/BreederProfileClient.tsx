@@ -343,11 +343,11 @@ export default function BreederProfileClient({
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Avatar row — overlaps cover */}
-          <div className="flex items-end justify-between -mt-10 md:-mt-12 mb-4">
+          <div className="flex items-end justify-between -mt-14 md:-mt-16 mb-4">
             <div className="relative group shrink-0">
               <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f, "logo_url", setUploadingLogo); e.target.value = ""; }} />
-              <div className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-2xl font-bold shadow-sm">
+              <div className="w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-3xl font-bold shadow-sm">
                 {breeder.logo_url
                   ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={112} height={112} className="w-full h-full object-cover" />
                   : initials}
