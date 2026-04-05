@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Menu, X, Dog, ChevronUp, ChevronDown,
   MessageCircle, Heart, Settings, LogOut,
-  LayoutDashboard, Megaphone, Star,
+  LayoutDashboard, Megaphone, Star, ExternalLink,
 } from "lucide-react";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
 import Button from "@/components/ui/Button";
@@ -29,6 +29,7 @@ const USER_MENU = [
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [breederSlug, setBreederSlug] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, profile, loading } = useAuth();
 
@@ -41,6 +42,21 @@ export default function Header() {
       window.location.href = "/";
     }
   };
+
+  // Fetch breeder slug for public profile link
+  useEffect(() => {
+    if (!user || profile?.role !== "breeder") return;
+    const supabase = createClient();
+    if (!supabase) return;
+    (supabase as any)
+      .from("breeder_profiles")
+      .select("slug")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }: { data: { slug: string } | null }) => {
+        if (data?.slug) setBreederSlug(data.slug);
+      });
+  }, [user, profile?.role]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -128,6 +144,22 @@ export default function Header() {
                       })}
                     </div>
 
+                    {breederSlug && (
+                      <>
+                        <div className="border-t border-border" />
+                        <div className="py-1">
+                          <Link
+                            href={`/allevatori/${breederSlug}`}
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-3 px-5 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                          >
+                            <ExternalLink className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                            Profilo pubblico
+                          </Link>
+                        </div>
+                      </>
+                    )}
+
                     <div className="border-t border-border" />
 
                     {/* Logout */}
@@ -192,6 +224,16 @@ export default function Header() {
                       </Link>
                     );
                   })}
+                  {breederSlug && (
+                    <Link
+                      href={`/allevatori/${breederSlug}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 py-2 text-sm text-foreground"
+                    >
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                      Profilo pubblico
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-3 py-2 text-sm text-foreground w-full mt-2 border-t border-border pt-3"
