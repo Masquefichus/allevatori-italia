@@ -79,7 +79,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
   const allBreeds = (allBreedRows ?? []) as { id: string; name_it: string; slug: string }[];
 
   return (
-    <>
+    <div>
       {/* Back nav */}
       <div className="border-b border-border bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -109,6 +109,6 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
           <ReviewForm breederId={breeder.id} breederName={breeder.kennel_name} />
         }
       />
-    </>
+    </div>
   );
 }
