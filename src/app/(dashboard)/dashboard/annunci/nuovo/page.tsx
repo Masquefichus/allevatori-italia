@@ -122,43 +122,7 @@ export default function NuovoAnnuncioPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <h2 className="font-semibold">Salute e Documenti</h2>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" defaultChecked className="rounded" />
-              Pedigree incluso
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" className="rounded" />
-              Vaccinati
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" className="rounded" />
-              Microchippati
-            </label>
-            <div className="pt-2">
-              <h4 className="text-sm font-medium mb-2">
-                Test sanitari effettuati
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {HEALTH_CERTIFICATIONS.map((cert) => (
-                  <label
-                    key={cert}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <input type="checkbox" className="rounded" />
-                    {cert}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end gap-3">
+<div className="flex justify-end gap-3">
           <Button variant="outline" type="button">
             Salva come Bozza
           </Button>

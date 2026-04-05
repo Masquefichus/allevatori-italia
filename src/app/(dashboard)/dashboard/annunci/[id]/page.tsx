@@ -316,61 +316,6 @@ export default function ModificaAnnuncioPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <h2 className="font-semibold">Salute e Documenti</h2>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={pedigree}
-                onChange={(e) => setPedigree(e.target.checked)}
-                className="rounded"
-              />
-              Pedigree incluso
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={vaccinated}
-                onChange={(e) => setVaccinated(e.target.checked)}
-                className="rounded"
-              />
-              Vaccinati
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={microchipped}
-                onChange={(e) => setMicrochipped(e.target.checked)}
-                className="rounded"
-              />
-              Microchippati
-            </label>
-            <div className="pt-2">
-              <h4 className="text-sm font-medium mb-2">
-                Test sanitari effettuati
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {HEALTH_CERTIFICATIONS.map((cert) => (
-                  <label
-                    key={cert}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      className="rounded"
-                      checked={selectedHealthTests.includes(cert)}
-                      onChange={() => toggleHealthTest(cert)}
-                    />
-                    {cert}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
