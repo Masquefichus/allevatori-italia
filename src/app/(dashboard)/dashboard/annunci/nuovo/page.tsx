@@ -21,11 +21,11 @@ export default function NuovoAnnuncioPage() {
           className="text-sm text-primary hover:underline flex items-center gap-1 mb-2"
         >
           <ArrowLeft className="h-3 w-3" />
-          Torna agli annunci
+          Torna alle cucciolate
         </Link>
-        <h1 className="text-2xl font-bold">Nuovo Annuncio</h1>
+        <h1 className="text-2xl font-bold">Nuova Cucciolata</h1>
         <p className="text-muted-foreground">
-          Crea un nuovo annuncio per i tuoi cuccioli
+          Crea una nuova cucciolata per i tuoi cuccioli
         </p>
       </div>
 

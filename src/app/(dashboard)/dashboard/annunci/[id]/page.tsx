@@ -187,11 +187,11 @@ export default function ModificaAnnuncioPage() {
           className="text-sm text-primary hover:underline flex items-center gap-1 mb-2"
         >
           <ArrowLeft className="h-3 w-3" />
-          Torna agli annunci
+          Torna alle cucciolate
         </Link>
-        <h1 className="text-2xl font-bold">Modifica Annuncio</h1>
+        <h1 className="text-2xl font-bold">Modifica Cucciolata</h1>
         <p className="text-muted-foreground">
-          Modifica i dettagli del tuo annuncio
+          Modifica i dettagli della tua cucciolata
         </p>
       </div>
 
