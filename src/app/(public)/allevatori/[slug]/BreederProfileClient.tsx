@@ -283,25 +283,84 @@ export default function BreederProfileClient({
   const location = [breeder.city, breeder.province, breeder.region].filter(Boolean).join(", ");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted/30">
 
-      {/* ── Header: name + tabs ──────────────────────────────────────────── */}
-      <div className="bg-white">
+      {/* ── LinkedIn-style header ─────────────────────────────────────────── */}
+      <div className="bg-white border-b border-border">
+
+        {/* Cover image */}
+        <div className="relative h-44 md:h-56 bg-muted overflow-hidden">
+          {breeder.cover_image_url ? (
+            <Image src={breeder.cover_image_url} alt="" fill className="object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+          )}
+        </div>
+
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Name + edit button */}
-          <div className="flex items-start justify-between pt-8 pb-5">
-            <h1 className="font-serif text-4xl md:text-5xl text-foreground leading-tight">{breeder.kennel_name}</h1>
-            {isOwner && !editing && (
-              <Button size="md" variant="outline" onClick={startEditing} className="shrink-0 hidden md:flex mt-2">
-                <Pencil className="h-4 w-4" /> Modifica
-              </Button>
+          {/* Avatar row — overlaps cover */}
+          <div className="flex items-end justify-between -mt-12 md:-mt-14 mb-4">
+            <div className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-2xl font-bold shrink-0 shadow-sm">
+              {breeder.logo_url
+                ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={112} height={112} className="w-full h-full object-cover" />
+                : initials}
+            </div>
+
+            {/* CTAs */}
+            <div className="flex gap-2 pb-1">
+              {isOwner ? (
+                !editing ? (
+                  <Button size="sm" variant="outline" onClick={startEditing}>
+                    <Pencil className="h-4 w-4" /> Modifica
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="sm" onClick={handleSave} isLoading={saving}><Save className="h-4 w-4" /> Salva</Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={saving}><X className="h-4 w-4" /></Button>
+                  </>
+                )
+              ) : (
+                <>
+                  <button
+                    onClick={toggleFavorite}
+                    disabled={savingFav}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                      isSaved
+                        ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                        : "border-border bg-white text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Heart className={`h-4 w-4 ${isSaved ? "fill-rose-500 text-rose-500" : ""}`} />
+                    {isSaved ? "Salvato" : "Salva"}
+                  </button>
+                  {ChatModalComponent}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Name + subtitle + location */}
+          <div className="pb-5">
+            <h1 className="font-serif text-3xl md:text-4xl text-foreground leading-tight">{breeder.kennel_name}</h1>
+            {breeds.length > 0 && (
+              <p className="text-muted-foreground mt-1">
+                Allevatore di{" "}
+                {breeds.map((b, i) => (
+                  <span key={b.id}>
+                    <Link href={`/razze/${b.slug}`} className="underline hover:text-primary">{b.name_it}</Link>
+                    {i < breeds.length - 1 && ", "}
+                  </span>
+                ))}
+              </p>
             )}
-            {isOwner && editing && (
-              <div className="hidden md:flex gap-2 shrink-0 mt-2">
-                <Button size="md" onClick={handleSave} isLoading={saving}><Save className="h-4 w-4" /> Salva</Button>
-                <Button size="md" variant="outline" onClick={() => setEditing(false)} disabled={saving}><X className="h-4 w-4" /></Button>
-              </div>
+            {location && (
+              <p className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />{location}
+              </p>
+            )}
+            {priceLabel && !isOwner && (
+              <p className="text-sm font-semibold text-foreground mt-2">{priceLabel}</p>
             )}
           </div>
 
@@ -338,126 +397,9 @@ export default function BreederProfileClient({
         </div>
       )}
 
-      {/* ── Photo grid + contact card ─────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* Photo grid (left 2/3) */}
-          <div className="lg:col-span-2">
-            {gallery.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2 rounded-2xl overflow-hidden h-72 md:h-96">
-                <div className="col-span-2 row-span-2 overflow-hidden bg-muted">
-                  <Image src={gallery[0]} alt={breeder.kennel_name} width={600} height={500} className="w-full h-full object-cover" />
-                </div>
-                <div className="overflow-hidden bg-muted">
-                  {gallery[1] && <Image src={gallery[1]} alt="" width={300} height={250} className="w-full h-full object-cover" />}
-                </div>
-                <div className="relative overflow-hidden bg-muted">
-                  {gallery[2] && <Image src={gallery[2]} alt="" width={300} height={250} className="w-full h-full object-cover" />}
-                  {gallery.length > 3 && (
-                    <div className="absolute inset-0 bg-black/40 flex items-end justify-end p-3">
-                      <span className="text-white text-xs font-medium bg-black/60 rounded-lg px-2.5 py-1.5">
-                        Vedi tutte le foto
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl bg-muted h-72 md:h-96 flex items-center justify-center text-muted-foreground">
-                <Dog className="h-12 w-12 text-border" />
-              </div>
-            )}
-          </div>
-
-          {/* Contact card (right 1/3) */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-border p-6 shadow-sm space-y-5 h-full flex flex-col justify-between">
-              {/* Breeder identity */}
-              <div className="flex flex-col items-center text-center gap-2">
-                <div className="w-16 h-16 rounded-full border-2 border-border overflow-hidden bg-primary flex items-center justify-center text-white text-lg font-semibold mb-1">
-                  {breeder.logo_url
-                    ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={64} height={64} className="w-full h-full object-cover" />
-                    : initials}
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">{breeder.kennel_name}</p>
-                  {breeds.length > 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      Allevatore di{" "}
-                      {breeds.map((b, i) => (
-                        <span key={b.id}>
-                          <Link href={`/razze/${b.slug}`} className="underline hover:text-primary">{b.name_it}</Link>
-                          {i < breeds.length - 1 && ", "}
-                        </span>
-                      ))}
-                    </p>
-                  )}
-                </div>
-                {location && (
-                  <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5 shrink-0" />{location}
-                  </p>
-                )}
-                {breeder.average_rating > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <Rating value={breeder.average_rating} size="sm" />
-                    <span className="text-sm text-muted-foreground">({breeder.review_count})</span>
-                  </div>
-                )}
-              </div>
-
-              {/* CTAs */}
-              {isOwner ? (
-                <div className="space-y-2">
-                  {!editing ? (
-                    <Button className="w-full" variant="outline" onClick={startEditing}>
-                      <Pencil className="h-4 w-4" /> Modifica profilo
-                    </Button>
-                  ) : (
-                    <>
-                      <Button className="w-full" onClick={handleSave} isLoading={saving}>
-                        <Save className="h-4 w-4" /> Salva modifiche
-                      </Button>
-                      <Button className="w-full" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-                        <X className="h-4 w-4" /> Annulla
-                      </Button>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {priceLabel && (
-                    <p className="text-center font-bold text-lg text-foreground">{priceLabel}</p>
-                  )}
-                  <div className="w-full">{ChatModalComponent}</div>
-                  <button
-                    onClick={toggleFavorite}
-                    disabled={savingFav}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                      isSaved
-                        ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
-                        : "border-border bg-white text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    <Heart className={`h-4 w-4 ${isSaved ? "fill-rose-500 text-rose-500" : ""}`} />
-                    {isSaved ? "Salvato" : "Salva allevatore"}
-                  </button>
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-1">
-                    <Shield className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Pagamenti protetti da {SITE_NAME}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* ── Body ──────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-10">
+        <div className="space-y-10">
 
             {/* EDIT FORM */}
             {editing && (
@@ -764,8 +706,6 @@ export default function BreederProfileClient({
                 </section>
               </>
             )}
-          </div>
-
         </div>
       </div>
     </div>
