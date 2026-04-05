@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Search, ArrowRight, Shield, Star, CheckCircle, MapPin } from "lucide-react";
-// Star e Shield usati nelle breeder card
+import { Search, ArrowRight, CheckCircle, MapPin } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card, { CardContent } from "@/components/ui/Card";
 import HomeAuthCTA from "@/components/layout/HomeAuthCTA";
@@ -94,19 +93,6 @@ export default async function HomePage() {
                             {[breeder.city, breeder.region].filter(Boolean).join(", ")}
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {breeder.enci_verified && (
-                          <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-                            <Shield className="h-3 w-3" /> ENCI
-                          </span>
-                        )}
-                        {breeder.average_rating > 0 && (
-                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                            <Star className="h-3 w-3 fill-secondary text-secondary" />
-                            {breeder.average_rating.toFixed(1)} ({breeder.review_count})
-                          </span>
-                        )}
                       </div>
                     </CardContent>
                   </Card>

@@ -242,11 +242,6 @@ export default async function BreedDetailPage({ params }: BreedPageProps) {
                                 {[breeder.city, breeder.region].filter(Boolean).join(", ")}
                               </p>
                             )}
-                            {breeder.average_rating > 0 && (
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                ★ {breeder.average_rating?.toFixed(1)} ({breeder.review_count ?? 0} recensioni)
-                              </p>
-                            )}
                           </div>
                         </CardContent>
                       </Card>

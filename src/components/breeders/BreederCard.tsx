@@ -62,16 +62,6 @@ export default function BreederCard({ breeder }: BreederCardProps) {
             </div>
           </div>
 
-          {/* Rating */}
-          {breeder.review_count > 0 && (
-            <Rating
-              value={breeder.average_rating}
-              size="sm"
-              showValue
-              count={breeder.review_count}
-            />
-          )}
-
           {/* Breeds */}
           {breeder.breeds && breeder.breeds.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
@@ -88,12 +78,6 @@ export default function BreederCard({ breeder }: BreederCardProps) {
 
           {/* Certifications */}
           <div className="flex items-center gap-2">
-            {breeder.enci_verified && (
-              <Badge variant="primary" className="flex items-center gap-1">
-                <Shield className="h-3 w-3" />
-                ENCI
-              </Badge>
-            )}
             {breeder.year_established && (
               <span className="text-xs text-muted-foreground">
                 Dal {breeder.year_established}

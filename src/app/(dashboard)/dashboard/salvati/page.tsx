@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, MapPin, Star, Shield } from "lucide-react";
+import { Heart, MapPin } from "lucide-react";
 import Card, { CardContent } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -142,19 +142,6 @@ export default function PrefertiPage() {
                             {[b.city, b.region].filter(Boolean).join(", ")}
                           </p>
                         )}
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          {b.enci_verified && (
-                            <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-                              <Shield className="h-3 w-3" /> ENCI
-                            </span>
-                          )}
-                          {b.average_rating > 0 && (
-                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                              <Star className="h-3 w-3 fill-secondary text-secondary" />
-                              {b.average_rating.toFixed(1)} ({b.review_count})
-                            </span>
-                          )}
-                        </div>
                       </div>
                     </Link>
                     <button
