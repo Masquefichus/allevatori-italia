@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   MapPin, Phone, Mail, Globe, Shield, Star, Calendar,
   CheckCircle, Facebook, Instagram, ExternalLink,
-  Dog, MessageCircle, Pencil, X, Save, Loader2, ChevronRight, Heart,
+  Dog, MessageCircle, Pencil, X, Save, Loader2, ChevronRight, Heart, Camera,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -163,6 +163,38 @@ export default function BreederProfileClient({
 
   const [isSaved, setIsSaved] = useState(false);
   const [savingFav, setSavingFav] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  async function uploadPhoto(file: File, field: "cover_image_url" | "logo_url", setUploading: (v: boolean) => void) {
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "images");
+      fd.append("folder", field === "cover_image_url" ? "covers" : "logos");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: fd,
+      });
+      const json = await res.json();
+      if (!json.url) return;
+
+      await (supabase as any).from("breeder_profiles").update({ [field]: json.url }).eq("id", breeder.id);
+      setBreeder((prev) => ({ ...prev, [field]: json.url }));
+    } finally {
+      setUploading(false);
+    }
+  }
 
   useEffect(() => {
     if (!user || isOwner) return;
@@ -295,16 +327,39 @@ export default function BreederProfileClient({
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-stone-200 to-stone-100" />
           )}
+          {isOwner && (
+            <>
+              <input ref={coverInputRef} type="file" accept="image/*" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f, "cover_image_url", setUploadingCover); e.target.value = ""; }} />
+              <button onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}
+                className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/50 hover:bg-black/70 text-white text-xs px-3 py-1.5 rounded-full transition-colors">
+                {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                {uploadingCover ? "Caricamento…" : "Cambia copertina"}
+              </button>
+            </>
+          )}
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Avatar row — overlaps cover */}
           <div className="flex items-end justify-between -mt-10 md:-mt-12 mb-4">
-            <div className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-2xl font-bold shrink-0 shadow-sm">
-              {breeder.logo_url
-                ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={112} height={112} className="w-full h-full object-cover" />
-                : initials}
+            <div className="relative group shrink-0">
+              <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f, "logo_url", setUploadingLogo); e.target.value = ""; }} />
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-2xl font-bold shadow-sm">
+                {breeder.logo_url
+                  ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={112} height={112} className="w-full h-full object-cover" />
+                  : initials}
+              </div>
+              {isOwner && (
+                <button onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}
+                  className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
+                  {uploadingLogo
+                    ? <Loader2 className="h-5 w-5 text-white animate-spin" />
+                    : <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />}
+                </button>
+              )}
             </div>
 
             {/* CTAs */}
