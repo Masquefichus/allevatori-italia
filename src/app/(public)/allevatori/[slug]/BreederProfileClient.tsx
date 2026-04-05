@@ -456,7 +456,7 @@ export default function BreederProfileClient({
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Avatar row — overlaps cover */}
-          <div className="flex items-end justify-between -mt-14 md:-mt-16 mb-4">
+          <div className="flex items-end justify-between -mt-10 md:-mt-12 mb-4">
             <div className="relative group shrink-0">
               <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f, "logo_url", setUploadingLogo); e.target.value = ""; }} />
@@ -468,25 +468,24 @@ export default function BreederProfileClient({
                       style={{ objectPosition: `${logoPos.x.toFixed(1)}% ${logoPos.y.toFixed(1)}%` }} />
                   : initials}
               </div>
-              {isOwner && (
-                repositioning === "logo" ? (
-                  <div
-                    className="absolute inset-0 rounded-full cursor-grab active:cursor-grabbing"
-                    onMouseDown={(e) => startDrag(e, "logo")}
-                    onTouchStart={(e) => startDrag(e, "logo")}
-                  >
-                    <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-                      <span className="text-white text-xs text-center px-2 leading-tight select-none">Trascina</span>
-                    </div>
+              {isOwner && repositioning === "logo" && (
+                <div
+                  className="absolute inset-0 rounded-full cursor-grab active:cursor-grabbing"
+                  onMouseDown={(e) => startDrag(e, "logo")}
+                  onTouchStart={(e) => startDrag(e, "logo")}
+                >
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                    <span className="text-white text-xs text-center px-2 leading-tight select-none">Trascina</span>
                   </div>
-                ) : (
-                  <button onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}
-                    className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
-                    {uploadingLogo
-                      ? <Loader2 className="h-5 w-5 text-white animate-spin" />
-                      : <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />}
-                  </button>
-                )
+                </div>
+              )}
+              {isOwner && repositioning !== "logo" && (
+                <button onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}
+                  className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
+                  {uploadingLogo
+                    ? <Loader2 className="h-5 w-5 text-white animate-spin" />
+                    : <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />}
+                </button>
               )}
               {/* Avatar reposition controls */}
               {isOwner && breeder.logo_url && (
