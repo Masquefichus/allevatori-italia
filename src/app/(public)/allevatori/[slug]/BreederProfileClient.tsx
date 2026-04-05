@@ -232,6 +232,64 @@ export default function BreederProfileClient({
   const [breeder, setBreeder] = useState(initialBreeder);
   const [breeds, setBreeds] = useState(initialBreeds);
 
+  // Photo repositioning
+  const [repositioning, setRepositioning] = useState<"cover" | "logo" | null>(null);
+  const [coverPos, setCoverPos] = useState<{ x: number; y: number }>(() => {
+    const parts = (initialBreeder.cover_image_position ?? "50% 50%").split(" ");
+    return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 };
+  });
+  const [logoPos, setLogoPos] = useState<{ x: number; y: number }>(() => {
+    const parts = (initialBreeder.logo_position ?? "50% 50%").split(" ");
+    return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 };
+  });
+  const dragStart = useRef<{ mouseX: number; mouseY: number; posX: number; posY: number } | null>(null);
+
+  function startDrag(e: React.MouseEvent | React.TouchEvent, type: "cover" | "logo") {
+    e.preventDefault();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const pos = type === "cover" ? coverPos : logoPos;
+    dragStart.current = { mouseX: clientX, mouseY: clientY, posX: pos.x, posY: pos.y };
+
+    function onMove(ev: MouseEvent | TouchEvent) {
+      if (!dragStart.current) return;
+      const cx = "touches" in ev ? (ev as TouchEvent).touches[0].clientX : (ev as MouseEvent).clientX;
+      const cy = "touches" in ev ? (ev as TouchEvent).touches[0].clientY : (ev as MouseEvent).clientY;
+      const dx = cx - dragStart.current.mouseX;
+      const dy = cy - dragStart.current.mouseY;
+      // Dragging right/down → image moves → show left/top part → decrease %
+      const sensitivity = 0.15;
+      const newX = Math.max(0, Math.min(100, dragStart.current.posX - dx * sensitivity));
+      const newY = Math.max(0, Math.min(100, dragStart.current.posY - dy * sensitivity));
+      if (type === "cover") setCoverPos({ x: newX, y: newY });
+      else setLogoPos({ x: newX, y: newY });
+    }
+
+    function onUp() {
+      dragStart.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    }
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+  }
+
+  async function savePosition(type: "cover" | "logo") {
+    const supabase = createClient();
+    if (!supabase) return;
+    const pos = type === "cover" ? coverPos : logoPos;
+    const field = type === "cover" ? "cover_image_position" : "logo_position";
+    const value = `${pos.x.toFixed(1)}% ${pos.y.toFixed(1)}%`;
+    await (supabase as any).from("breeder_profiles").update({ [field]: value }).eq("id", breeder.id);
+    setBreeder((prev) => ({ ...prev, [field]: value }));
+    setRepositioning(null);
+  }
+
   const [form, setForm] = useState({
     kennel_name: initialBreeder.kennel_name ?? "",
     description: initialBreeder.description ?? "",
@@ -334,20 +392,64 @@ export default function BreederProfileClient({
         {/* Cover image */}
         <div className="relative h-32 md:h-44 bg-muted overflow-hidden">
           {breeder.cover_image_url ? (
-            <Image src={breeder.cover_image_url} alt="" fill className="object-cover" />
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={breeder.cover_image_url}
+              alt=""
+              draggable={false}
+              className="w-full h-full object-cover select-none"
+              style={{ objectPosition: `${coverPos.x.toFixed(1)}% ${coverPos.y.toFixed(1)}%` }}
+            />
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-stone-200 to-stone-100" />
           )}
+
+          {/* Drag overlay in reposition mode */}
+          {isOwner && repositioning === "cover" && breeder.cover_image_url && (
+            <div
+              className="absolute inset-0 cursor-grab active:cursor-grabbing"
+              onMouseDown={(e) => startDrag(e, "cover")}
+              onTouchStart={(e) => startDrag(e, "cover")}
+            >
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                <span className="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full select-none">
+                  Trascina per riposizionare
+                </span>
+              </div>
+            </div>
+          )}
+
           {isOwner && (
-            <>
+            <div className="absolute top-3 right-3 flex gap-2">
               <input ref={coverInputRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f, "cover_image_url", setUploadingCover); e.target.value = ""; }} />
-              <button onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}
-                className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/50 hover:bg-black/70 text-white text-xs px-3 py-1.5 rounded-full transition-colors">
-                {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
-                {uploadingCover ? "Caricamento…" : "Cambia copertina"}
-              </button>
-            </>
+              {repositioning === "cover" ? (
+                <>
+                  <button onClick={() => savePosition("cover")}
+                    className="flex items-center gap-1.5 bg-primary text-white text-xs px-3 py-1.5 rounded-full">
+                    <Save className="h-3 w-3" /> Salva posizione
+                  </button>
+                  <button onClick={() => setRepositioning(null)}
+                    className="flex items-center gap-1.5 bg-black/50 text-white text-xs px-3 py-1.5 rounded-full">
+                    Annulla
+                  </button>
+                </>
+              ) : (
+                <>
+                  {breeder.cover_image_url && (
+                    <button onClick={() => setRepositioning("cover")}
+                      className="flex items-center gap-1.5 bg-black/50 hover:bg-black/70 text-white text-xs px-3 py-1.5 rounded-full transition-colors">
+                      Riposiziona
+                    </button>
+                  )}
+                  <button onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}
+                    className="flex items-center gap-1.5 bg-black/50 hover:bg-black/70 text-white text-xs px-3 py-1.5 rounded-full transition-colors">
+                    {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    {uploadingCover ? "Caricamento…" : "Cambia copertina"}
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
 
@@ -360,16 +462,53 @@ export default function BreederProfileClient({
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f, "logo_url", setUploadingLogo); e.target.value = ""; }} />
               <div className="w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-3xl font-bold shadow-sm">
                 {breeder.logo_url
-                  ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={112} height={112} className="w-full h-full object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={breeder.logo_url} alt={breeder.kennel_name} draggable={false}
+                      className="w-full h-full object-cover select-none"
+                      style={{ objectPosition: `${logoPos.x.toFixed(1)}% ${logoPos.y.toFixed(1)}%` }} />
                   : initials}
               </div>
               {isOwner && (
-                <button onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}
-                  className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
-                  {uploadingLogo
-                    ? <Loader2 className="h-5 w-5 text-white animate-spin" />
-                    : <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />}
-                </button>
+                repositioning === "logo" ? (
+                  <div
+                    className="absolute inset-0 rounded-full cursor-grab active:cursor-grabbing"
+                    onMouseDown={(e) => startDrag(e, "logo")}
+                    onTouchStart={(e) => startDrag(e, "logo")}
+                  >
+                    <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-xs text-center px-2 leading-tight select-none">Trascina</span>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}
+                    className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
+                    {uploadingLogo
+                      ? <Loader2 className="h-5 w-5 text-white animate-spin" />
+                      : <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />}
+                  </button>
+                )
+              )}
+              {/* Avatar reposition controls */}
+              {isOwner && breeder.logo_url && (
+                <div className="flex gap-2 mt-1 justify-center">
+                  {repositioning === "logo" ? (
+                    <>
+                      <button onClick={() => savePosition("logo")}
+                        className="text-xs bg-primary text-white px-2.5 py-1 rounded-full">
+                        <Save className="h-3 w-3 inline mr-1" />Salva
+                      </button>
+                      <button onClick={() => setRepositioning(null)}
+                        className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">
+                        Annulla
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setRepositioning("logo")}
+                      className="text-xs text-muted-foreground hover:text-foreground underline">
+                      Riposiziona
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
