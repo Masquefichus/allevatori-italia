@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { slugify } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -154,6 +156,7 @@ export default function BreederProfileClient({
   listings, reviews, breederUserId, ChatModalComponent, ReviewFormComponent,
 }: Props) {
   const { user } = useAuth();
+  const router = useRouter();
   const isOwner = !!user && !!breederUserId && user.id === breederUserId;
   const [tab, setTab] = useState<Tab>("panoramica");
   const [editing, setEditing] = useState(false);
@@ -276,10 +279,12 @@ export default function BreederProfileClient({
     const supabase = createClient();
     if (!supabase) { setSaveError("Supabase non configurato"); setSaving(false); return; }
 
+    const newSlug = slugify(form.kennel_name);
     const updates = {
       ...form,
       year_established: form.year_established ? parseInt(form.year_established) : null,
       breed_ids: selectedBreedIds,
+      slug: newSlug,
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -298,8 +303,14 @@ export default function BreederProfileClient({
     setBreeds(allBreeds.filter((b) => selectedBreedIds.includes(b.id)));
     setEditing(false);
     setSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+
+    // Redirect to new URL if slug changed
+    if (newSlug !== breeder.slug) {
+      router.replace(`/allevatori/${newSlug}`);
+    } else {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    }
   }
 
   const activeListings = listings.filter((l) => l.status === "attivo");
