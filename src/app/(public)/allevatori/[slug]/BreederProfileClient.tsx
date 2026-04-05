@@ -289,18 +289,18 @@ export default function BreederProfileClient({
       <div className="bg-white border-b border-border">
 
         {/* Cover image */}
-        <div className="relative h-44 md:h-56 bg-muted overflow-hidden">
+        <div className="relative h-32 md:h-44 bg-muted overflow-hidden">
           {breeder.cover_image_url ? (
             <Image src={breeder.cover_image_url} alt="" fill className="object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+            <div className="w-full h-full bg-gradient-to-r from-stone-200 to-stone-100" />
           )}
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Avatar row — overlaps cover */}
-          <div className="flex items-end justify-between -mt-12 md:-mt-14 mb-4">
+          <div className="flex items-end justify-between -mt-10 md:-mt-12 mb-4">
             <div className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-2xl font-bold shrink-0 shadow-sm">
               {breeder.logo_url
                 ? <Image src={breeder.logo_url} alt={breeder.kennel_name} width={112} height={112} className="w-full h-full object-cover" />
