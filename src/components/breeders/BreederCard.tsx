@@ -26,7 +26,7 @@ export default function BreederCard({ breeder }: BreederCardProps) {
               <span className="text-4xl">🐕</span>
             </div>
           )}
-          {breeder.is_premium && (
+          {false && (
             <div className="absolute top-3 right-3">
               <Badge variant="secondary" className="flex items-center gap-1">
                 <Crown className="h-3 w-3" />

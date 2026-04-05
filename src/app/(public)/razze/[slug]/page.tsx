@@ -235,7 +235,6 @@ export default async function BreedDetailPage({ params }: BreedPageProps) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold truncate">{breeder.kennel_name}</h3>
-                              {breeder.is_premium && <Badge variant="secondary">Premium</Badge>}
                             </div>
                             {(breeder.city || breeder.region) && (
                               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">

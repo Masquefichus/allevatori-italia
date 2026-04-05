@@ -192,11 +192,6 @@ export default async function AllevatoriPage({
                         ) : (
                           <span className="text-4xl">🐕</span>
                         )}
-                        {breeder.is_premium && (
-                          <div className="absolute top-3 right-3">
-                            <Badge variant="secondary">Premium</Badge>
-                          </div>
-                        )}
                       </div>
                       <CardContent className="space-y-2">
                         <div className="flex items-start gap-3 -mt-8 relative">

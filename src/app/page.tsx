@@ -79,11 +79,6 @@ export default async function HomePage() {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-4xl">🐕</div>
                       )}
-                      {breeder.is_premium && (
-                        <div className="absolute top-3 right-3">
-                          <span className="text-xs bg-secondary text-white px-2 py-0.5 rounded-full font-medium">Premium</span>
-                        </div>
-                      )}
                     </div>
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3 -mt-8 mb-3">

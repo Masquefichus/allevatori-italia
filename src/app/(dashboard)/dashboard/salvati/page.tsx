@@ -135,9 +135,6 @@ export default function PrefertiPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-foreground truncate">{b.kennel_name}</h3>
-                          {b.is_premium && (
-                            <span className="text-xs bg-secondary text-white px-2 py-0.5 rounded-full">Premium</span>
-                          )}
                         </div>
                         {(b.city || b.region) && (
                           <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
