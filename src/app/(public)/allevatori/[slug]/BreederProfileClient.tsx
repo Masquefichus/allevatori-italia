@@ -392,13 +392,13 @@ export default function BreederProfileClient({
         {/* Cover image */}
         <div className="relative h-32 md:h-44 bg-muted overflow-hidden">
           {breeder.cover_image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={breeder.cover_image_url}
               alt=""
-              draggable={false}
-              className="w-full h-full object-cover select-none"
+              fill
+              className="object-cover select-none"
               style={{ objectPosition: `${coverPos.x.toFixed(1)}% ${coverPos.y.toFixed(1)}%` }}
+              draggable={false}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-stone-200 to-stone-100" />
@@ -460,11 +460,10 @@ export default function BreederProfileClient({
             <div className="relative group shrink-0">
               <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f, "logo_url", setUploadingLogo); e.target.value = ""; }} />
-              <div className="w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-3xl font-bold shadow-sm">
+              <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white bg-primary overflow-hidden flex items-center justify-center text-white text-3xl font-bold shadow-sm">
                 {breeder.logo_url
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={breeder.logo_url} alt={breeder.kennel_name} draggable={false}
-                      className="w-full h-full object-cover select-none"
+                  ? <Image src={breeder.logo_url} alt={breeder.kennel_name} fill draggable={false}
+                      className="object-cover select-none"
                       style={{ objectPosition: `${logoPos.x.toFixed(1)}% ${logoPos.y.toFixed(1)}%` }} />
                   : initials}
               </div>
