@@ -14,7 +14,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 const BREEDER_MENU = [
   { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
-  { href: "/dashboard/annunci", label: "Annunci", icon: Megaphone },
+  { href: "/dashboard/annunci", label: "Cucciolate", icon: Megaphone },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
   { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
   { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
