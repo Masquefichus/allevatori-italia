@@ -8,10 +8,19 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
-import { razze } from "@/data/razze";
-import { HEALTH_CERTIFICATIONS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import ImageUpload from "@/components/ui/ImageUpload";
+
+interface Breed {
+  id: string;
+  name_it: string;
+}
+
+async function checkSession(supabase: ReturnType<typeof createClient>) {
+  if (!supabase) return false;
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
+}
 
 export default function ModificaAnnuncioPage() {
   const router = useRouter();
@@ -21,10 +30,10 @@ export default function ModificaAnnuncioPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
 
-  // Form state
   const [title, setTitle] = useState("");
-  const [breed, setBreed] = useState("");
+  const [breedId, setBreedId] = useState("");
   const [description, setDescription] = useState("");
   const [litterDate, setLitterDate] = useState("");
   const [availablePuppies, setAvailablePuppies] = useState("");
@@ -32,70 +41,48 @@ export default function ModificaAnnuncioPage() {
   const [priceOnRequest, setPriceOnRequest] = useState(false);
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
-  const [pedigree, setPedigree] = useState(true);
-  const [vaccinated, setVaccinated] = useState(false);
-  const [microchipped, setMicrochipped] = useState(false);
-  const [selectedHealthTests, setSelectedHealthTests] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [status, setStatus] = useState<string>("bozza");
 
-  function toggleHealthTest(cert: string) {
-    setSelectedHealthTests((prev) =>
-      prev.includes(cert) ? prev.filter((c) => c !== cert) : [...prev, cert]
-    );
-  }
-
-  // Load existing listing
   useEffect(() => {
-    async function loadListing() {
+    async function load() {
       const supabase = createClient();
       if (!supabase) { setLoading(false); return; }
 
-      const storageKey = `sb-nveyyjefsrdyjdtwwxda-auth-token`;
-      const stored = localStorage.getItem(storageKey);
-      if (!stored) { setLoading(false); return; }
+      await checkSession(supabase);
 
-      try {
-        const session = JSON.parse(stored);
-        await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        });
+      const [{ data: listing }, { data: breedRows }] = await Promise.all([
+        (supabase as any).from("listings").select("*").eq("id", id).single(),
+        supabase.from("breeds").select("id, name_it").order("name_it"),
+      ]);
 
-        const { data } = await supabase
-          .from("listings")
-          .select("*")
-          .eq("id", id)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .single() as { data: any };
+      if (breedRows) setBreeds(breedRows);
 
-        if (data) {
-          setTitle(data.title || "");
-          setBreed(data.breed_id || "");
-          setDescription(data.description || "");
-          setLitterDate(data.litter_date || "");
-          setAvailablePuppies(data.available_puppies?.toString() || "");
-          setGender(data.gender_available || "");
-          setPriceOnRequest(data.price_on_request || false);
-          setPriceMin(data.price_min?.toString() || "");
-          setPriceMax(data.price_max?.toString() || "");
-          setPedigree(data.pedigree_included ?? true);
-          setVaccinated(data.vaccinated || false);
-          setMicrochipped(data.microchipped || false);
-          setSelectedHealthTests(data.health_tests || []);
-          setImages(data.images || []);
-          setStatus(data.status || "bozza");
-        }
-      } catch {}
+      if (listing) {
+        setTitle(listing.title || "");
+        setBreedId(listing.breed_id || "");
+        setDescription(listing.description || "");
+        setLitterDate(listing.litter_date || "");
+        setAvailablePuppies(listing.available_puppies?.toString() || "");
+        setGender(listing.gender_available || "");
+        setPriceOnRequest(listing.price_on_request || false);
+        setPriceMin(listing.price_min?.toString() || "");
+        setPriceMax(listing.price_max?.toString() || "");
+        setImages(listing.images || []);
+        setStatus(listing.status || "bozza");
+      }
 
       setLoading(false);
     }
 
-    loadListing();
+    load();
   }, [id]);
 
   async function handleSubmit(e: React.FormEvent, newStatus: "attivo" | "bozza") {
     e.preventDefault();
+    if (!title.trim()) { setMessage({ type: "error", text: "Il titolo è obbligatorio." }); return; }
+    if (!breedId) { setMessage({ type: "error", text: "Seleziona la razza." }); return; }
+
     setSaving(true);
     setMessage(null);
 
@@ -106,30 +93,18 @@ export default function ModificaAnnuncioPage() {
       return;
     }
 
-    const storageKey = `sb-nveyyjefsrdyjdtwwxda-auth-token`;
-    const stored = localStorage.getItem(storageKey);
-    if (!stored) {
+    const ok = await checkSession(supabase);
+    if (!ok) {
       setMessage({ type: "error", text: "Devi effettuare il login." });
       setSaving(false);
       return;
     }
 
-    try {
-      const session = JSON.parse(stored);
-      await supabase.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token,
-      });
-
-      if (!title.trim()) {
-        setMessage({ type: "error", text: "Il titolo è obbligatorio." });
-        setSaving(false);
-        return;
-      }
-
-      const updateData = {
+    const { error } = await (supabase as any)
+      .from("listings")
+      .update({
         title: title.trim(),
-        breed_id: breed,
+        breed_id: breedId,
         description: description.trim() || null,
         litter_date: litterDate || null,
         available_puppies: availablePuppies ? parseInt(availablePuppies) : null,
@@ -137,38 +112,23 @@ export default function ModificaAnnuncioPage() {
         price_on_request: priceOnRequest,
         price_min: !priceOnRequest && priceMin ? parseInt(priceMin) : null,
         price_max: !priceOnRequest && priceMax ? parseInt(priceMax) : null,
-        pedigree_included: pedigree,
-        vaccinated,
-        microchipped,
-        health_tests: selectedHealthTests,
         images,
         status: newStatus,
-      };
+      })
+      .eq("id", id);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from("listings") as any)
-        .update(updateData)
-        .eq("id", id);
-
-      if (error) {
-        setMessage({ type: "error", text: `Errore: ${error.message}` });
-        setSaving(false);
-        return;
-      }
-
-      setStatus(newStatus);
-      setMessage({
-        type: "success",
-        text: newStatus === "bozza"
-          ? "Bozza salvata con successo!"
-          : "Annuncio aggiornato e pubblicato!",
-      });
-
-      setTimeout(() => router.push("/dashboard/annunci"), 1500);
-    } catch {
-      setMessage({ type: "error", text: "Errore di connessione. Riprova." });
+    if (error) {
+      setMessage({ type: "error", text: `Errore: ${error.message}` });
       setSaving(false);
+      return;
     }
+
+    setStatus(newStatus);
+    setMessage({
+      type: "success",
+      text: newStatus === "bozza" ? "Bozza salvata!" : "Annuncio aggiornato e pubblicato!",
+    });
+    setTimeout(() => router.push("/dashboard/annunci"), 1500);
   }
 
   if (loading) {
@@ -190,19 +150,15 @@ export default function ModificaAnnuncioPage() {
           Torna alle cucciolate
         </Link>
         <h1 className="text-2xl font-bold">Modifica Cucciolata</h1>
-        <p className="text-muted-foreground">
-          Modifica i dettagli della tua cucciolata
-        </p>
+        <p className="text-muted-foreground">Modifica i dettagli della tua cucciolata</p>
       </div>
 
       {message && (
-        <div
-          className={`p-4 rounded-lg text-sm font-medium ${
-            message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
+        <div className={`p-4 rounded-lg text-sm font-medium ${
+          message.type === "success"
+            ? "bg-green-50 text-green-700 border border-green-200"
+            : "bg-red-50 text-red-700 border border-red-200"
+        }`}>
           {message.text}
         </div>
       )}
@@ -224,17 +180,12 @@ export default function ModificaAnnuncioPage() {
               label="Razza *"
               id="breed"
               placeholder="Seleziona la razza"
-              value={breed}
-              onChange={(e) => setBreed(e.target.value)}
-              options={razze.map((r) => ({
-                value: r.slug,
-                label: r.name_it,
-              }))}
+              value={breedId}
+              onChange={(e) => setBreedId(e.target.value)}
+              options={breeds.map((b) => ({ value: b.id, label: b.name_it }))}
             />
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Descrizione
-              </label>
+              <label className="block text-sm font-medium mb-1">Descrizione</label>
               <textarea
                 rows={5}
                 placeholder="Descrivi la cucciolata, i genitori, le caratteristiche..."
@@ -316,7 +267,6 @@ export default function ModificaAnnuncioPage() {
           </CardContent>
         </Card>
 
-
         <Card>
           <CardHeader>
             <h2 className="font-semibold">Foto</h2>
@@ -336,14 +286,14 @@ export default function ModificaAnnuncioPage() {
             <Button
               variant="outline"
               type="button"
-              isLoading={saving}
-              onClick={(e) => handleSubmit(e, "bozza")}
+              disabled={saving}
+              onClick={(e) => handleSubmit(e as any, "bozza")}
             >
               Salva Bozza
             </Button>
           )}
-          <Button type="submit" isLoading={saving}>
-            {status === "bozza" ? "Pubblica Annuncio" : "Salva Modifiche"}
+          <Button type="submit" disabled={saving}>
+            {saving ? "Salvataggio..." : status === "bozza" ? "Pubblica Annuncio" : "Salva Modifiche"}
           </Button>
         </div>
       </form>
