@@ -193,7 +193,7 @@ export default async function AllevatoriPage({
                           <span className="text-4xl">🐕</span>
                         )}
                       </div>
-                      <CardContent className="space-y-2">
+                      <CardContent className="space-y-2 relative z-10">
                         <div className="flex items-start gap-3 -mt-8 relative">
                           <div className="w-14 h-14 rounded-xl bg-white border-2 border-white shadow-md flex items-center justify-center shrink-0 overflow-hidden">
                             {breeder.logo_url ? (

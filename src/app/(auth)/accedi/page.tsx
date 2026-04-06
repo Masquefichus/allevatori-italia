@@ -60,9 +60,6 @@ function LoginForm() {
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
-      console.log("LOGIN DATA:", JSON.stringify(data?.session?.user?.email));
-      console.log("LOGIN ERROR:", signInError?.message);
-
       if (signInError) {
         setError(signInError.message);
         setLoading(false);

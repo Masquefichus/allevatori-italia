@@ -79,7 +79,7 @@ export default async function HomePage() {
                         <div className="w-full h-full flex items-center justify-center text-4xl">🐕</div>
                       )}
                     </div>
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 relative z-10">
                       <div className="flex items-start gap-3 -mt-8 mb-3">
                         <div className="w-14 h-14 rounded-xl bg-white border-2 border-white shadow-md flex items-center justify-center shrink-0 overflow-hidden">
                           {breeder.logo_url
@@ -168,7 +168,7 @@ export default async function HomePage() {
             </p>
             <div>
               <Link href="/per-allevatori">
-                <Button size="lg" className="bg-white text-foreground hover:bg-white/90 shadow-none">
+                <Button size="lg" className="bg-white !text-gray-900 hover:bg-white/90 shadow-none">
                   Scopri di più <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -184,7 +184,7 @@ export default async function HomePage() {
             </p>
             <div>
               <Link href="/allevatori">
-                <Button size="lg" className="bg-white text-secondary hover:bg-white/90 shadow-none">
+                <Button size="lg" className="bg-white !text-gray-900 hover:bg-white/90 shadow-none">
                   Trova un allevatore <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
