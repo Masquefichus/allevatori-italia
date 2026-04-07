@@ -46,8 +46,7 @@ export default async function AllevatoriPage({
       ? query.in("id", allIds)
       : query.in("id", ["00000000-0000-0000-0000-000000000000"]);
   }
-  if (params.enci === "true") query = query.eq("enci_verified", true);
-  if (params.fci === "true") query = query.eq("fci_affiliated", true);
+  if (params.enci === "true") query = query.not("affisso", "is", null);
   if (params.rating) query = query.gte("average_rating", Number(params.rating));
 
   // Filtro pedigree e health (mappati su certifications)
@@ -128,7 +127,6 @@ export default async function AllevatoriPage({
               ...(params.province ? { province: params.province } : {}),
               ...(params.size ? { size: params.size } : {}),
               ...(params.enci ? { enci: params.enci } : {}),
-              ...(params.fci ? { fci: params.fci } : {}),
               ...(params.rating ? { rating: params.rating } : {}),
               ...(params.availability ? { availability: params.availability } : {}),
               ...(params.sort ? { sort: params.sort } : {}),
@@ -158,7 +156,6 @@ export default async function AllevatoriPage({
                 {params.province && <input type="hidden" name="province" value={params.province} />}
                 {params.size && <input type="hidden" name="size" value={params.size} />}
                 {params.enci && <input type="hidden" name="enci" value={params.enci} />}
-                {params.fci && <input type="hidden" name="fci" value={params.fci} />}
                 {params.rating && <input type="hidden" name="rating" value={params.rating} />}
                 <select
                   name="sort"

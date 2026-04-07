@@ -200,7 +200,7 @@ export default function ChatModal({ breederUserId, breederName }: ChatModalProps
     return (
       <a
         href="/accedi"
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-xl font-medium text-sm text-foreground hover:bg-muted transition-colors"
       >
         <LogIn className="h-4 w-4" />
         Accedi per inviare un messaggio
@@ -213,7 +213,7 @@ export default function ChatModal({ breederUserId, breederName }: ChatModalProps
       {/* Trigger Button */}
       <button
         onClick={handleOpen}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-xl font-medium text-sm text-foreground hover:bg-muted transition-colors"
       >
         <MessageCircle className="h-4 w-4" />
         Invia Messaggio

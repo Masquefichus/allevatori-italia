@@ -48,6 +48,33 @@ export const HEALTH_CERTIFICATIONS = [
   "Test BAER (sordità)",
 ] as const;
 
+export const DOG_TITLES = [
+  "Campione Italiano di Bellezza",
+  "Campione Internazionale di Bellezza (C.I.B.)",
+  "Giovane Campione Italiano",
+  "Riproduttore Selezionato ENCI",
+  "CAC",
+  "CACIB",
+  "BOB",
+  "BIS",
+  "BH",
+  "IGP 1",
+  "IGP 2",
+  "IGP 3",
+  "ZTP",
+  "CAE-1",
+  "CAE-2",
+] as const;
+
+export const HEALTH_SCREENING_TYPES = {
+  hd: { label: "Displasia anca (HD)", grades: ["A", "B", "C", "D", "E"] },
+  ed: { label: "Displasia gomito (ED)", grades: ["0", "1", "2", "3"] },
+  eyes: { label: "Esame oculistico", grades: ["Esente", "Affetto"] },
+  heart: { label: "Esame cardiologico", grades: ["Esente", "Affetto"] },
+  patella: { label: "Lussazione rotulea", grades: ["0", "1", "2", "3", "4"] },
+  baer: { label: "Test BAER (udito)", grades: ["Normale", "Unilaterale", "Bilaterale"] },
+} as const;
+
 export const SUBSCRIPTION_PLANS = {
   base: {
     name: "Base",

@@ -63,3 +63,22 @@ a, button, [role="button"], select, label[for], summary {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
+
+/* BlockNote side menu — Notion-style handles */
+.bn-side-menu {
+  gap: 2px !important;
+  margin-right: 2px !important;
+}
+.bn-side-menu .mantine-UnstyledButton-root:not(.mantine-Menu-item) {
+  padding: 1px !important;
+  border-radius: 3px !important;
+}
+.bn-side-menu .mantine-UnstyledButton-root:not(.mantine-Menu-item) svg {
+  height: 18px !important;
+  width: 18px !important;
+  color: #c4c4c4 !important;
+}
+.bn-side-menu .mantine-UnstyledButton-root:hover svg {
+  color: #9b9b9b !important;
+}
+

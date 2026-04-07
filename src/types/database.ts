@@ -30,6 +30,7 @@ export interface Breed {
   image_url: string | null;
   origin_country: string | null;
   size_category: SizeCategory | null;
+  fci_id: number | null;
   is_italian_breed: boolean;
   is_popular: boolean;
   created_at: string;
@@ -56,6 +57,8 @@ export interface BreederProfileRow {
   enci_number: string | null;
   enci_verified: boolean;
   fci_affiliated: boolean;
+  affisso: string | null;
+  breed_club_memberships: string[];
   year_established: number | null;
   breed_ids: string[];
   specializations: string[];
@@ -94,6 +97,32 @@ export interface ListingRow {
   is_featured: boolean;
   views: number;
   expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BreedingDogSex = "maschio" | "femmina";
+
+export interface BreedingDogRow {
+  id: string;
+  breeder_id: string;
+  name: string;
+  call_name: string | null;
+  breed_id: string | null;
+  sex: BreedingDogSex;
+  date_of_birth: string | null;
+  pedigree_number: string | null;
+  microchip_number: string | null;
+  color: string | null;
+  titles: string[];
+  health_screenings: Record<string, string>;
+  dna_deposited: boolean;
+  photo_url: string | null;
+  gallery_urls: string[];
+  is_external: boolean;
+  external_kennel_name: string | null;
+  notes: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }

@@ -1,0 +1,2254 @@
+[
+  {
+    "name": "AIPR - Associazione Italiana Per la Tutela del Cane da Pastore del Caucaso, dell'Asia Centrale e altre razze da pastore",
+    "shortName": "AIPR (ex Associazione Italiana Pastori Russi)",
+    "website": "http://www.aipr.it/",
+    "email": "aipr@libero.it",
+    "phone": "330-430729",
+    "address": "Via Iconicella 61, 86029 Trivento (CB)",
+    "region": "Molise",
+    "president": "Roberti Nicola",
+    "logo": "/images/club-logos/aipr-associazione-italiana-per-la-tutela-del-cane-da-pastore-del-caucaso-dell-asia-centrale-e-altre-razze-da-pastore.png",
+    "enciSlug": "aipr",
+    "breeds": [
+      {
+        "fciNumber": 53,
+        "name": "Komondor"
+      },
+      {
+        "fciNumber": 54,
+        "name": "Kuvasz"
+      },
+      {
+        "fciNumber": 55,
+        "name": "Puli"
+      },
+      {
+        "fciNumber": 56,
+        "name": "Pumi"
+      },
+      {
+        "fciNumber": 87,
+        "name": "Cane da pastore catalano"
+      },
+      {
+        "fciNumber": 93,
+        "name": "Cane da pastore croato"
+      },
+      {
+        "fciNumber": 96,
+        "name": "Cane da pastore di Tatra"
+      },
+      {
+        "fciNumber": 142,
+        "name": "Cane da pastore di Beauce (Berger de Picardie)"
+      },
+      {
+        "fciNumber": 170,
+        "name": "Cane da pastore dell'Anatolia (Kangal)"
+      },
+      {
+        "fciNumber": 173,
+        "name": "Cane da pastore di Ciarplanina"
+      },
+      {
+        "fciNumber": 238,
+        "name": "Mudi"
+      },
+      {
+        "fciNumber": 247,
+        "name": "Cane da pastore polacco di Podhale"
+      },
+      {
+        "fciNumber": 251,
+        "name": "Cane da pastore polacco di pianura"
+      },
+      {
+        "fciNumber": 252,
+        "name": "Cane da pastore della Russia meridionale"
+      },
+      {
+        "fciNumber": 277,
+        "name": "Cane da pastore di Ciarplanina"
+      },
+      {
+        "fciNumber": 278,
+        "name": "Cane da pastore di Karst"
+      },
+      {
+        "fciNumber": 293,
+        "name": "Cane da pastore australiano (Australian Kelpie)"
+      },
+      {
+        "fciNumber": 321,
+        "name": "Cane da pastore Mallorquin (Ca de Bestiar)"
+      },
+      {
+        "fciNumber": 326,
+        "name": "Cane da pastore polacco di Podhale"
+      },
+      {
+        "fciNumber": 328,
+        "name": "Cane da pastore del Caucaso"
+      },
+      {
+        "fciNumber": 331,
+        "name": "Cane da pastore rumeno dei Carpazi"
+      },
+      {
+        "fciNumber": 335,
+        "name": "Cane da pastore dell'Asia Centrale"
+      },
+      {
+        "fciNumber": 340,
+        "name": "Cane da pastore rumeno di Mioritza"
+      },
+      {
+        "fciNumber": 349,
+        "name": "Cane da pastore del Karst"
+      },
+      {
+        "fciNumber": 350,
+        "name": "Cane da pastore di Ciarplanina"
+      },
+      {
+        "fciNumber": 355,
+        "name": "Tornjak"
+      },
+      {
+        "fciNumber": 357,
+        "name": "Ciobanesc Romanesc De Bucovina"
+      }
+    ]
+  },
+  {
+    "name": "Amici Bassotto Club",
+    "shortName": "Amici Bassotto Club",
+    "website": "http://www.amicibassottoclub.com/",
+    "email": "info@amicibassottoclub.it",
+    "phone": "0187-020524",
+    "address": "Via Romana 13/A, 19136 La Spezia (SP)",
+    "region": "Liguria",
+    "president": "Palladini Antonio",
+    "logo": "/images/club-logos/amici-bassotto-club.png",
+    "enciSlug": "amici-bassotto-club",
+    "breeds": [
+      {
+        "fciNumber": 148,
+        "name": "Bassotto tedesco"
+      }
+    ]
+  },
+  {
+    "name": "Amici del Beauceron",
+    "shortName": "Amici del Beauceron",
+    "website": "http://www.amicidelbeauceron.it",
+    "email": "info@amicidelbeauceron.it",
+    "phone": "011-3201112",
+    "address": "c/o Violino, Via Giambone 17, Borgaretto, 10092 Beinasco (TO)",
+    "region": "Piemonte",
+    "president": "Violino Clemente",
+    "logo": "/images/club-logos/amici-del-beauceron.png",
+    "enciSlug": "amici-del-beauceron",
+    "breeds": [
+      {
+        "fciNumber": 44,
+        "name": "Cane da pastore di Beauce (Beauceron)"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Amatori del Cane Fonnese",
+    "shortName": "A.A.C.F.",
+    "website": "https://www.canefonnese.it/",
+    "email": null,
+    "phone": null,
+    "address": null,
+    "region": "Sardegna",
+    "president": null,
+    "logo": null,
+    "enciSlug": null,
+    "breeds": [
+      {
+        "fciNumber": 902,
+        "name": "Cane Fonnese"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Amatori del Cane da Pastore Bergamasco",
+    "shortName": "Associazione Amatori Pastore Bergamasco",
+    "website": "http://www.pastore-bergamasco.net",
+    "email": "segreteria@pastore-bergamasco.net",
+    "phone": "335-8242082",
+    "address": "c/o Stilci Fiamma, Via G. Leopardi 42, 20013 Magenta (MI)",
+    "region": "Lombardia",
+    "president": "Guidobono Cavalchini Luigi",
+    "logo": "/images/club-logos/associazione-amatori-del-cane-da-pastore-bergamasco.png",
+    "enciSlug": "associazione-amatori-del-cane-da-pastore-bergamasco",
+    "breeds": [
+      {
+        "fciNumber": 194,
+        "name": "Cane da pastore bergamasco"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Amici Cane da Pastore di Oropa",
+    "shortName": "Associazione Amici Cane da Pastore di Oropa",
+    "website": "https://canedioropa.jimdofree.com/",
+    "email": "amici.cane.oropa@gmail.com",
+    "phone": null,
+    "address": "Via Cesare Battisti 35, 13876 Sandigliano (BI)",
+    "region": "Piemonte",
+    "president": "Bindi Marco",
+    "logo": "/images/club-logos/associazione-amici-cane-da-pastore-di-oropa.jpg",
+    "enciSlug": "associazione-amici-cane-da-pastore-di-oropa",
+    "breeds": [
+      {
+        "fciNumber": 905,
+        "name": "Cane da pastore d'Oropa"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Italiana Alpenlaendische Dachsbracke",
+    "shortName": "Associazione Italiana Alpenlaendische Dachsbracke",
+    "website": "http://www.dachsbrackeitalia.it",
+    "email": "dachsbrackeitalia2025@gmail.com",
+    "phone": null,
+    "address": "c/o Bevilacqua Salvatore, Via Spalletti 895, 40014 Crevalcore (BO)",
+    "region": "Emilia-Romagna",
+    "president": "Bevilacqua Salvatore",
+    "logo": "/images/club-logos/associazione-italiana-alpenlaendische-dachsbracke.jpg",
+    "enciSlug": "associazione-italiana-alpenlaendische-dachsbracke",
+    "breeds": [
+      {
+        "fciNumber": 254,
+        "name": "Alpenländische Dachsbracke"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Italiana Amatori Dobermann",
+    "shortName": "AIAD",
+    "website": "http://www.ildobermann.it/",
+    "email": "segreteria@ildobermann.it",
+    "phone": "338-5476554",
+    "address": "c/o Polifrone Attilio, Via Reggio - Campi II, Tronco n. 369, 89126 Reggio Calabria (RC)",
+    "region": "Calabria",
+    "president": "Polifrone Attilio",
+    "logo": "/images/club-logos/associazione-italiana-amatori-dobermann.jpg",
+    "enciSlug": "associazione-italiana-amatori-dobermann",
+    "breeds": [
+      {
+        "fciNumber": 143,
+        "name": "Dobermann"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Italiana Amatori Razze da Pastore Britanniche",
+    "shortName": "AIARB",
+    "website": "http://www.pastoribritannici.it/",
+    "email": "pastoribritannici@libero.it",
+    "phone": "333-3036729",
+    "address": "c/o Ripoli Filippo, Via dell'Immaginetta 9, 56121 Pisa (PI)",
+    "region": "Toscana",
+    "president": "Bentivoglio Selvaggia",
+    "logo": "/images/club-logos/associazione-italiana-amatori-razze-da-pastore-britanniche.png",
+    "enciSlug": "associazione-italiana-amatori-razze-da-pastore-britanniche",
+    "breeds": [
+      {
+        "fciNumber": 271,
+        "name": "Bearded Collie"
+      },
+      {
+        "fciNumber": 38,
+        "name": "Welsh Corgi Cardigan"
+      },
+      {
+        "fciNumber": 39,
+        "name": "Welsh Corgi Pembroke"
+      },
+      {
+        "fciNumber": 360,
+        "name": "Lancashire Heeler"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Magyar Vizsla Club Italiano",
+    "shortName": "Associazione Magyar Vizsla Club Italiano",
+    "website": "http://www.vizslaclub.it",
+    "email": "segretario@vizslaclub.it",
+    "phone": "348-3810355",
+    "address": "c/o Brogiolo Enrico, Corso Milano 54, 35139 Padova (PD)",
+    "region": "Veneto",
+    "president": "Brogiolo Enrico",
+    "logo": "/images/club-logos/associazione-magyar-vizsla-club-italiano.jpg",
+    "enciSlug": "associazione-magyar-vizsla-club-italiano",
+    "breeds": [
+      {
+        "fciNumber": 57,
+        "name": "Bracco Ungherese a pelo corto (Magyar Vizsla)"
+      },
+      {
+        "fciNumber": 239,
+        "name": "Bracco Ungherese a pelo duro"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Samannara",
+    "shortName": "Samannara",
+    "website": "https://www.samannara.it/",
+    "email": null,
+    "phone": null,
+    "address": null,
+    "region": "Sicilia",
+    "president": null,
+    "logo": "/images/club-logos/associazione-samannara.png",
+    "enciSlug": null,
+    "breeds": [
+      {
+        "fciNumber": 903,
+        "name": "Cane di Mannara / Mastino Siciliano"
+      }
+    ]
+  },
+  {
+    "name": "Associazione Tecnica Amatori Volpino Italiano",
+    "shortName": "ATAVI",
+    "website": "http://volpinoatavi.it/",
+    "email": "segreteriaatavi2024@gmail.com",
+    "phone": "3313657214",
+    "address": "c/o Fiorini Massimo, Località Acquerta 29, 56046 Riparbella (PI)",
+    "region": "Toscana",
+    "president": "Fiorini Massimo",
+    "logo": "/images/club-logos/associazione-tecnica-amatori-volpino-italiano.png",
+    "enciSlug": "associazione-tecnica-amatori-volpino-italiano",
+    "breeds": [
+      {
+        "fciNumber": 195,
+        "name": "Volpino Italiano"
+      }
+    ]
+  },
+  {
+    "name": "Associazione per la tutela del cane da pastore della Sila",
+    "shortName": "Associazione Pastore della Sila",
+    "website": null,
+    "email": "info@associazionepastoredellasila.it",
+    "phone": null,
+    "address": "Via Vincenzo Catalani 10, 88100 Catanzaro (CZ)",
+    "region": "Calabria",
+    "president": null,
+    "logo": null,
+    "enciSlug": "associazione-per-la-tutela-del-cane-da-pastore-della-sila",
+    "breeds": [
+      {
+        "fciNumber": 904,
+        "name": "Cane da pastore della Sila"
+      }
+    ]
+  },
+  {
+    "name": "Australian Cattle Dog Club Italia",
+    "shortName": "Australian Cattle Dog Club Italia",
+    "website": "http://www.acdclubitalia.it",
+    "email": "segreteria@acdclubitalia.it",
+    "phone": "346-3589931",
+    "address": "c/o Schiavon Petra, Via Carmignola 1832, 45021 Badia Polesine (RO)",
+    "region": "Veneto",
+    "president": "Schiavon Petra",
+    "logo": "/images/club-logos/australian-cattle-dog-club-italia.png",
+    "enciSlug": "australian-cattle-dog-club-italia",
+    "breeds": [
+      {
+        "fciNumber": 287,
+        "name": "Australian Cattle Dog"
+      }
+    ]
+  },
+  {
+    "name": "Bloodhound Club d'Italia",
+    "shortName": "Bloodhound Club d'Italia",
+    "website": "http://www.bloodhoundclubitalia.com",
+    "email": "info@bloodhoundclubitalia.com",
+    "phone": "335-6505269",
+    "address": "c/o Roberto Fanchini, Via Oleggio Castello 90A, 28060 Comignago (NO)",
+    "region": "Piemonte",
+    "president": "Fanchini Roberto",
+    "logo": "/images/club-logos/bloodhound-club-d-italia.png",
+    "enciSlug": "bloodhound-club-d-italia",
+    "breeds": [
+      {
+        "fciNumber": 84,
+        "name": "Chien de Saint Hubert (Bloodhound)"
+      }
+    ]
+  },
+  {
+    "name": "Boxer Club d'Italia",
+    "shortName": "Boxer Club d'Italia",
+    "website": "http://www.boxerclubitalia.it",
+    "email": "segreteria@boxerclubitalia.it",
+    "phone": "0331-635996",
+    "address": "Via Bellingera 4, 21052 Busto Arsizio (VA)",
+    "region": "Lombardia",
+    "president": "Crosa Roberto",
+    "logo": "/images/club-logos/boxer-club-d-italia.png",
+    "enciSlug": "boxer-club-d-italia",
+    "breeds": [
+      {
+        "fciNumber": 144,
+        "name": "Boxer"
+      }
+    ]
+  },
+  {
+    "name": "Cao de Agua Club",
+    "shortName": "Cao de Agua Club",
+    "website": "http://www.caodeaguaclub.it/",
+    "email": "info@caodeaguaclub.it",
+    "phone": "348-4141955",
+    "address": "Via F. Petrarca 27, 35137 Padova (PD)",
+    "region": "Veneto",
+    "president": "Zappaterra Antonia",
+    "logo": "/images/club-logos/cao-de-agua-club.png",
+    "enciSlug": "cao-de-agua-club",
+    "breeds": [
+      {
+        "fciNumber": 37,
+        "name": "Cão de Agua Português"
+      }
+    ]
+  },
+  {
+    "name": "Circolo Italiano Bulldog",
+    "shortName": "Circolo Italiano Bulldog",
+    "website": "http://www.bulldogitalia.it",
+    "email": "segreteria@bulldogitalia.it",
+    "phone": "349-8548099",
+    "address": "c/o Trotta Lucia, Via Ponte Alto 1, 42028 Poviglio (RE)",
+    "region": "Emilia-Romagna",
+    "president": "Trotta Lucia",
+    "logo": "/images/club-logos/circolo-italiano-bulldog.png",
+    "enciSlug": "circolo-italiano-bulldog",
+    "breeds": [
+      {
+        "fciNumber": 149,
+        "name": "Bulldog"
+      }
+    ]
+  },
+  {
+    "name": "Circolo del Pastore Abruzzese Maremmano",
+    "shortName": "CPAM",
+    "website": "http://www.cpma.it",
+    "email": "segreteriacpma@gmail.com",
+    "phone": "348-8525806",
+    "address": "c/o Di Fonzo Mauro, Via Teramo 23, 67046 Santa Jona di Ovindoli (AQ)",
+    "region": "Abruzzo",
+    "president": "Grasso Antonio",
+    "logo": "/images/club-logos/circolo-del-pastore-abruzzese-maremmano.jpg",
+    "enciSlug": "circolo-del-pastore-abruzzese-maremmano",
+    "breeds": [
+      {
+        "fciNumber": 201,
+        "name": "Cane da pastore Maremmano Abruzzese"
+      }
+    ]
+  },
+  {
+    "name": "Circolo del Piccolo Levriero Italiano",
+    "shortName": "Circolo del Piccolo Levriero Italiano",
+    "website": "http://www.circolodelpiccololevrieroitaliano.it",
+    "email": "segreteria@circolodelpiccololevrieroitaliano.it",
+    "phone": null,
+    "address": "c/o Simona Micarelli, Via dei Mille, 06053 Deruta (PG)",
+    "region": "Umbria",
+    "president": "Micarelli Simona",
+    "logo": "/images/club-logos/circolo-del-piccolo-levriero-italiano.png",
+    "enciSlug": "circolo-del-piccolo-levriero-italiano",
+    "breeds": [
+      {
+        "fciNumber": 200,
+        "name": "Piccolo Levriero Italiano"
+      }
+    ]
+  },
+  {
+    "name": "Club Amatori Cani dei Pirenei",
+    "shortName": "A.C.P.",
+    "website": "http://www.clubacp.com",
+    "email": "peperinanmc@gmail.com",
+    "phone": "333-3669907",
+    "address": "c/o Monzio Compagnoni Nadia, Via Pieve 6, Loc. Casoni, 27017 Pieve Porto Morone (PV)",
+    "region": "Lombardia",
+    "president": "Monzio Compagnoni Nadia",
+    "logo": "/images/club-logos/club-amatori-cani-dei-pirenei.jpg",
+    "enciSlug": "club-amatori-cani-dei-pirenei",
+    "breeds": [
+      {
+        "fciNumber": 137,
+        "name": "Cane da Montagna dei Pirenei"
+      },
+      {
+        "fciNumber": 138,
+        "name": "Cane da pastore dei Pirenei a faccia rasa"
+      },
+      {
+        "fciNumber": 141,
+        "name": "Cane da pastore dei Pirenei a pelo lungo"
+      }
+    ]
+  },
+  {
+    "name": "Club Amatori Pastori Belgi",
+    "shortName": "C.A.P.B.",
+    "website": "http://www.capb-club.com",
+    "email": "capb.segreteriagenerale@gmail.com",
+    "phone": "3277168156",
+    "address": "c/o ENCI, Viale Corsica 20, 20137 Milano (MI)",
+    "region": "Lombardia",
+    "president": "Fretta Carlo (Commissario Straordinario)",
+    "logo": "/images/club-logos/club-amatori-pastori-belgi.png",
+    "enciSlug": "club-amatori-pastori-belgi",
+    "breeds": [
+      {
+        "fciNumber": 15,
+        "name": "Cane da pastore belga"
+      }
+    ]
+  },
+  {
+    "name": "Club Amici Dalmata",
+    "shortName": "Club Amici Dalmata",
+    "website": "http://www.clubamicidalmata.it",
+    "email": "segreteria@clubamicidalmata.it",
+    "phone": "335-7017649",
+    "address": "c/o Bonino Renata, Via Riboli 17/1, 16033 Lavagna (GE)",
+    "region": "Liguria",
+    "president": "Pessina Renata Bonino",
+    "logo": "/images/club-logos/club-amici-dalmata.png",
+    "enciSlug": "club-amici-dalmata",
+    "breeds": [
+      {
+        "fciNumber": 153,
+        "name": "Dalmata"
+      }
+    ]
+  },
+  {
+    "name": "Club Cane Lupo Cecoslovacco",
+    "shortName": "CCLC",
+    "website": "https://www.clubcanelupocecoslovacco.net/",
+    "email": "segreteria@clubcanelupocecoslovacco.net",
+    "phone": "3518130166",
+    "address": "c/o Gruppo Cinofilo Chieti, Via Pescasseroli 16, 66100 Chieti (CH)",
+    "region": "Abruzzo",
+    "president": "Paolini Claudia",
+    "logo": "/images/club-logos/club-cane-lupo-cecoslovacco.png",
+    "enciSlug": "club-cane-lupo-cecoslovacco",
+    "breeds": [
+      {
+        "fciNumber": 332,
+        "name": "Cane Lupo Cecoslovacco"
+      }
+    ]
+  },
+  {
+    "name": "Club Cani Compagnia",
+    "shortName": "Club Cani Compagnia",
+    "website": "http://www.clubcanicompagnia.it",
+    "email": "segreteria@clubcanicompagnia.it",
+    "phone": null,
+    "address": "c/o Renata Pessina, Via Riboli 17/1, 16033 Lavagna (GE)",
+    "region": "Liguria",
+    "president": "Condò Pietro Paolo",
+    "logo": "/images/club-logos/club-cani-compagnia.png",
+    "enciSlug": "club-cani-compagnia",
+    "breeds": [
+      {
+        "fciNumber": 77,
+        "name": "Epagneul nano continentale"
+      },
+      {
+        "fciNumber": 80,
+        "name": "Griffone di Bruxelles"
+      },
+      {
+        "fciNumber": 81,
+        "name": "Griffone belga"
+      },
+      {
+        "fciNumber": 82,
+        "name": "Piccolo Brabantino"
+      },
+      {
+        "fciNumber": 101,
+        "name": "Bouledogue francese"
+      },
+      {
+        "fciNumber": 128,
+        "name": "King Charles Spaniel"
+      },
+      {
+        "fciNumber": 136,
+        "name": "Cavalier King Charles Spaniel"
+      },
+      {
+        "fciNumber": 140,
+        "name": "Boston Terrier"
+      },
+      {
+        "fciNumber": 172,
+        "name": "Barboni (Poodle)"
+      },
+      {
+        "fciNumber": 192,
+        "name": "Kromfohrländer"
+      },
+      {
+        "fciNumber": 206,
+        "name": "Chin"
+      },
+      {
+        "fciNumber": 207,
+        "name": "Pechinese"
+      },
+      {
+        "fciNumber": 208,
+        "name": "Shih Tzu"
+      },
+      {
+        "fciNumber": 209,
+        "name": "Tibetan Terrier"
+      },
+      {
+        "fciNumber": 215,
+        "name": "Bichon à poil frisé"
+      },
+      {
+        "fciNumber": 218,
+        "name": "Chihuahua"
+      },
+      {
+        "fciNumber": 227,
+        "name": "Lhasa Apso"
+      },
+      {
+        "fciNumber": 231,
+        "name": "Tibetan Spaniel"
+      },
+      {
+        "fciNumber": 233,
+        "name": "Piccolo cane leone"
+      },
+      {
+        "fciNumber": 250,
+        "name": "Bichon Havanais"
+      },
+      {
+        "fciNumber": 253,
+        "name": "Carlino (Pug)"
+      },
+      {
+        "fciNumber": 283,
+        "name": "Coton de Tuléar"
+      },
+      {
+        "fciNumber": 288,
+        "name": "Chinese Crested Dog"
+      },
+      {
+        "fciNumber": 352,
+        "name": "Russian Toy"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Amatori Bovari Svizzeri",
+    "shortName": "CIABS",
+    "website": "http://www.clubciabs.it",
+    "email": "segreteria@ciabs.it",
+    "phone": "329-4969594",
+    "address": "c/o Manciani/Albanese, Via Galileo Galilei 35, 01030 Castel Sant'Elia (VT)",
+    "region": "Lazio",
+    "president": "Manciani Maddalena",
+    "logo": null,
+    "enciSlug": "club-italiano-amatori-bovari-svizzeri",
+    "breeds": [
+      {
+        "fciNumber": 45,
+        "name": "Bovaro del Bernese"
+      },
+      {
+        "fciNumber": 46,
+        "name": "Bovaro dell'Appenzell"
+      },
+      {
+        "fciNumber": 47,
+        "name": "Bovaro dell'Entlebuch"
+      },
+      {
+        "fciNumber": 58,
+        "name": "Grande Bovaro Svizzero"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Bracco Francese",
+    "shortName": "Club Italiano Bracco Francese",
+    "website": "http://www.braccofrancese.com",
+    "email": "segreteria@braccofrancese.com",
+    "phone": "340-7128240",
+    "address": "Strada Pedemontana 53, 58011 Capalbio (GR)",
+    "region": "Toscana",
+    "president": "Ragatzu Marco",
+    "logo": "/images/club-logos/club-italiano-bracco-francese.jpg",
+    "enciSlug": "club-italiano-bracco-francese",
+    "breeds": [
+      {
+        "fciNumber": 177,
+        "name": "Bracco Francese tipo Pirenei"
+      },
+      {
+        "fciNumber": 180,
+        "name": "Bracco d'Ariège"
+      },
+      {
+        "fciNumber": 179,
+        "name": "Bracco Saint-Germain"
+      },
+      {
+        "fciNumber": 133,
+        "name": "Bracco d'Auvergne"
+      },
+      {
+        "fciNumber": 134,
+        "name": "Bracco del Bourbonnais"
+      },
+      {
+        "fciNumber": 115,
+        "name": "Bracco Francese tipo Gascogne"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Drahthaar",
+    "shortName": "Club Italiano Drahthaar",
+    "website": "http://www.deutsch-drahthaar.it",
+    "email": "club@deutsch-drahthaar.it",
+    "phone": "059-549687",
+    "address": "c/o Campedelli S., Via Romagnoli 45, 41015 Nonantola (MO)",
+    "region": "Emilia-Romagna",
+    "president": "Melchionda Alessandro",
+    "logo": "/images/club-logos/club-italiano-drahthaar.gif",
+    "enciSlug": "club-italiano-drahthaar",
+    "breeds": [
+      {
+        "fciNumber": 98,
+        "name": "Cane da ferma tedesco a pelo duro (Deutsch Drahthaar)"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Epagneul Breton",
+    "shortName": "CIEB",
+    "website": "http://www.epagneulbreton.net",
+    "email": "segreteria@epagneulbreton.net",
+    "phone": "324-8782316",
+    "address": "c/o Tureddi Andrea, Viale G. Puccini 221, 55048 Torre del Lago (LU)",
+    "region": "Toscana",
+    "president": "Tureddi Andrea",
+    "logo": "/images/club-logos/club-italiano-epagneul-breton.gif",
+    "enciSlug": "club-italiano-epagneul-breton",
+    "breeds": [
+      {
+        "fciNumber": 95,
+        "name": "Epagneul Breton"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Lagotto",
+    "shortName": "Club Italiano Lagotto",
+    "website": "http://www.lagottoromagnolo.org",
+    "email": "lagotto@lagottoromagnolo.org",
+    "phone": "349-8321294",
+    "address": "c/o Rondinini Luca, Via 2 giugno 106, fraz. Castelluccio, 52010 Capolona (AR)",
+    "region": "Toscana",
+    "president": "Alessandrini Paolo",
+    "logo": "/images/club-logos/club-italiano-lagotto.jpg",
+    "enciSlug": "club-italiano-lagotto",
+    "breeds": [
+      {
+        "fciNumber": 298,
+        "name": "Lagotto Romagnolo"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Leonberger",
+    "shortName": "CIL",
+    "website": "http://www.leonberger.it",
+    "email": "cil@leonberger.it",
+    "phone": "348-0148218",
+    "address": "c/o Francesca Molinari, Via Falcone 55, 46046 Marmirolo (MN)",
+    "region": "Lombardia",
+    "president": "Molinari Francesca",
+    "logo": "/images/club-logos/club-italiano-leonberger.jpg",
+    "enciSlug": "club-italiano-leonberger",
+    "breeds": [
+      {
+        "fciNumber": 145,
+        "name": "Leonberger"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Razze Nordiche",
+    "shortName": "C.I.R.N.",
+    "website": "http://www.cirn.it",
+    "email": "segreteria@cirn.it",
+    "phone": "0332-648776",
+    "address": "c/o Bruno Maffezzoni, Via Ronchet 4, 21038 Sangiano (VA)",
+    "region": "Lombardia",
+    "president": "Maffezzoni Bruno",
+    "logo": "/images/club-logos/club-italiano-razze-nordiche.jpg",
+    "enciSlug": "club-italiano-razze-nordiche",
+    "breeds": [
+      {
+        "fciNumber": 42,
+        "name": "Cane da pastore islandese"
+      },
+      {
+        "fciNumber": 48,
+        "name": "Lapinporokoira"
+      },
+      {
+        "fciNumber": 49,
+        "name": "Suomenlapinkoira"
+      },
+      {
+        "fciNumber": 189,
+        "name": "Lapinkoira"
+      },
+      {
+        "fciNumber": 211,
+        "name": "Canadian Eskimo Dog"
+      },
+      {
+        "fciNumber": 212,
+        "name": "Samoiedo"
+      },
+      {
+        "fciNumber": 242,
+        "name": "Norsk Elghund Grigio"
+      },
+      {
+        "fciNumber": 243,
+        "name": "Alaskan Malamute"
+      },
+      {
+        "fciNumber": 255,
+        "name": "Akita"
+      },
+      {
+        "fciNumber": 257,
+        "name": "Shiba"
+      },
+      {
+        "fciNumber": 261,
+        "name": "Hokkaido"
+      },
+      {
+        "fciNumber": 262,
+        "name": "Spitz giapponese"
+      },
+      {
+        "fciNumber": 265,
+        "name": "Norsk Lundehund"
+      },
+      {
+        "fciNumber": 268,
+        "name": "Norsk Elghund Nero"
+      },
+      {
+        "fciNumber": 270,
+        "name": "Siberian Husky"
+      },
+      {
+        "fciNumber": 274,
+        "name": "Groenlandese"
+      },
+      {
+        "fciNumber": 291,
+        "name": "Eurasier"
+      },
+      {
+        "fciNumber": 304,
+        "name": "Jamthund"
+      },
+      {
+        "fciNumber": 305,
+        "name": "Norrbottenspets"
+      },
+      {
+        "fciNumber": 306,
+        "name": "Västgötaspets"
+      },
+      {
+        "fciNumber": 317,
+        "name": "Kai"
+      },
+      {
+        "fciNumber": 318,
+        "name": "Kishu"
+      },
+      {
+        "fciNumber": 319,
+        "name": "Shikoku"
+      },
+      {
+        "fciNumber": 344,
+        "name": "Akita americano"
+      },
+      {
+        "fciNumber": 365,
+        "name": "Yakutskaya Laika"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano San Bernardo",
+    "shortName": "Club Italiano San Bernardo",
+    "website": "http://www.canedisanbernardo.it",
+    "email": "segreteria@canedisanbernardo.it",
+    "phone": "351-8979194",
+    "address": "Via Viozzo 2/A, 03038 Roccasecca (FR)",
+    "region": "Lazio",
+    "president": "Bonomi Giovanbattista",
+    "logo": "/images/club-logos/club-italiano-san-bernardo.png",
+    "enciSlug": "club-italiano-san-bernardo",
+    "breeds": [
+      {
+        "fciNumber": 61,
+        "name": "Cane di San Bernardo"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Schnauzer & Pinscher",
+    "shortName": "Club Italiano Schnauzer & Pinscher",
+    "website": "http://www.schnauzerpinscher.it",
+    "email": "segreteria@schnauzerpinscher.it",
+    "phone": "339-2950506",
+    "address": "c/o Carmen Minetti, Loc. Castelletto 70, 12060 Piozzo (CN)",
+    "region": "Piemonte",
+    "president": "Pentenero Gianni",
+    "logo": "/images/club-logos/club-italiano-schnauzer-pinscher.gif",
+    "enciSlug": "club-italiano-schnauzer-pinscher",
+    "breeds": [
+      {
+        "fciNumber": 64,
+        "name": "Riesenschnauzer"
+      },
+      {
+        "fciNumber": 181,
+        "name": "Schnauzer medio"
+      },
+      {
+        "fciNumber": 182,
+        "name": "Zwergschnauzer"
+      },
+      {
+        "fciNumber": 183,
+        "name": "Affenpinscher"
+      },
+      {
+        "fciNumber": 184,
+        "name": "Pinscher tedesco"
+      },
+      {
+        "fciNumber": 185,
+        "name": "Zwergpinscher"
+      },
+      {
+        "fciNumber": 186,
+        "name": "Pinscher Austriaco a pelo corto"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Spaniel",
+    "shortName": "CIS",
+    "website": "http://www.clubitalianospaniel.com",
+    "email": "info@clubitalianospaniel.com",
+    "phone": "324-0834837",
+    "address": "c/o Gruppo Cinofilo Partenopeo, Via Chiatamone 7, 80121 Napoli (NA)",
+    "region": "Campania",
+    "president": "Ceccarelli Maria",
+    "logo": "/images/club-logos/club-italiano-spaniel.png",
+    "enciSlug": "club-italiano-spaniel",
+    "breeds": [
+      {
+        "fciNumber": 5,
+        "name": "Cocker Spaniel Inglese"
+      },
+      {
+        "fciNumber": 104,
+        "name": "Clumber Spaniel"
+      },
+      {
+        "fciNumber": 105,
+        "name": "Barbet"
+      },
+      {
+        "fciNumber": 109,
+        "name": "Cane d'acqua tedesco"
+      },
+      {
+        "fciNumber": 123,
+        "name": "Field Spaniel"
+      },
+      {
+        "fciNumber": 124,
+        "name": "Irish Water Spaniel"
+      },
+      {
+        "fciNumber": 127,
+        "name": "Sussex Spaniel"
+      },
+      {
+        "fciNumber": 167,
+        "name": "Cocker americano"
+      },
+      {
+        "fciNumber": 221,
+        "name": "Spaniel Olandese"
+      },
+      {
+        "fciNumber": 301,
+        "name": "American Water Spaniel"
+      },
+      {
+        "fciNumber": 314,
+        "name": "Kooikerhondje"
+      },
+      {
+        "fciNumber": 336,
+        "name": "Perro de Agua Español"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Spinoni",
+    "shortName": "Club Italiano Spinoni",
+    "website": "http://www.spinone-italiano.it",
+    "email": "info@spinone-italiano.it",
+    "phone": "0332-285189",
+    "address": "Via Toce 13, 21100 Varese (VA)",
+    "region": "Lombardia",
+    "president": "Lozza Marco",
+    "logo": "/images/club-logos/club-italiano-spinoni.png",
+    "enciSlug": "club-italiano-spinoni",
+    "breeds": [
+      {
+        "fciNumber": 165,
+        "name": "Spinone Italiano"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Spitz",
+    "shortName": "Club Italiano Spitz",
+    "website": "http://www.clubitalianospitz.com",
+    "email": "segreteria@clubitalianospitz.com",
+    "phone": "347-4863586",
+    "address": "c/o Montis Paola, Case Sparse Strada San Sperate 130/D, 09033 Decimomannu (CA)",
+    "region": "Sardegna",
+    "president": "Spinelli Irene",
+    "logo": "/images/club-logos/club-italiano-spitz.jpg",
+    "enciSlug": "club-italiano-spitz",
+    "breeds": [
+      {
+        "fciNumber": 97,
+        "name": "Spitz tedeschi"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Tchiorny Terrier",
+    "shortName": "Club Italiano Tchiorny Terrier",
+    "website": "http://www.tchiornyterrier.com",
+    "email": "clubitalianotchiornyterrier2@gmail.com",
+    "phone": "339-2184560",
+    "address": "c/o Turchetti Daniela, Via Tortona 80/B, 27058 Voghera (PV)",
+    "region": "Lombardia",
+    "president": "Turchetti Daniela",
+    "logo": "/images/club-logos/club-italiano-tchiorny-terrier.jpg",
+    "enciSlug": "club-italiano-tchiorny-terrier",
+    "breeds": [
+      {
+        "fciNumber": 327,
+        "name": "Terrier nero russo"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano Terranova",
+    "shortName": "Club Italiano Terranova",
+    "website": "http://www.clubitalianodelterranova.it",
+    "email": "presidenza@clubitalianodelterranova.it",
+    "phone": null,
+    "address": "Viale Silvio Amico 18, 17025 Loano (SV)",
+    "region": "Liguria",
+    "president": "Bruno Emma",
+    "logo": "/images/club-logos/club-italiano-terranova.jpg",
+    "enciSlug": "club-italiano-terranova",
+    "breeds": [
+      {
+        "fciNumber": 50,
+        "name": "Terranova (Newfoundland)"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano del Chow Chow",
+    "shortName": "CIDCC",
+    "website": "https://www.clubitalianodelchowchow.it/",
+    "email": "segreteria@cidcc.it",
+    "phone": "389-2671594",
+    "address": "Via Vigonovese 130, 35020 Saonara (PD)",
+    "region": "Veneto",
+    "president": "Rosolia Antonino Nanni",
+    "logo": "/images/club-logos/club-italiano-del-chow-chow.jpg",
+    "enciSlug": "club-italiano-del-chow-chow",
+    "breeds": [
+      {
+        "fciNumber": 205,
+        "name": "Chow Chow"
+      }
+    ]
+  },
+  {
+    "name": "Club Italiano del Molosso",
+    "shortName": "C.I.M.",
+    "website": "https://www.clubitalianodelmolosso.com",
+    "email": "infoc.i.m@tim.it",
+    "phone": "081-5306467",
+    "address": "c/o Parmiciano, Via Olof Palme 13, 80038 Pomigliano d'Arco (NA)",
+    "region": "Campania",
+    "president": "Parmiciano Vincenzo",
+    "logo": "/images/club-logos/club-italiano-del-molosso.gif",
+    "enciSlug": "club-italiano-del-molosso",
+    "breeds": [
+      {
+        "fciNumber": 41,
+        "name": "Bullmastiff"
+      },
+      {
+        "fciNumber": 91,
+        "name": "Mastiff"
+      },
+      {
+        "fciNumber": 92,
+        "name": "Dogue de Bordeaux"
+      },
+      {
+        "fciNumber": 116,
+        "name": "Rottweiler"
+      },
+      {
+        "fciNumber": 157,
+        "name": "Mastín Español"
+      },
+      {
+        "fciNumber": 225,
+        "name": "Fila Brasileiro"
+      },
+      {
+        "fciNumber": 226,
+        "name": "Tosa"
+      },
+      {
+        "fciNumber": 230,
+        "name": "Tibetan Mastiff"
+      },
+      {
+        "fciNumber": 249,
+        "name": "Perro Dogo Mallorquin (Ca de Bou)"
+      },
+      {
+        "fciNumber": 260,
+        "name": "Cane da pastore del Caucaso"
+      },
+      {
+        "fciNumber": 264,
+        "name": "Cane da Serra da Estrela"
+      },
+      {
+        "fciNumber": 315,
+        "name": "Broholmer"
+      },
+      {
+        "fciNumber": 346,
+        "name": "Perro de Presa Canario"
+      },
+      {
+        "fciNumber": 368,
+        "name": "Cão de Gado Transmontano"
+      },
+      {
+        "fciNumber": 369,
+        "name": "Cane da Serra de Aires"
+      }
+    ]
+  },
+  {
+    "name": "Club del Bolognese e Maltese",
+    "shortName": "Club del Bolognese e Maltese",
+    "website": "https://www.clubdelbologneseemaltese.it/",
+    "email": "clubdelbologneseemaltese@gmail.com",
+    "phone": "06-9591341",
+    "address": "c/o Paolantoni, Loc. Colle Pereto 3/B, 00038 Valmontone (RM)",
+    "region": "Lazio",
+    "president": "Paolantoni Stefano",
+    "logo": "/images/club-logos/club-del-bolognese-e-maltese.png",
+    "enciSlug": "club-del-bolognese-e-maltese",
+    "breeds": [
+      {
+        "fciNumber": 65,
+        "name": "Maltese"
+      },
+      {
+        "fciNumber": 196,
+        "name": "Bolognese"
+      }
+    ]
+  },
+  {
+    "name": "Club del Levriero",
+    "shortName": "Club del Levriero",
+    "website": "http://www.clublevriero.org",
+    "email": "segreteria@clublevriero.org",
+    "phone": "0461-209626",
+    "address": "c/o Poli Marcello, Via Tavernaro 3, 38121 Trento (TN)",
+    "region": "Trentino-Alto Adige",
+    "president": "Poli Marcello",
+    "logo": "/images/club-logos/club-del-levriero.png",
+    "enciSlug": "club-del-levriero",
+    "breeds": [
+      {
+        "fciNumber": 89,
+        "name": "Podenco Ibicenco"
+      },
+      {
+        "fciNumber": 158,
+        "name": "Greyhound"
+      },
+      {
+        "fciNumber": 160,
+        "name": "Levriero Irlandese (Irish Wolfhound)"
+      },
+      {
+        "fciNumber": 162,
+        "name": "Whippet"
+      },
+      {
+        "fciNumber": 164,
+        "name": "Deerhound"
+      },
+      {
+        "fciNumber": 188,
+        "name": "Sloughi"
+      },
+      {
+        "fciNumber": 193,
+        "name": "Borzoi (Levriero Russo)"
+      },
+      {
+        "fciNumber": 228,
+        "name": "Levriero Afgano"
+      },
+      {
+        "fciNumber": 240,
+        "name": "Magyar Agar (Levriero Ungherese)"
+      },
+      {
+        "fciNumber": 248,
+        "name": "Pharaoh Hound"
+      },
+      {
+        "fciNumber": 269,
+        "name": "Saluki"
+      },
+      {
+        "fciNumber": 285,
+        "name": "Galgo Español"
+      },
+      {
+        "fciNumber": 307,
+        "name": "Azawakh"
+      },
+      {
+        "fciNumber": 329,
+        "name": "Podenco Canario"
+      },
+      {
+        "fciNumber": 333,
+        "name": "Chart Polski"
+      }
+    ]
+  },
+  {
+    "name": "Club del Pastore Siciliano",
+    "shortName": "Club del Pastore Siciliano",
+    "website": "http://www.pastoresiciliano.it/",
+    "email": "info@pastoresiciliano.it",
+    "phone": "393-2003965",
+    "address": "Via Vanella Trentanove 10, 97015 Modica (RG)",
+    "region": "Sicilia",
+    "president": "Vullo John",
+    "logo": "/images/club-logos/club-del-pastore-siciliano.jpg",
+    "enciSlug": "club-del-pastore-siciliano",
+    "breeds": [
+      {
+        "fciNumber": 906,
+        "name": "Spino degli Iblei (Pastore Siciliano)"
+      }
+    ]
+  },
+  {
+    "name": "Dogo Argentino Club Italia",
+    "shortName": "Dogo Argentino Club Italia",
+    "website": "http://www.dogoargentinoclub.com",
+    "email": "pinelli.mario@gmail.com",
+    "phone": "335-7745211",
+    "address": "c/o St. Ass.to Alter-Ego, Via Cavour 2/D, 41049 Sassuolo (MO)",
+    "region": "Emilia-Romagna",
+    "president": "Pinelli Mario",
+    "logo": null,
+    "enciSlug": "dogo-argentino-club-italia",
+    "breeds": [
+      {
+        "fciNumber": 292,
+        "name": "Dogo Argentino"
+      }
+    ]
+  },
+  {
+    "name": "Hovawart Club Italia",
+    "shortName": "HCI",
+    "website": "http://www.hovawart.it",
+    "email": "presidenza@hovawart.it",
+    "phone": "377-6996020",
+    "address": "Via Calzolai 253, 44123 Ferrara (FE)",
+    "region": "Emilia-Romagna",
+    "president": "Dall'Olio Roberta",
+    "logo": "/images/club-logos/hovawart-club-italia.png",
+    "enciSlug": "hovawart-club-italia",
+    "breeds": [
+      {
+        "fciNumber": 190,
+        "name": "Hovawart"
+      }
+    ]
+  },
+  {
+    "name": "Italian Australian & American Shepherd Association",
+    "shortName": "IAASA",
+    "website": "http://www.aussie.it",
+    "email": "segreteria@aussie.it",
+    "phone": "345-5023315",
+    "address": "Strada Piscina 18, 10040 Cumiana (TO)",
+    "region": "Piemonte",
+    "president": "Lovati Gabriella",
+    "logo": null,
+    "enciSlug": "italian-australian-american-shepherd-association",
+    "breeds": [
+      {
+        "fciNumber": 342,
+        "name": "Australian Shepherd"
+      },
+      {
+        "fciNumber": 367,
+        "name": "Miniature American Shepherd"
+      }
+    ]
+  },
+  {
+    "name": "Italian Border Collie Club",
+    "shortName": "IBCC",
+    "website": "http://www.italianbordercollie.it",
+    "email": "ibcsegreteria@gmail.com",
+    "phone": "342-6943900",
+    "address": "c/o Bernini M., Via dei Salcetti 45/A, 56019 Nodica (PI)",
+    "region": "Toscana",
+    "president": "Fabiano Gatto",
+    "logo": null,
+    "enciSlug": "italian-border-collie-club",
+    "breeds": [
+      {
+        "fciNumber": 297,
+        "name": "Border Collie"
+      }
+    ]
+  },
+  {
+    "name": "Kurzhaar Club d'Italia",
+    "shortName": "Kurzhaar Club d'Italia",
+    "website": "http://www.kurzhaarclubitaliano.com",
+    "email": "kurzhaarclubitaliano@gmail.com",
+    "phone": "0746-755157",
+    "address": "c/o Guarnieri, Via Chiesa Nuova 137, 02100 Rieti (RI)",
+    "region": "Lazio",
+    "president": "Guarnieri Alfio",
+    "logo": "/images/club-logos/kurzhaar-club-d-italia.png",
+    "enciSlug": "kurzhaar-club-d-italia",
+    "breeds": [
+      {
+        "fciNumber": 119,
+        "name": "Cane da ferma tedesco a pelo corto (Deutsch Kurzhaar)"
+      }
+    ]
+  },
+  {
+    "name": "Old English Sheepdog Italia",
+    "shortName": "OESI",
+    "website": "https://www.oldenglishsheepdogitalia.com/",
+    "email": "info@oldenglishsheepdogitalia.com",
+    "phone": "0533-794849",
+    "address": "c/o Crepaldi, Via Boschetto 4, Loc. Santa Giustina, 44026 Mesola (FE)",
+    "region": "Emilia-Romagna",
+    "president": "Spillare Luigi",
+    "logo": "/images/club-logos/old-english-sheepdog-italia.png",
+    "enciSlug": "old-english-sheepdog-italia",
+    "breeds": [
+      {
+        "fciNumber": 16,
+        "name": "Old English Sheepdog (Bobtail)"
+      }
+    ]
+  },
+  {
+    "name": "Pastore Svizzero Bianco Club Italia",
+    "shortName": "PSBCI",
+    "website": "http://www.pastoresvizzerobiancoclubitalia.it",
+    "email": "info.psbci@gmail.com",
+    "phone": "0331-204292",
+    "address": "c/o Praderio, Via Torquato Tasso 10/12, 21012 Cassano Magnago (VA)",
+    "region": "Lombardia",
+    "president": "Praderio Giuliana",
+    "logo": "/images/club-logos/pastore-svizzero-bianco-club-italia.jpg",
+    "enciSlug": "pastore-svizzero-bianco-club-italia",
+    "breeds": [
+      {
+        "fciNumber": 347,
+        "name": "Pastore Svizzero Bianco"
+      }
+    ]
+  },
+  {
+    "name": "Pointer Club d'Italia",
+    "shortName": "Pointer Club d'Italia",
+    "website": "http://www.pointerclubitaliano.com",
+    "email": "segreteria@pointerclubitaliano.com",
+    "phone": "349-3645214",
+    "address": "c/o Daniel Maestri, Via Soncino 60 Melotta, 26014 Casaletto di Sopra (CR)",
+    "region": "Lombardia",
+    "president": "Moserle Andrea",
+    "logo": "/images/club-logos/pointer-club-d-italia.gif",
+    "enciSlug": "pointer-club-d-italia",
+    "breeds": [
+      {
+        "fciNumber": 1,
+        "name": "Pointer Inglese"
+      }
+    ]
+  },
+  {
+    "name": "Retriever's Club Italiano",
+    "shortName": "Retriever's Club Italiano",
+    "website": "http://www.retrieversclub.it",
+    "email": "segreteria@retrieversclub.it",
+    "phone": "328-4247921",
+    "address": "c/o Gr. Cin. Viterbese, Largo F. Nagni 2, 01100 Viterbo (VT)",
+    "region": "Lazio",
+    "president": "Agostini Rosa",
+    "logo": "/images/club-logos/retriever-s-club-italiano.gif",
+    "enciSlug": "retriever-s-club-italiano",
+    "breeds": [
+      {
+        "fciNumber": 110,
+        "name": "Curly Coated Retriever"
+      },
+      {
+        "fciNumber": 111,
+        "name": "Golden Retriever"
+      },
+      {
+        "fciNumber": 121,
+        "name": "Flat Coated Retriever"
+      },
+      {
+        "fciNumber": 122,
+        "name": "Labrador Retriever"
+      },
+      {
+        "fciNumber": 263,
+        "name": "Chesapeake Bay Retriever"
+      },
+      {
+        "fciNumber": 312,
+        "name": "Nova Scotia Duck Tolling Retriever"
+      }
+    ]
+  },
+  {
+    "name": "Rhodesian Ridgeback Club d'Italia",
+    "shortName": "RRCI",
+    "website": "http://www.rrci.it",
+    "email": "segreteria@rrci.it",
+    "phone": "331-3217768",
+    "address": "c/o Nobiloni Flaminia, Località Colleromano 40, 00060 Riano (RM)",
+    "region": "Lazio",
+    "president": "Mancini Marcello",
+    "logo": "/images/club-logos/rhodesian-ridgeback-club-d-italia.jpg",
+    "enciSlug": "rhodesian-ridgeback-club-d-italia",
+    "breeds": [
+      {
+        "fciNumber": 146,
+        "name": "Rhodesian Ridgeback"
+      }
+    ]
+  },
+  {
+    "name": "Shar Pei Club Italiano",
+    "shortName": "SPCI",
+    "website": "http://www.sharpeiclub.it",
+    "email": "segreteria@sharpeiclub.it",
+    "phone": "339-3150893",
+    "address": "c/o Colombo Stefano, Via Petrarca 39/3, 22041 Colverde (CO)",
+    "region": "Lombardia",
+    "president": "Vago Ambrogio",
+    "logo": "/images/club-logos/shar-pei-club-italiano.gif",
+    "enciSlug": "shar-pei-club-italiano",
+    "breeds": [
+      {
+        "fciNumber": 309,
+        "name": "Shar Pei"
+      }
+    ]
+  },
+  {
+    "name": "Shetland Club d'Italia",
+    "shortName": "Shetland Club d'Italia",
+    "website": "http://www.shetlandclubitalia.it",
+    "email": "shetland.club.italia@gmail.com",
+    "phone": "045-908606",
+    "address": "Loc. Casette 26, 37023 Grezzana (VR)",
+    "region": "Veneto",
+    "president": "Albrigo Anna",
+    "logo": "/images/club-logos/shetland-club-d-italia.png",
+    "enciSlug": "shetland-club-d-italia",
+    "breeds": [
+      {
+        "fciNumber": 88,
+        "name": "Shetland Sheepdog"
+      }
+    ]
+  },
+  {
+    "name": "Società Amatori Bracco Italiano",
+    "shortName": "SABI",
+    "website": "http://www.ilbraccoitaliano.org",
+    "email": "info@ilbraccoitaliano.org",
+    "phone": "366-3689919",
+    "address": "c/o FIDC, Piazza Lago Balano 9, 43125 Parma (PR)",
+    "region": "Emilia-Romagna",
+    "president": "Ermini Alessandro Adriano",
+    "logo": "/images/club-logos/societa-amatori-bracco-italiano.png",
+    "enciSlug": "societa-amatori-bracco-italiano",
+    "breeds": [
+      {
+        "fciNumber": 202,
+        "name": "Bracco Italiano"
+      }
+    ]
+  },
+  {
+    "name": "Società Amatori Cane Corso",
+    "shortName": "SACC",
+    "website": "http://www.societaamatoricanecorso.it",
+    "email": "segreteria.sacc@gmail.com",
+    "phone": "329-1756464",
+    "address": "c/o Gruppo Cinofilo Frosinone, Via SS 214 n. 12, 03100 Frosinone (FR)",
+    "region": "Lazio",
+    "president": "Di Rienzo Luigi",
+    "logo": "/images/club-logos/societa-amatori-cane-corso.png",
+    "enciSlug": "societa-amatori-cane-corso",
+    "breeds": [
+      {
+        "fciNumber": 343,
+        "name": "Cane Corso"
+      }
+    ]
+  },
+  {
+    "name": "Società Amatori Cani da Traccia",
+    "shortName": "SACT",
+    "website": "http://www.schweisshunde.com",
+    "email": "segreteria.sact@hotmail.com",
+    "phone": null,
+    "address": "c/o Minniti Bruno, Fraz. Luin 20, 11020 Brissogne (AO)",
+    "region": "Valle d'Aosta",
+    "president": "Stefano Neve",
+    "logo": "/images/club-logos/societa-amatori-cani-da-traccia.jpg",
+    "enciSlug": "societa-amatori-cani-da-traccia",
+    "breeds": [
+      {
+        "fciNumber": 213,
+        "name": "Hannoverscher Schweisshund"
+      },
+      {
+        "fciNumber": 217,
+        "name": "Bayerischer Gebirgsschweisshund"
+      }
+    ]
+  },
+  {
+    "name": "Società Amatori Cirneco dell'Etna",
+    "shortName": "SACE",
+    "website": "http://www.societaamatoricirneco.it",
+    "email": "info@societaamatoricirneco.it",
+    "phone": "0932-752106",
+    "address": "c/o G.C. Ragusano, Via Giardina 9, 97015 Modica (RG)",
+    "region": "Sicilia",
+    "president": "Veraldi Giuseppe",
+    "logo": "/images/club-logos/societa-amatori-cirneco-dell-etna.png",
+    "enciSlug": "societa-amatori-cirneco-dell-etna",
+    "breeds": [
+      {
+        "fciNumber": 199,
+        "name": "Cirneco dell'Etna"
+      }
+    ]
+  },
+  {
+    "name": "Società Amatori Mastino Napoletano",
+    "shortName": "SAMN",
+    "website": "http://www.samn.it",
+    "email": "info@samn.it",
+    "phone": "081-8441024",
+    "address": "c/o De Falco Iovane M., Via Vinella 24, 80030 Scisciano (NA)",
+    "region": "Campania",
+    "president": "De Falco Iovane Francesco",
+    "logo": "/images/club-logos/societa-amatori-mastino-napoletano.gif",
+    "enciSlug": "societa-amatori-mastino-napoletano",
+    "breeds": [
+      {
+        "fciNumber": 197,
+        "name": "Mastino Napoletano"
+      }
+    ]
+  },
+  {
+    "name": "Società Amatori Schaferhünde",
+    "shortName": "SAS",
+    "website": "http://www.sas-italia.com",
+    "email": "info@sas-italia.com",
+    "phone": "059-354197",
+    "address": "Via Alfeo Corassori 68, 41124 Modena (MO)",
+    "region": "Emilia-Romagna",
+    "president": "Pianelli Michele",
+    "logo": "/images/club-logos/societa-amatori-schaferhunde.jpg",
+    "enciSlug": "societa-amatori-schaferhunde",
+    "breeds": [
+      {
+        "fciNumber": 166,
+        "name": "Cane da pastore tedesco (German Shepherd)"
+      }
+    ]
+  },
+  {
+    "name": "Società Italiana Alani",
+    "shortName": "SIA",
+    "website": "http://www.clubalani.it",
+    "email": "segreteria@clubalani.it",
+    "phone": "346-3533151",
+    "address": "Ss Aurelia 42, 58015 Orbetello (GR)",
+    "region": "Toscana",
+    "president": "Paolini Giuliano",
+    "logo": "/images/club-logos/societa-italiana-alani.jpg",
+    "enciSlug": "societa-italiana-alani",
+    "breeds": [
+      {
+        "fciNumber": 235,
+        "name": "Alano (Great Dane)"
+      }
+    ]
+  },
+  {
+    "name": "Società Italiana Amatori Yorkshire Terrier",
+    "shortName": "SIAYT",
+    "website": "http://www.siayt.it",
+    "email": "presidenza@siayt.it",
+    "phone": "3389218006",
+    "address": "c/o Casadei Patrizia, Via Giuseppe Verdi 24, 27010 Albuzzano (PV)",
+    "region": "Lombardia",
+    "president": "Casadei Patrizia",
+    "logo": "/images/club-logos/societa-italiana-amatori-yorkshire-terrier.jpg",
+    "enciSlug": "societa-italiana-amatori-yorkshire-terrier",
+    "breeds": [
+      {
+        "fciNumber": 86,
+        "name": "Yorkshire Terrier"
+      }
+    ]
+  },
+  {
+    "name": "Società Italiana Basset Hound",
+    "shortName": "Società Italiana Basset Hound",
+    "website": "http://www.bassethoundclub.it",
+    "email": "presidenza@bassethoundclub.it",
+    "phone": "320-2428954",
+    "address": "c/o Barbara Folco, Via Brunori 65, 36050 Monteviale (VI)",
+    "region": "Veneto",
+    "president": "Ansoldi Marina",
+    "logo": "/images/club-logos/societa-italiana-basset-hound.png",
+    "enciSlug": "societa-italiana-basset-hound",
+    "breeds": [
+      {
+        "fciNumber": 163,
+        "name": "Basset Hound"
+      }
+    ]
+  },
+  {
+    "name": "Società Italiana Cane da Pastore Olandese",
+    "shortName": "SIPO",
+    "website": "https://societaitalianapastoreolandese.com",
+    "email": "segreteria.sipo@gmail.com",
+    "phone": "329-8888131",
+    "address": "Via San Vincenzo 2, 03039 Sora (FR)",
+    "region": "Lazio",
+    "president": "Marino Pietro",
+    "logo": "/images/club-logos/societa-italiana-cane-da-pastore-olandese.jpg",
+    "enciSlug": "societa-italiana-cane-da-pastore-olandese",
+    "breeds": [
+      {
+        "fciNumber": 223,
+        "name": "Cane da pastore olandese"
+      }
+    ]
+  },
+  {
+    "name": "Società Italiana Collies",
+    "shortName": "SIC",
+    "website": "http://www.societaitalianacollies.it",
+    "email": "segreteria@societaitalianacollies.it",
+    "phone": "342-6688978",
+    "address": "c/o Solbiati Alex, Via Caduti di Nassirya 17, 20027 Rescaldina (MI)",
+    "region": "Lombardia",
+    "president": "Solbiati Alex",
+    "logo": "/images/club-logos/societa-italiana-collies.jpg",
+    "enciSlug": "societa-italiana-collies",
+    "breeds": [
+      {
+        "fciNumber": 156,
+        "name": "Collie a pelo lungo (Rough Collie)"
+      },
+      {
+        "fciNumber": 296,
+        "name": "Collie a pelo corto (Smooth Collie)"
+      }
+    ]
+  },
+  {
+    "name": "Società Italiana Pro Segugio",
+    "shortName": "SIPS",
+    "website": "http://www.prosegugio.it",
+    "email": "info@prosegugio.it",
+    "phone": "0377-802414",
+    "address": "Via Cavour 56, 26841 Casalpusterlengo (LO)",
+    "region": "Lombardia",
+    "president": "Di Giannantonio Gianluca (Commissario Straordinario)",
+    "logo": "/images/club-logos/societa-italiana-pro-segugio.png",
+    "enciSlug": "societa-italiana-pro-segugio",
+    "breeds": [
+      {
+        "fciNumber": 17,
+        "name": "Segugio italiano a pelo raso"
+      },
+      {
+        "fciNumber": 19,
+        "name": "Segugio maremmano"
+      },
+      {
+        "fciNumber": 20,
+        "name": "Briquet Griffon Vendéen"
+      },
+      {
+        "fciNumber": 21,
+        "name": "Grand Griffon Vendéen"
+      },
+      {
+        "fciNumber": 22,
+        "name": "Grand Bleu de Gascogne"
+      },
+      {
+        "fciNumber": 24,
+        "name": "Poitevin"
+      },
+      {
+        "fciNumber": 25,
+        "name": "Billy"
+      },
+      {
+        "fciNumber": 28,
+        "name": "Petit Bleu de Gascogne"
+      },
+      {
+        "fciNumber": 30,
+        "name": "Ariégeois"
+      },
+      {
+        "fciNumber": 31,
+        "name": "Porcelaine"
+      },
+      {
+        "fciNumber": 32,
+        "name": "Petit Gascon Saintongeois"
+      },
+      {
+        "fciNumber": 33,
+        "name": "Grand Basset Griffon Vendéen"
+      },
+      {
+        "fciNumber": 34,
+        "name": "Basset Bleu de Gascogne"
+      },
+      {
+        "fciNumber": 35,
+        "name": "Basset Fauve de Bretagne"
+      },
+      {
+        "fciNumber": 36,
+        "name": "Petit Basset Griffon Vendéen"
+      },
+      {
+        "fciNumber": 51,
+        "name": "Segugio svizzero (Laufhund)"
+      },
+      {
+        "fciNumber": 52,
+        "name": "Segugio del Giura"
+      },
+      {
+        "fciNumber": 59,
+        "name": "Segugio svizzero"
+      },
+      {
+        "fciNumber": 60,
+        "name": "Piccoli segugi svizzeri"
+      },
+      {
+        "fciNumber": 62,
+        "name": "Segugio del Bernese"
+      },
+      {
+        "fciNumber": 63,
+        "name": "Segugio del Lucernese"
+      },
+      {
+        "fciNumber": 66,
+        "name": "Anglo-Français de Petite Vénerie"
+      },
+      {
+        "fciNumber": 67,
+        "name": "Beagle Harrier"
+      },
+      {
+        "fciNumber": 68,
+        "name": "Harrier"
+      },
+      {
+        "fciNumber": 100,
+        "name": "Basset Artésien Normand"
+      },
+      {
+        "fciNumber": 129,
+        "name": "Segugio dell'Appennino"
+      },
+      {
+        "fciNumber": 130,
+        "name": "Drever"
+      },
+      {
+        "fciNumber": 131,
+        "name": "Schillerstövare"
+      },
+      {
+        "fciNumber": 132,
+        "name": "Hamiltonstövare"
+      },
+      {
+        "fciNumber": 150,
+        "name": "Segugio italiano a pelo forte"
+      },
+      {
+        "fciNumber": 151,
+        "name": "Segugio finlandese"
+      },
+      {
+        "fciNumber": 152,
+        "name": "Segugio polacco"
+      },
+      {
+        "fciNumber": 154,
+        "name": "Rhodesian Ridgeback"
+      },
+      {
+        "fciNumber": 155,
+        "name": "Segugio austriaco nero focato"
+      },
+      {
+        "fciNumber": 159,
+        "name": "Otterhound"
+      },
+      {
+        "fciNumber": 161,
+        "name": "Beagle"
+      },
+      {
+        "fciNumber": 198,
+        "name": "Segugio maremmano"
+      },
+      {
+        "fciNumber": 203,
+        "name": "Dachsbracke del Westfalia"
+      },
+      {
+        "fciNumber": 204,
+        "name": "Segugio Hellenico"
+      },
+      {
+        "fciNumber": 214,
+        "name": "Segugio italiano a pelo raso"
+      },
+      {
+        "fciNumber": 219,
+        "name": "Français tricolore"
+      },
+      {
+        "fciNumber": 220,
+        "name": "Français blanc et noir"
+      },
+      {
+        "fciNumber": 229,
+        "name": "Segugio posavatz"
+      },
+      {
+        "fciNumber": 241,
+        "name": "Segugio della Transilvania"
+      },
+      {
+        "fciNumber": 244,
+        "name": "Black and Tan Coonhound"
+      },
+      {
+        "fciNumber": 266,
+        "name": "Segugio dell'Istria a pelo raso"
+      },
+      {
+        "fciNumber": 267,
+        "name": "Segugio dell'Istria a pelo duro"
+      },
+      {
+        "fciNumber": 279,
+        "name": "Segugio di Hygen"
+      },
+      {
+        "fciNumber": 282,
+        "name": "Segugio di Halden"
+      },
+      {
+        "fciNumber": 290,
+        "name": "Griffon Nivernais"
+      },
+      {
+        "fciNumber": 294,
+        "name": "Segugio di Dunker"
+      },
+      {
+        "fciNumber": 295,
+        "name": "Segugio della Slesia"
+      },
+      {
+        "fciNumber": 299,
+        "name": "Segugio di Gotland"
+      },
+      {
+        "fciNumber": 300,
+        "name": "Grand Gascon Saintongeois"
+      },
+      {
+        "fciNumber": 303,
+        "name": "Segugio dell'Artois"
+      },
+      {
+        "fciNumber": 316,
+        "name": "Français blanc et orange"
+      },
+      {
+        "fciNumber": 322,
+        "name": "Grand Anglo-Français tricolore"
+      },
+      {
+        "fciNumber": 323,
+        "name": "Grand Anglo-Français blanc et noir"
+      },
+      {
+        "fciNumber": 324,
+        "name": "Grand Anglo-Français blanc et orange"
+      },
+      {
+        "fciNumber": 325,
+        "name": "Griffon Bleu de Gascogne"
+      },
+      {
+        "fciNumber": 337,
+        "name": "Segugio di Posavina"
+      },
+      {
+        "fciNumber": 361,
+        "name": "Segugio dell'Appennino"
+      },
+      {
+        "fciNumber": 375,
+        "name": "Segugio Maremmano"
+      }
+    ]
+  },
+  {
+    "name": "Società Italiana Setters",
+    "shortName": "SIS",
+    "website": "https://www.societaitalianasetters.org/",
+    "email": "f.lapini@societaitalianasetters.org",
+    "phone": null,
+    "address": "Viale Corsica 20, 20137 Milano (MI)",
+    "region": "Lombardia",
+    "president": "Lapini Francesco (Commissario Straordinario)",
+    "logo": "/images/club-logos/societa-italiana-setters.png",
+    "enciSlug": "societa-italiana-setters",
+    "breeds": [
+      {
+        "fciNumber": 2,
+        "name": "Setter Inglese"
+      },
+      {
+        "fciNumber": 6,
+        "name": "Gordon Setter"
+      },
+      {
+        "fciNumber": 120,
+        "name": "Setter Irlandese"
+      },
+      {
+        "fciNumber": 330,
+        "name": "Setter Irlandese rosso-bianco"
+      }
+    ]
+  },
+  {
+    "name": "Società Italiana Terriers",
+    "shortName": "SIT",
+    "website": "http://www.societaitalianaterriers.it",
+    "email": "segreteria@societaitalianaterriers.it",
+    "phone": "338-5358656",
+    "address": "c/o Avv. Donato Cialdella, Via Montegrappa 117, 53036 Poggibonsi (SI)",
+    "region": "Toscana",
+    "president": "Palazzuoli Claudia",
+    "logo": "/images/club-logos/societa-italiana-terriers.jpg",
+    "enciSlug": "societa-italiana-terriers",
+    "breeds": [
+      {
+        "fciNumber": 3,
+        "name": "Airedale Terrier"
+      },
+      {
+        "fciNumber": 4,
+        "name": "Australian Terrier"
+      },
+      {
+        "fciNumber": 7,
+        "name": "Bedlington Terrier"
+      },
+      {
+        "fciNumber": 8,
+        "name": "Border Terrier"
+      },
+      {
+        "fciNumber": 9,
+        "name": "Bull Terrier"
+      },
+      {
+        "fciNumber": 10,
+        "name": "Fox Terrier a pelo liscio"
+      },
+      {
+        "fciNumber": 11,
+        "name": "Irish Terrier"
+      },
+      {
+        "fciNumber": 12,
+        "name": "Kerry Blue Terrier"
+      },
+      {
+        "fciNumber": 13,
+        "name": "Lakeland Terrier"
+      },
+      {
+        "fciNumber": 40,
+        "name": "Staffordshire Bull Terrier"
+      },
+      {
+        "fciNumber": 70,
+        "name": "Cairn Terrier"
+      },
+      {
+        "fciNumber": 71,
+        "name": "Dandie Dinmont Terrier"
+      },
+      {
+        "fciNumber": 72,
+        "name": "Manchester Terrier"
+      },
+      {
+        "fciNumber": 73,
+        "name": "Norwich Terrier"
+      },
+      {
+        "fciNumber": 74,
+        "name": "Scottish Terrier"
+      },
+      {
+        "fciNumber": 75,
+        "name": "Sealyham Terrier"
+      },
+      {
+        "fciNumber": 76,
+        "name": "Skye Terrier"
+      },
+      {
+        "fciNumber": 78,
+        "name": "Welsh Terrier"
+      },
+      {
+        "fciNumber": 85,
+        "name": "West Highland White Terrier"
+      },
+      {
+        "fciNumber": 103,
+        "name": "Fox Terrier a pelo ruvido"
+      },
+      {
+        "fciNumber": 139,
+        "name": "American Staffordshire Terrier"
+      },
+      {
+        "fciNumber": 168,
+        "name": "Soft Coated Wheaten Terrier"
+      },
+      {
+        "fciNumber": 169,
+        "name": "Glen of Imaal Terrier"
+      },
+      {
+        "fciNumber": 236,
+        "name": "Silky Terrier"
+      },
+      {
+        "fciNumber": 246,
+        "name": "Norfolk Terrier"
+      },
+      {
+        "fciNumber": 259,
+        "name": "Nihon Terrier"
+      },
+      {
+        "fciNumber": 272,
+        "name": "Irish Soft Coated Wheaten Terrier"
+      },
+      {
+        "fciNumber": 286,
+        "name": "Terrier Brasileiro"
+      },
+      {
+        "fciNumber": 302,
+        "name": "Cesky Terrier"
+      },
+      {
+        "fciNumber": 339,
+        "name": "Jack Russell Terrier"
+      },
+      {
+        "fciNumber": 341,
+        "name": "Miniature Bull Terrier"
+      },
+      {
+        "fciNumber": 345,
+        "name": "Parson Russell Terrier"
+      },
+      {
+        "fciNumber": 359,
+        "name": "Rat Terrier"
+      }
+    ]
+  },
+  {
+    "name": "Springer Spaniel Club d'Italia",
+    "shortName": "Springer Spaniel Club d'Italia",
+    "website": "http://www.springerspanielclub.org",
+    "email": "info@springerspanielclub.org",
+    "phone": "3342055957",
+    "address": "c/o Tiziano Pavolettoni, Via Settembrini 8, 56017 San Giuliano Terme (PI)",
+    "region": "Toscana",
+    "president": "Pavolettoni Tiziano",
+    "logo": "/images/club-logos/springer-spaniel-club-d-italia.jpg",
+    "enciSlug": "springer-spaniel-club-d-italia",
+    "breeds": [
+      {
+        "fciNumber": 125,
+        "name": "Springer Spaniel Inglese"
+      },
+      {
+        "fciNumber": 126,
+        "name": "Welsh Springer Spaniel"
+      }
+    ]
+  },
+  {
+    "name": "Weimaraner Club d'Italia",
+    "shortName": "Weimaraner Club d'Italia",
+    "website": "http://www.weimaranerclub.it",
+    "email": "info@weimaranerclub.it",
+    "phone": "335-8092904",
+    "address": "Via G. Roi 45, 36010 Monticello Conte Otto (VI)",
+    "region": "Veneto",
+    "president": "Porro Filippo",
+    "logo": "/images/club-logos/weimaraner-club-d-italia.jpg",
+    "enciSlug": "weimaraner-club-d-italia",
+    "breeds": [
+      {
+        "fciNumber": 99,
+        "name": "Weimaraner"
+      }
+    ]
+  }
+]

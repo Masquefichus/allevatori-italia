@@ -27,16 +27,9 @@ export default function InformazioniPage() {
       const supabase = createClient();
       if (!supabase) { setLoading(false); return; }
 
-      const storageKey = `sb-nveyyjefsrdyjdtwwxda-auth-token`;
-      const stored = localStorage.getItem(storageKey);
-      if (!stored) { setLoading(false); return; }
-
       try {
-        const session = JSON.parse(stored);
-        await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        });
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { setLoading(false); return; }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data } = await (supabase.from("profiles") as any)
@@ -69,16 +62,9 @@ export default function InformazioniPage() {
     const supabase = createClient();
     if (!supabase) { setError("Supabase non configurato."); setSaving(false); return; }
 
-    const storageKey = `sb-nveyyjefsrdyjdtwwxda-auth-token`;
-    const stored = localStorage.getItem(storageKey);
-    if (!stored) { setError("Sessione scaduta."); setSaving(false); return; }
-
     try {
-      const session = JSON.parse(stored);
-      await supabase.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token,
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setError("Sessione scaduta."); setSaving(false); return; }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: updateError } = await (supabase.from("profiles") as any)

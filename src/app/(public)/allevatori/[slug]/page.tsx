@@ -41,16 +41,14 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
 
   if (!breeder) notFound();
 
-  // Resolve breed UUIDs → name + slug
+  // Resolve breed IDs → name + slug
   let resolvedBreeds: { id: string; name_it: string; slug: string }[] = [];
   if (breeder.breed_ids?.length) {
-    const { data: breedRows } = await supabase
-      .from("breeds")
-      .select("id, name_it, slug")
-      .in("id", breeder.breed_ids);
-    if (breedRows) {
+    // Fetch all breeds and match by id (the breed_ids column is UUID[])
+    const { data: allBreedRows } = await supabase.from("breeds").select("id, name_it, slug");
+    if (allBreedRows) {
       resolvedBreeds = breeder.breed_ids
-        .map((id: string) => breedRows.find((b) => b.id === id))
+        .map((bid: string) => allBreedRows.find((b) => b.id === bid))
         .filter(Boolean) as { id: string; name_it: string; slug: string }[];
     }
   }
@@ -63,6 +61,15 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
     .order("created_at", { ascending: false });
 
   const listings = (listingRows ?? []) as Parameters<typeof BreederProfileClient>[0]["listings"];
+
+  // Fetch breeding dogs
+  const { data: breedingDogRows } = await supabase
+    .from("breeding_dogs")
+    .select("*")
+    .eq("breeder_id", breeder.id)
+    .order("sort_order");
+
+  const breedingDogs = (breedingDogRows ?? []) as Parameters<typeof BreederProfileClient>[0]["breedingDogs"];
 
   // Fetch reviews
   const { data: reviewRows } = await supabase
@@ -81,8 +88,8 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
   return (
     <div>
       {/* Back nav */}
-      <div className="border-b border-border bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div className="bg-background">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2">
           <Link
             href="/allevatori"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -98,6 +105,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
         breeds={resolvedBreeds}
         allBreeds={allBreeds}
         listings={listings}
+        breedingDogs={breedingDogs}
         reviews={reviews}
         breederUserId={breeder.user_id}
         ChatModalComponent={

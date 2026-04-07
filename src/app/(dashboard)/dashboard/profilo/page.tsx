@@ -10,6 +10,8 @@ import { regioni } from "@/data/regioni";
 import { SPECIALIZATIONS, HEALTH_CERTIFICATIONS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
+import { razze } from "@/data/razze";
+import { getClubsForFciId, type BreedClub } from "@/lib/breed-clubs";
 
 export default function ProfiloPage() {
   const { user, loading: authLoading } = useAuth();
@@ -38,6 +40,8 @@ export default function ProfiloPage() {
   const [breedQuery, setBreedQuery] = useState("");
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
   const [selectedCerts, setSelectedCerts] = useState<string[]>([]);
+  const [affisso, setAffisso] = useState("");
+  const [selectedClubs, setSelectedClubs] = useState<string[]>([]);
 
   // UI state
   const [fetching, setFetching] = useState(true);
@@ -96,6 +100,8 @@ export default function ProfiloPage() {
         setSelectedBreeds((data.breed_ids || []).map((id: string) => idToSlug[id]).filter(Boolean));
         setSelectedSpecs(data.specializations || []);
         setSelectedCerts(data.certifications || []);
+        setAffisso(data.affisso || "");
+        setSelectedClubs(data.breed_club_memberships || []);
       }
       setFetching(false);
     });
@@ -145,6 +151,8 @@ export default function ProfiloPage() {
       breed_ids: selectedBreeds.map((slug) => breedSlugToId[slug]).filter(Boolean),
       specializations: selectedSpecs,
       certifications: selectedCerts,
+      affisso: affisso.trim() || null,
+      breed_club_memberships: selectedClubs,
     };
 
     if (profileId) {
@@ -307,7 +315,13 @@ export default function ProfiloPage() {
               onChange={(e) => setKennelName(e.target.value)}
               error={errors.kennelName}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input
+                label="Affisso ENCI/FCI"
+                placeholder="Es. Del Castello Incantato"
+                value={affisso}
+                onChange={(e) => setAffisso(e.target.value)}
+              />
               <Input
                 label="Numero ENCI"
                 placeholder="Es. MI-12345"
@@ -555,6 +569,47 @@ export default function ProfiloPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Club di Razza */}
+        {selectedBreeds.length > 0 && (() => {
+          // Derive relevant clubs from selected breeds
+          const relevantClubs = new Map<string, BreedClub>();
+          for (const slug of selectedBreeds) {
+            const razza = razze.find((r) => r.slug === slug);
+            if (!razza) continue;
+            for (const club of getClubsForFciId(razza.fci_id)) {
+              if (club.enciSlug) relevantClubs.set(club.enciSlug, club);
+            }
+          }
+          const clubList = Array.from(relevantClubs.values());
+          if (clubList.length === 0) return null;
+          return (
+            <Card>
+              <CardHeader>
+                <h2 className="font-semibold">Club di Razza</h2>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-3">Seleziona i club di cui fai parte (filtrati in base alle razze selezionate)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {clubList.map((club) => (
+                    <label
+                      key={club.enciSlug}
+                      className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded"
+                        checked={selectedClubs.includes(club.enciSlug!)}
+                        onChange={() => toggleItem(selectedClubs, setSelectedClubs, club.enciSlug!)}
+                      />
+                      {club.shortName}
+                    </label>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Submit */}
         <div className="flex justify-end gap-3">

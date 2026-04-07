@@ -68,20 +68,13 @@ export default function ImageUpload({
       return;
     }
 
-    const storageKey = `sb-nveyyjefsrdyjdtwwxda-auth-token`;
-    const stored = localStorage.getItem(storageKey);
-    if (!stored) {
-      setError("Devi effettuare il login.");
-      setUploading(false);
-      return;
-    }
-
     try {
-      const session = JSON.parse(stored);
-      await supabase.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token,
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError("Devi effettuare il login.");
+        setUploading(false);
+        return;
+      }
 
       const fileList = Array.from(files);
       const newImages: string[] = [];
