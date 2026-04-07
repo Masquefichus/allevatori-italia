@@ -45,13 +45,12 @@ export default function ChatInline({
 
     if (data) {
       setMessages(data as unknown as Message[]);
-      // Marca come letti
-      await supabase
-        .from("messages")
-        .update({ is_read: true })
-        .eq("conversation_id", conversationId)
-        .neq("sender_id", currentUserId)
-        .eq("is_read", false);
+      // Marca come letti via API (RLS non ha policy UPDATE sui messaggi)
+      fetch("/api/messages/read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId, userId: currentUserId }),
+      }).catch(() => {});
     }
     setLoading(false);
   }, [conversationId, currentUserId]);
