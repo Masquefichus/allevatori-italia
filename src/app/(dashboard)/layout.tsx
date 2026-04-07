@@ -11,6 +11,7 @@ import {
   Settings,
   Search,
   Heart,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -18,6 +19,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 const BREEDER_NAV = [
   { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
+  { href: "/dashboard/profilo", label: "Profilo", icon: User },
   { href: "/dashboard/annunci", label: "Cucciolate", icon: Megaphone },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
   { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
