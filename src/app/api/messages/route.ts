@@ -13,7 +13,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("conversations")
-      .select("*, listing:listings(title, breed:breeds(name_it))")
+      .select("*, litter:litters(name, breed:breeds(name_it))")
       .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
       .order("last_message_at", { ascending: false });
 
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
     }
 
-    const { recipient_id, listing_id, message } = await request.json();
+    const { recipient_id, litter_id, message } = await request.json();
 
     // Check for existing conversation
     const { data: existing } = await supabase
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
         .insert({
           participant_1: user.id,
           participant_2: recipient_id,
-          listing_id,
+          litter_id,
         })
         .select()
         .single();

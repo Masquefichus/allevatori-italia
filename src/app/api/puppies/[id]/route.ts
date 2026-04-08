@@ -10,22 +10,15 @@ export async function GET(
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from("listings")
-      .select("*, breed:breeds(*), breeder:breeder_profiles(*, profile:profiles(*))")
+      .from("puppies")
+      .select("*")
       .eq("id", id)
       .single();
 
     if (error) throw error;
-
-    // Increment views
-    await supabase
-      .from("listings")
-      .update({ views: (data.views || 0) + 1 })
-      .eq("id", id);
-
     return NextResponse.json(data);
   } catch {
-    return NextResponse.json({ error: "Annuncio non trovato" }, { status: 404 });
+    return NextResponse.json({ error: "Cucciolo non trovato" }, { status: 404 });
   }
 }
 
@@ -45,7 +38,7 @@ export async function PATCH(
 
     const body = await request.json();
     const { data, error } = await supabase
-      .from("listings")
+      .from("puppies")
       .update(body)
       .eq("id", id)
       .select()
@@ -73,7 +66,7 @@ export async function DELETE(
     }
 
     const { error } = await supabase
-      .from("listings")
+      .from("puppies")
       .delete()
       .eq("id", id);
 

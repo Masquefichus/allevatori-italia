@@ -49,23 +49,20 @@ export default async function AllevatoriPage({
   if (params.enci === "true") query = query.not("affisso", "is", null);
   if (params.rating) query = query.gte("average_rating", Number(params.rating));
 
-  // Filtro pedigree e health (mappati su certifications)
-  if (params.pedigree === "true") query = query.contains("certifications", ["Pedigree ENCI"]);
-  if (params.health === "true") query = query.not("certifications", "eq", "{}");
 
-  // Filtro disponibilità: cerca breeders con listings attivi
-  let breederIdsWithListings: string[] | null = null;
+  // Filtro disponibilità: cerca breeders con cucciolate attive
+  let breederIdsWithLitters: string[] | null = null;
   if (params.availability) {
     const statusMap: Record<string, string> = { now: "attivo", expected: "bozza", waitlist: "scaduto" };
-    const listingStatus = statusMap[params.availability];
-    if (listingStatus) {
-      const { data: listingRows } = await supabase
-        .from("listings")
+    const litterStatus = statusMap[params.availability];
+    if (litterStatus) {
+      const { data: litterRows } = await supabase
+        .from("litters")
         .select("breeder_id")
-        .eq("status", listingStatus);
-      breederIdsWithListings = [...new Set((listingRows ?? []).map((l) => l.breeder_id))];
-      if (breederIdsWithListings.length > 0) {
-        query = query.in("id", breederIdsWithListings);
+        .eq("status", litterStatus);
+      breederIdsWithLitters = [...new Set((litterRows ?? []).map((l) => l.breeder_id))];
+      if (breederIdsWithLitters.length > 0) {
+        query = query.in("id", breederIdsWithLitters);
       } else {
         // Nessun allevatore con questa disponibilità
         query = query.in("id", ["00000000-0000-0000-0000-000000000000"]);

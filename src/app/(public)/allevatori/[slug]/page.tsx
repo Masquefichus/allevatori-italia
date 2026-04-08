@@ -53,14 +53,19 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
     }
   }
 
-  // Fetch listings
-  const { data: listingRows } = await supabase
-    .from("listings")
-    .select("id, title, breed_id, price_min, price_max, price_on_request, available_puppies, litter_date, gender_available, pedigree_included, vaccinated, microchipped, health_tests, images, status")
+  // Fetch litters with parents and puppies
+  const { data: litterRows } = await supabase
+    .from("litters")
+    .select(`
+      *,
+      mother:breeding_dogs!mother_id(id, name, call_name, affisso, photo_url, sex, breed_id, color, titles, health_screenings, pedigree_number),
+      father:breeding_dogs!father_id(id, name, call_name, affisso, photo_url, sex, breed_id, color, titles, health_screenings, pedigree_number, is_external, external_kennel_name),
+      puppies(*)
+    `)
     .eq("breeder_id", breeder.id)
     .order("created_at", { ascending: false });
 
-  const listings = (listingRows ?? []) as Parameters<typeof BreederProfileClient>[0]["listings"];
+  const litters = (litterRows ?? []) as Parameters<typeof BreederProfileClient>[0]["litters"];
 
   // Fetch breeding dogs
   const { data: breedingDogRows } = await supabase
@@ -82,8 +87,8 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
   const reviews = (reviewRows ?? []) as unknown as Parameters<typeof BreederProfileClient>[0]["reviews"];
 
   // Fetch all breeds for the edit mode picker (always load, client decides if owner)
-  const { data: allBreedRows } = await supabase.from("breeds").select("id, name_it, slug").order("name_it");
-  const allBreeds = (allBreedRows ?? []) as { id: string; name_it: string; slug: string }[];
+  const { data: allBreedRows } = await supabase.from("breeds").select("id, name_it, slug, is_working_breed").order("name_it");
+  const allBreeds = (allBreedRows ?? []) as { id: string; name_it: string; slug: string; is_working_breed: boolean }[];
 
   return (
     <div>
@@ -104,7 +109,7 @@ export default async function BreederProfilePage({ params }: BreederPageProps) {
         breeder={breeder}
         breeds={resolvedBreeds}
         allBreeds={allBreeds}
-        listings={listings}
+        litters={litters}
         breedingDogs={breedingDogs}
         reviews={reviews}
         breederUserId={breeder.user_id}

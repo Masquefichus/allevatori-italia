@@ -26,54 +26,54 @@ export const ADMIN_NAV = [
   { href: "/admin/razze", label: "Razze" },
 ] as const;
 
-export const SPECIALIZATIONS = [
-  "Esposizione",
-  "Compagnia",
-  "Lavoro",
-  "Caccia",
-  "Agility",
-  "Pet Therapy",
-  "Ricerca e Soccorso",
-  "Guardia",
-] as const;
 
-export const HEALTH_CERTIFICATIONS = [
-  "Displasia dell'anca (HD)",
-  "Displasia del gomito (ED)",
-  "Test DNA",
-  "Esame oculistico",
-  "Test cardiologico",
-  "Patella (lussazione rotulea)",
-  "Spondilosi",
-  "Test BAER (sordità)",
-] as const;
-
-export const DOG_TITLES = [
+export const DOG_TITOLI_ESPOSITIVI = [
   "Campione Italiano di Bellezza",
   "Campione Internazionale di Bellezza (C.I.B.)",
   "Giovane Campione Italiano",
-  "Riproduttore Selezionato ENCI",
+] as const;
+
+export const DOG_CERTIFICATI_ESPOSITIVI = [
   "CAC",
   "CACIB",
   "BOB",
   "BIS",
-  "BH",
+] as const;
+
+export const DOG_TITOLI_LAVORO = [
   "IGP 1",
   "IGP 2",
   "IGP 3",
+] as const;
+
+export const DOG_CERTIFICATI_LAVORO = [
+  "BH",
   "ZTP",
   "CAE-1",
   "CAE-2",
 ] as const;
 
+export const DOG_TITOLI_ENCI = [
+  "Riproduttore Selezionato ENCI",
+  "Campione Riproduttore",
+] as const;
+
+export const DOG_TITLES = [...DOG_TITOLI_ESPOSITIVI, ...DOG_CERTIFICATI_ESPOSITIVI, ...DOG_TITOLI_LAVORO, ...DOG_CERTIFICATI_LAVORO, ...DOG_TITOLI_ENCI] as const;
+
 export const HEALTH_SCREENING_TYPES = {
-  hd: { label: "Displasia anca (HD)", grades: ["A", "B", "C", "D", "E"] },
-  ed: { label: "Displasia gomito (ED)", grades: ["0", "1", "2", "3"] },
-  eyes: { label: "Esame oculistico", grades: ["Esente", "Affetto"] },
-  heart: { label: "Esame cardiologico", grades: ["Esente", "Affetto"] },
-  patella: { label: "Lussazione rotulea", grades: ["0", "1", "2", "3", "4"] },
-  baer: { label: "Test BAER (udito)", grades: ["Normale", "Unilaterale", "Bilaterale"] },
+  hd: { label: "Displasia anca (HD)", grades: ["A", "B", "C", "D", "E"], sources: ["veterinario", "fsa", "celemasche"], hasYear: false },
+  ed: { label: "Displasia gomito (ED)", grades: ["0", "1", "2", "3"], sources: ["veterinario", "fsa", "celemasche"], hasYear: false },
+  eyes: { label: "Esame oculistico", grades: ["Esente", "Affetto"], sources: ["veterinario", "fsa"], hasYear: true },
+  heart: { label: "Esame cardiologico", grades: ["Esente", "Affetto"], sources: ["veterinario"], hasYear: true },
+  patella: { label: "Lussazione rotulea", grades: ["0", "1", "2", "3", "4"], sources: ["veterinario", "fsa"], hasYear: false },
+  baer: { label: "Test BAER (udito)", grades: ["Normale", "Unilaterale", "Bilaterale"], sources: ["veterinario"], hasYear: false },
 } as const;
+
+export const HEALTH_SOURCE_LABELS: Record<string, string> = {
+  veterinario: "Veterinario",
+  fsa: "FSA",
+  celemasche: "CeLeMaSche",
+};
 
 export const SUBSCRIPTION_PLANS = {
   base: {

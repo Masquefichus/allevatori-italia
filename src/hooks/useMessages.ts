@@ -62,14 +62,14 @@ export function useMessages() {
     }
   }, [activeConversation, fetchConversations]);
 
-  const startConversation = useCallback(async (recipientId: string, message: string, listingId?: string) => {
+  const startConversation = useCallback(async (recipientId: string, message: string, litterId?: string) => {
     try {
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           recipient_id: recipientId,
-          listing_id: listingId,
+          litter_id: litterId,
           message,
         }),
       });

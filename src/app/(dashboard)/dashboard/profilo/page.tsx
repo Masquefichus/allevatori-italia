@@ -7,7 +7,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import { regioni } from "@/data/regioni";
-import { SPECIALIZATIONS, HEALTH_CERTIFICATIONS } from "@/lib/constants";
+
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
 import { razze } from "@/data/razze";
@@ -21,7 +21,6 @@ export default function ProfiloPage() {
   const [kennelName, setKennelName] = useState("");
   const [enciNumber, setEnciNumber] = useState("");
   const [yearEstablished, setYearEstablished] = useState("");
-  const [description, setDescription] = useState("");
   const [region, setRegion] = useState("");
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
@@ -38,8 +37,6 @@ export default function ProfiloPage() {
   const [breedSlugToId, setBreedSlugToId] = useState<Record<string, string>>({}); // slug → UUID
   const [allBreeds, setAllBreeds] = useState<{ id: string; slug: string; name_it: string }[]>([]);
   const [breedQuery, setBreedQuery] = useState("");
-  const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
-  const [selectedCerts, setSelectedCerts] = useState<string[]>([]);
   const [affisso, setAffisso] = useState("");
   const [selectedClubs, setSelectedClubs] = useState<string[]>([]);
 
@@ -84,7 +81,6 @@ export default function ProfiloPage() {
         setKennelName(data.kennel_name || "");
         setEnciNumber(data.enci_number || "");
         setYearEstablished(data.year_established?.toString() || "");
-        setDescription(data.description || "");
         setRegion(data.region || "");
         setProvince(data.province || "");
         setCity(data.city || "");
@@ -98,8 +94,6 @@ export default function ProfiloPage() {
         // Convert stored UUIDs back to slugs for checkbox state
         setLogoUrl(data.logo_url || "");
         setSelectedBreeds((data.breed_ids || []).map((id: string) => idToSlug[id]).filter(Boolean));
-        setSelectedSpecs(data.specializations || []);
-        setSelectedCerts(data.certifications || []);
         setAffisso(data.affisso || "");
         setSelectedClubs(data.breed_club_memberships || []);
       }
@@ -111,7 +105,6 @@ export default function ProfiloPage() {
     const errs: Record<string, string> = {};
     if (!kennelName.trim()) errs.kennelName = "Il nome dell'allevamento è obbligatorio";
     if (!region) errs.region = "La regione è obbligatoria";
-    if (!description.trim()) errs.description = "La descrizione è obbligatoria";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -136,7 +129,6 @@ export default function ProfiloPage() {
       kennel_name: kennelName.trim(),
       enci_number: enciNumber.trim() || null,
       year_established: yearEstablished ? parseInt(yearEstablished) : null,
-      description: description.trim(),
       region,
       province: province || "",
       city: city.trim() || null,
@@ -149,8 +141,6 @@ export default function ProfiloPage() {
       instagram_url: instagramUrl.trim() || null,
       // Convert breed slugs to UUIDs for storage
       breed_ids: selectedBreeds.map((slug) => breedSlugToId[slug]).filter(Boolean),
-      specializations: selectedSpecs,
-      certifications: selectedCerts,
       affisso: affisso.trim() || null,
       breed_club_memberships: selectedClubs,
     };
@@ -338,23 +328,6 @@ export default function ProfiloPage() {
                 onChange={(e) => setYearEstablished(e.target.value)}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Descrizione *
-              </label>
-              <textarea
-                rows={5}
-                placeholder="Descrivi il tuo allevamento, la tua filosofia, la tua esperienza..."
-                className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
-                  errors.description ? "border-destructive" : "border-border"
-                }`}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-              {errors.description && (
-                <p className="mt-1 text-sm text-destructive">{errors.description}</p>
-              )}
-            </div>
           </CardContent>
         </Card>
 
@@ -520,56 +493,6 @@ export default function ProfiloPage() {
           </div>
         </div>
 
-        {/* Specializzazioni */}
-        <Card>
-          <CardHeader>
-            <h2 className="font-semibold">Specializzazioni</h2>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {SPECIALIZATIONS.map((spec) => (
-                <label
-                  key={spec}
-                  className="flex items-center gap-2 text-sm cursor-pointer px-3 py-2 rounded-lg border border-border hover:bg-muted"
-                >
-                  <input
-                    type="checkbox"
-                    className="rounded"
-                    checked={selectedSpecs.includes(spec)}
-                    onChange={() => toggleItem(selectedSpecs, setSelectedSpecs, spec)}
-                  />
-                  {spec}
-                </label>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Certificazioni Sanitarie */}
-        <Card>
-          <CardHeader>
-            <h2 className="font-semibold">Certificazioni Sanitarie</h2>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {HEALTH_CERTIFICATIONS.map((cert) => (
-                <label
-                  key={cert}
-                  className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted"
-                >
-                  <input
-                    type="checkbox"
-                    className="rounded"
-                    checked={selectedCerts.includes(cert)}
-                    onChange={() => toggleItem(selectedCerts, setSelectedCerts, cert)}
-                  />
-                  {cert}
-                </label>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Club di Razza */}
         {selectedBreeds.length > 0 && (() => {
           // Derive relevant clubs from selected breeds
@@ -602,7 +525,7 @@ export default function ProfiloPage() {
                         checked={selectedClubs.includes(club.enciSlug!)}
                         onChange={() => toggleItem(selectedClubs, setSelectedClubs, club.enciSlug!)}
                       />
-                      {club.shortName}
+                      {club.name}
                     </label>
                   ))}
                 </div>

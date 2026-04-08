@@ -1,7 +1,8 @@
 export type UserRole = "user" | "breeder" | "admin";
 export type SizeCategory = "piccola" | "media" | "grande" | "gigante";
-export type ListingStatus = "attivo" | "venduto" | "scaduto" | "bozza";
-export type GenderAvailable = "maschio" | "femmina" | "entrambi";
+export type LitterStatus = "attivo" | "venduto" | "scaduto" | "bozza";
+export type PuppyStatus = "disponibile" | "prenotato" | "venduto";
+export type PuppySex = "maschio" | "femmina";
 export type SubscriptionPlan = "base" | "premium" | "elite";
 export type SubscriptionStatus = "active" | "canceled" | "past_due" | "trialing";
 
@@ -33,6 +34,7 @@ export interface Breed {
   fci_id: number | null;
   is_italian_breed: boolean;
   is_popular: boolean;
+  is_working_breed: boolean;
   created_at: string;
 }
 
@@ -46,6 +48,7 @@ export interface BreederProfileRow {
   province: string;
   city: string | null;
   address: string | null;
+  show_address: boolean;
   latitude: number | null;
   longitude: number | null;
   website: string | null;
@@ -61,8 +64,6 @@ export interface BreederProfileRow {
   breed_club_memberships: string[];
   year_established: number | null;
   breed_ids: string[];
-  specializations: string[];
-  certifications: string[];
   logo_url: string | null;
   cover_image_url: string | null;
   gallery_urls: string[];
@@ -76,27 +77,47 @@ export interface BreederProfileRow {
   updated_at: string;
 }
 
-export interface ListingRow {
+export interface LitterRow {
   id: string;
   breeder_id: string;
-  breed_id: string;
-  title: string;
-  description: string | null;
-  price_min: number | null;
-  price_max: number | null;
-  price_on_request: boolean;
+  breed_id: string | null;
+  mother_id: string;
+  father_id: string | null;
+  is_external_father: boolean;
+  external_father_name: string | null;
+  external_father_kennel: string | null;
+  external_father_breed_id: string | null;
+  external_father_color: string | null;
+  external_father_pedigree_number: string | null;
+  external_father_photo_url: string | null;
+  external_father_titles: string[];
+  external_father_health_screenings: Record<string, string>;
+  name: string;
   litter_date: string | null;
-  available_puppies: number | null;
-  gender_available: GenderAvailable | null;
   pedigree_included: boolean;
   vaccinated: boolean;
   microchipped: boolean;
-  health_tests: string[];
   images: string[];
-  status: ListingStatus;
-  is_featured: boolean;
-  views: number;
-  expires_at: string | null;
+  status: LitterStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PuppyRow {
+  id: string;
+  litter_id: string;
+  name: string | null;
+  sex: PuppySex;
+  color: string | null;
+  variety: string | null;
+  status: PuppyStatus;
+  photo_url: string | null;
+  price: number | null;
+  price_on_request: boolean;
+  microchip_number: string | null;
+  notes: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -108,7 +129,9 @@ export interface BreedingDogRow {
   breeder_id: string;
   name: string;
   call_name: string | null;
+  affisso: string | null;
   breed_id: string | null;
+  variety: string | null;
   sex: BreedingDogSex;
   date_of_birth: string | null;
   pedigree_number: string | null;
@@ -146,7 +169,7 @@ export interface ConversationRow {
   id: string;
   participant_1: string;
   participant_2: string;
-  listing_id: string | null;
+  litter_id: string | null;
   last_message_at: string | null;
   created_at: string;
 }
@@ -181,9 +204,15 @@ export interface BreederProfile extends BreederProfileRow {
   profile?: Profile;
 }
 
-export interface Listing extends ListingRow {
+export interface Litter extends LitterRow {
+  mother?: BreedingDogRow;
+  father?: BreedingDogRow;
   breed?: Breed;
-  breeder?: BreederProfile;
+  puppies?: PuppyRow[];
+}
+
+export interface Puppy extends PuppyRow {
+  litter?: Litter;
 }
 
 export interface Review extends ReviewRow {
@@ -193,7 +222,7 @@ export interface Review extends ReviewRow {
 export interface Conversation extends ConversationRow {
   other_participant?: Profile;
   last_message?: Message;
-  listing?: Listing;
+  litter?: Litter;
 }
 
 export interface Message extends MessageRow {
@@ -215,7 +244,8 @@ export interface Database {
       profiles: TableDef<Profile>;
       breeds: TableDef<Breed>;
       breeder_profiles: TableDef<BreederProfileRow>;
-      listings: TableDef<ListingRow>;
+      litters: TableDef<LitterRow>;
+      puppies: TableDef<PuppyRow>;
       reviews: TableDef<ReviewRow>;
       conversations: TableDef<ConversationRow>;
       messages: TableDef<MessageRow>;

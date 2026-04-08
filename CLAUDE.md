@@ -97,7 +97,8 @@ All live under `src/app/api/`:
 
 - `/api/breeders` — search (GET) + create (POST); `[id]` — GET/PATCH/DELETE
 - `/api/breeds` — list all breeds
-- `/api/listings` — CRUD; supports status filter
+- `/api/litters` — CRUD for cucciolate (litters), with nested puppies; `[id]` — GET/PATCH/DELETE
+- `/api/puppies` — CRUD for individual puppies within a litter; `[id]` — GET/PATCH/DELETE
 - `/api/messages` — conversations + messages
 - `/api/reviews` — CRUD with moderation
 - `/api/upload` — Supabase Storage upload (jpg/png/webp/gif, max 5MB)
@@ -111,7 +112,8 @@ All live under `src/app/api/`:
 - **`profiles`**: extends `auth.users` via trigger (auto-created on signup). Role: `'user' | 'breeder' | 'admin'`.
 - **`breeder_profiles`**: linked to `profiles`. Contains kennel info, `breed_ids[]` (array), `gallery_urls[]`, geo coordinates, ENCI/FCI flags, `is_approved`, `is_premium`. Slug is unique.
 - **`breeds`**: static seed data — 50 breeds. Has `is_italian_breed`, FCI group, size category.
-- **`listings`**: puppy listings with status `'attivo' | 'venduto' | 'scaduto' | 'bozza'`.
+- **`litters`**: cucciolate linked to `breeding_dogs` via `mother_id`/`father_id`. Supports external fathers (`is_external_father` + `external_father_*` fields). Status: `'attivo' | 'venduto' | 'scaduto' | 'bozza'`.
+- **`puppies`**: individual puppies within a litter. Fields: name, sex, color, status (`'disponibile' | 'prenotato' | 'venduto'`), photo, price, microchip.
 - **`reviews`**: rating 1–5, UNIQUE on `(breeder_id, author_id)`. DB trigger auto-updates `breeder_profiles.average_rating` and `review_count`.
 - **`conversations` + `messages`**: simple two-participant messaging.
 - **`subscriptions`**: tracks Stripe subscription state per user.

@@ -25,7 +25,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function CucciolatePage() {
   const { user } = useAuth();
-  const [listings, setListings] = useState<any[]>([]);
+  const [litters, setLitters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -35,7 +35,6 @@ export default function CucciolatePage() {
       const supabase = createClient();
       if (!supabase) { setLoading(false); return; }
 
-      // Get the breeder profile for this user
       const { data: bp } = await (supabase as any)
         .from("breeder_profiles")
         .select("id")
@@ -45,34 +44,25 @@ export default function CucciolatePage() {
       if (!bp) { setLoading(false); return; }
 
       const { data } = await (supabase as any)
-        .from("listings")
-        .select("id, title, breed_id, status, available_puppies, price_min, price_max, price_on_request, images, created_at")
+        .from("litters")
+        .select("id, name, breed_id, status, litter_date, images, created_at, puppies(id, status)")
         .eq("breeder_id", bp.id)
         .order("created_at", { ascending: false });
 
-      setListings(data || []);
+      setLitters(data || []);
       setLoading(false);
     }
     load();
   }, [user]);
 
-  async function deleteListing(id: string) {
-    if (!confirm("Eliminare questa cucciolata?")) return;
+  async function deleteLitter(id: string) {
+    if (!confirm("Eliminare questa cucciolata e tutti i cuccioli?")) return;
     setDeleting(id);
     const supabase = createClient();
     if (!supabase) return;
-    await (supabase as any).from("listings").delete().eq("id", id);
-    setListings((prev) => prev.filter((l) => l.id !== id));
+    await (supabase as any).from("litters").delete().eq("id", id);
+    setLitters((prev) => prev.filter((l) => l.id !== id));
     setDeleting(null);
-  }
-
-  function formatPrice(l: any) {
-    if (l.price_on_request) return "Prezzo su richiesta";
-    if (l.price_min && l.price_max && l.price_min !== l.price_max)
-      return `€${l.price_min.toLocaleString("it-IT")} – €${l.price_max.toLocaleString("it-IT")}`;
-    if (l.price_min || l.price_max)
-      return `€${(l.price_min ?? l.price_max).toLocaleString("it-IT")}`;
-    return null;
   }
 
   if (loading) {
@@ -88,7 +78,7 @@ export default function CucciolatePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Cucciolate</h1>
-          <p className="text-muted-foreground">Gestisci le tue cucciolate disponibili</p>
+          <p className="text-muted-foreground">Gestisci le tue cucciolate</p>
         </div>
         <Link href="/dashboard/annunci/nuovo">
           <Button>
@@ -98,7 +88,7 @@ export default function CucciolatePage() {
         </Link>
       </div>
 
-      {listings.length === 0 ? (
+      {litters.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <Dog className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -116,36 +106,37 @@ export default function CucciolatePage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {listings.map((listing) => {
-            const price = formatPrice(listing);
-            const img = listing.images?.[0];
-            const date = new Date(listing.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" });
-            const status = listing.status as keyof typeof STATUS_BADGE;
+          {litters.map((litter) => {
+            const puppies = litter.puppies ?? [];
+            const available = puppies.filter((p: any) => p.status === "disponibile").length;
+            const total = puppies.length;
+            const date = new Date(litter.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" });
+            const status = litter.status as keyof typeof STATUS_BADGE;
+            const img = litter.images?.[0];
             return (
-              <Card key={listing.id}>
+              <Card key={litter.id}>
                 <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 py-4">
                   <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex items-center justify-center text-2xl shrink-0">
                     {img
                       ? <img src={img} alt="" className="w-full h-full object-cover" />
-                      : "🐶"}
+                      : <Dog className="h-6 w-6 text-muted-foreground" />}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="font-medium truncate">{listing.title ?? "Cucciolata"}</h3>
+                      <h3 className="font-medium truncate">{litter.name}</h3>
                       <Badge variant={STATUS_BADGE[status] ?? "outline"}>
                         {STATUS_LABEL[status] ?? status}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {listing.available_puppies != null && `${listing.available_puppies} cuccioli`}
-                      {price && ` · ${price}`}
+                      {total > 0 ? `${total} cuccioli (${available} disponibili)` : "Nessun cucciolo inserito"}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">Pubblicato il {date}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Creato il {date}</p>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <Link href={`/dashboard/annunci/${listing.id}`}>
+                    <Link href={`/dashboard/annunci/${litter.id}`}>
                       <Button variant="ghost" size="sm">
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -153,8 +144,8 @@ export default function CucciolatePage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteListing(listing.id)}
-                      disabled={deleting === listing.id}
+                      onClick={() => deleteLitter(litter.id)}
+                      disabled={deleting === litter.id}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

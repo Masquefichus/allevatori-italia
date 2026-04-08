@@ -14,7 +14,7 @@ import { SortableContext, useSortable, rectSortingStrategy } from "@dnd-kit/sort
 import { CSS } from "@dnd-kit/utilities";
 import Button from "@/components/ui/Button";
 import Rating from "@/components/ui/Rating";
-import { SITE_NAME, DOG_TITLES, HEALTH_SCREENING_TYPES } from "@/lib/constants";
+import { SITE_NAME, DOG_TITLES, DOG_TITOLI_ESPOSITIVI, DOG_CERTIFICATI_ESPOSITIVI, DOG_TITOLI_LAVORO, DOG_CERTIFICATI_LAVORO, DOG_TITOLI_ENCI, HEALTH_SCREENING_TYPES, HEALTH_SOURCE_LABELS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 const RichTextEditor = lazy(() => import("@/components/ui/RichTextEditor"));
 import ImageUpload from "@/components/ui/ImageUpload";
@@ -24,14 +24,33 @@ import { getClubBySlug, getClubsForFciId, type BreedClub } from "@/lib/breed-clu
 import { razze } from "@/data/razze";
 import { regioni } from "@/data/regioni";
 
-interface Breed { id: string; name_it: string; slug: string; }
-interface Listing {
-  id: string; title: string | null; breed_id: string | null;
-  price_min: number | null; price_max: number | null; price_on_request: boolean;
-  available_puppies: number | null; litter_date: string | null;
-  gender_available: string | null; pedigree_included: boolean;
-  vaccinated: boolean; microchipped: boolean;
-  health_tests: string[] | null; images: string[] | null; status: string;
+interface Breed { id: string; name_it: string; slug: string; is_working_breed?: boolean; }
+interface Puppy {
+  id: string; litter_id: string; name: string | null;
+  sex: "maschio" | "femmina"; color: string | null;
+  status: "disponibile" | "prenotato" | "venduto";
+  photo_url: string | null; price: number | null;
+  price_on_request: boolean; microchip_number: string | null;
+  notes: string | null; sort_order: number;
+}
+interface Litter {
+  id: string; breeder_id: string; breed_id: string | null;
+  mother_id: string; father_id: string | null;
+  is_external_father: boolean;
+  external_father_name: string | null;
+  external_father_kennel: string | null;
+  external_father_breed_id: string | null;
+  external_father_color: string | null;
+  external_father_pedigree_number: string | null;
+  external_father_photo_url: string | null;
+  external_father_titles: string[];
+  external_father_health_screenings: Record<string, string>;
+  name: string; litter_date: string | null;
+  pedigree_included: boolean; vaccinated: boolean; microchipped: boolean;
+  images: string[]; status: string; notes: string | null;
+  puppies: Puppy[];
+  mother?: BreedingDog;
+  father?: BreedingDog;
 }
 interface Review {
   id: string; rating: number; title: string | null; content: string | null;
@@ -40,7 +59,7 @@ interface Review {
 interface Breeder {
   id: string; user_id: string | null; kennel_name: string; slug: string;
   description: string | null; city: string | null; province: string | null;
-  region: string | null; address: string | null; phone: string | null;
+  region: string | null; address: string | null; show_address: boolean; phone: string | null;
   email_public: string | null; whatsapp: string | null; website: string | null;
   facebook_url: string | null; instagram_url: string | null;
   enci_number: string | null; enci_verified: boolean; fci_affiliated: boolean;
@@ -48,13 +67,12 @@ interface Breeder {
   year_established: number | null; logo_url: string | null;
   cover_image_url: string | null; gallery_urls: string[] | null;
   is_premium: boolean; average_rating: number; review_count: number;
-  certifications: string[] | null; specializations: string[] | null;
   breed_ids: string[] | null; logo_position: string | null;
   cover_image_position: string | null;
 }
 
 interface BreedingDog {
-  id: string; breeder_id: string; name: string; call_name: string | null;
+  id: string; breeder_id: string; name: string; call_name: string | null; affisso: string | null; variety: string | null;
   breed_id: string | null; sex: "maschio" | "femmina";
   date_of_birth: string | null; pedigree_number: string | null;
   microchip_number: string | null; color: string | null;
@@ -68,7 +86,7 @@ interface Props {
   breeder: Breeder;
   breeds: Breed[];
   allBreeds: Breed[];
-  listings: Listing[];
+  litters: Litter[];
   breedingDogs: BreedingDog[];
   reviews: Review[];
   breederUserId: string | null;
@@ -85,7 +103,7 @@ function SortablePhoto({ url, index, onCrop, onRemove }: { url: string; index: n
       <img src={url} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-black/20 pointer-events-none" />
       {/* Drag handle */}
-      <button {...attributes} {...listeners} className="absolute top-1 left-1 w-6 h-6 rounded bg-white/90 flex items-center justify-center cursor-grab active:cursor-grabbing" style={{ zIndex: 20 }}>
+      <button {...attributes} {...listeners} className="absolute top-1 left-1 w-6 h-6 rounded bg-white/90 flex items-center justify-center" style={{ zIndex: 20, cursor: "grab" }}>
         <GripVertical className="h-3 w-3 text-muted-foreground" />
       </button>
       <div className="absolute top-1 right-1 flex gap-0.5" style={{ zIndex: 20 }}>
@@ -106,7 +124,7 @@ function SortableDogCard({ dog, allBreeds, onEdit, onDelete }: { dog: BreedingDo
         {dog.photo_url
           ? <img src={dog.photo_url} alt={dog.name} className="w-full h-full object-cover" />
           : <div className="w-full h-full flex items-center justify-center text-3xl">{dog.sex === "maschio" ? "♂" : "♀"}</div>}
-        <button {...attributes} {...listeners} className="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white/90 flex items-center justify-center cursor-grab active:cursor-grabbing">
+        <button {...attributes} {...listeners} className="absolute top-2 left-2 w-7 h-7 rounded-lg bg-white/90 flex items-center justify-center" style={{ cursor: "grab" }}>
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </button>
         <div className="absolute top-2 right-2 flex gap-1">
@@ -115,18 +133,47 @@ function SortableDogCard({ dog, allBreeds, onEdit, onDelete }: { dog: BreedingDo
         </div>
       </div>
       <div className="p-3">
-        <p className="font-medium text-foreground text-sm">{dog.call_name || dog.name}</p>
-        <p className="text-xs text-muted-foreground">{breed?.name_it} · {dog.sex === "maschio" ? "Maschio" : "Femmina"}</p>
+        <p className="font-medium text-foreground text-sm">{dog.name}{dog.affisso ? ` ${dog.affisso}` : ""}</p>
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+          <span>{breed?.name_it}</span>
+          <span>·</span>
+          <span>{dog.sex === "maschio" ? "Maschio" : "Femmina"}</span>
+          {dog.color && <><span>·</span><span>{dog.color}</span></>}
+          {dog.date_of_birth && (() => {
+            const years = Math.floor((Date.now() - new Date(dog.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+            return <><span>·</span><span>{years === 1 ? "1 anno" : `${years} anni`}</span></>;
+          })()}
+        </div>
+        {dog.titles.length > 0 && (() => {
+          const titoliEnci = dog.titles.filter((t) => (DOG_TITOLI_ENCI as readonly string[]).includes(t));
+          const titoli = dog.titles.filter((t) => ([...DOG_TITOLI_ESPOSITIVI, ...DOG_TITOLI_LAVORO] as readonly string[]).includes(t));
+          const certificati = dog.titles.filter((t) => ([...DOG_CERTIFICATI_ESPOSITIVI, ...DOG_CERTIFICATI_LAVORO] as readonly string[]).includes(t));
+          return (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {titoliEnci.map((t) => (
+                <span key={t} className="text-[10px] font-medium bg-amber-600 text-white px-1.5 py-0.5 rounded-full">{t}</span>
+              ))}
+              {titoli.map((t) => (
+                <span key={t} className="text-[10px] font-medium bg-primary text-white px-1.5 py-0.5 rounded-full">{t}</span>
+              ))}
+              {certificati.map((t) => (
+                <span key={t} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{t}</span>
+              ))}
+            </div>
+          );
+        })()}
+        {Object.keys(dog.health_screenings).filter((k) => !k.endsWith("_source") && !k.endsWith("_year")).length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {Object.entries(dog.health_screenings).filter(([k]) => !k.endsWith("_source") && !k.endsWith("_year")).map(([key, val]) => (
+              <span key={key} className="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full">
+                {key.toUpperCase()}: {val}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
-}
-
-function formatPrice(min: number | null, max: number | null, onRequest: boolean) {
-  if (onRequest) return "Prezzo su richiesta";
-  if (!min && !max) return null;
-  if (min && max && min !== max) return `€${min.toLocaleString("it-IT")} – €${max.toLocaleString("it-IT")}`;
-  return `€${(min ?? max)!.toLocaleString("it-IT")}`;
 }
 
 // ── Breed search picker for edit mode ────────────────────────────────────────
@@ -219,7 +266,7 @@ function Field({ label, value, onChange, placeholder, type = "text", multiline =
 // ── Main component ────────────────────────────────────────────────────────────
 export default function BreederProfileClient({
   breeder: initialBreeder, breeds: initialBreeds, allBreeds,
-  listings: initialListings, breedingDogs: initialBreedingDogs, reviews, breederUserId, ChatModalComponent, ReviewFormComponent,
+  litters: initialLitters, breedingDogs: initialBreedingDogs, reviews, breederUserId, ChatModalComponent, ReviewFormComponent,
 }: Props) {
   const { user } = useAuth();
   const router = useRouter();
@@ -241,16 +288,26 @@ export default function BreederProfileClient({
   const [managedPhotos, setManagedPhotos] = useState<string[]>([]);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [cropIndex, setCropIndex] = useState<number | null>(null);
-  const [localListings, setLocalListings] = useState<Listing[]>(initialListings);
-  const [editingListingId, setEditingListingId] = useState<string | null>(null); // listing id or "new"
-  const [listingForm, setListingForm] = useState({
-    title: "", breed_id: "", description: "", litter_date: "",
-    available_puppies: "", gender_available: "", price_on_request: false,
-    price_min: "", price_max: "", pedigree_included: true,
-    vaccinated: false, microchipped: false, images: [] as string[],
-    status: "attivo" as string,
+  const [localLitters, setLocalLitters] = useState<Litter[]>(initialLitters);
+  const [editingLitterId, setEditingLitterId] = useState<string | null>(null);
+  const [expandedLitterId, setExpandedLitterId] = useState<string | null>(null);
+  const [litterForm, setLitterForm] = useState({
+    mother_id: "", father_id: "", is_external_father: false,
+    external_father_name: "", external_father_kennel: "",
+    external_father_breed_id: "",
+    external_father_color: "", external_father_pedigree_number: "",
+    external_father_photo_url: "", external_father_titles: [] as string[],
+    external_father_health_screenings: {} as Record<string, string>,
+    litter_date: "", pedigree_included: true, vaccinated: false,
+    microchipped: false, images: [] as string[], status: "attivo" as string,
+    notes: "",
+    puppies: [] as Array<{
+      id?: string; name: string; sex: "maschio" | "femmina"; color: string; variety: string;
+      status: "disponibile" | "prenotato" | "venduto"; photo_url: string;
+      price: string; price_on_request: boolean; microchip_number: string; notes: string;
+    }>,
   });
-  const [savingListing, setSavingListing] = useState(false);
+  const [savingLitter, setSavingLitter] = useState(false);
 
   // Breeding dogs state
   const [localDogs, setLocalDogs] = useState<BreedingDog[]>(initialBreedingDogs);
@@ -258,8 +315,9 @@ export default function BreederProfileClient({
   const [editingDogsMode, setEditingDogsMode] = useState(false);
   const [selectedDogId, setSelectedDogId] = useState<string | null>(null); // for side panel
   const [dogForm, setDogForm] = useState({
-    name: "", call_name: "", breed_id: "", sex: "maschio" as "maschio" | "femmina",
-    date_of_birth: "", pedigree_number: "", microchip_number: "", color: "",
+    name: "", affisso: "", affisso_mode: "breeder" as "breeder" | "other" | "none",
+    breed_id: "", variety: "", sex: "maschio" as "maschio" | "femmina",
+    date_of_birth: "", pedigree_number: "", color: "",
     titles: [] as string[], health_screenings: {} as Record<string, string>,
     dna_deposited: false, photo_url: "", gallery_urls: [] as string[],
     is_external: false, external_kennel_name: "", notes: "",
@@ -420,98 +478,161 @@ export default function BreederProfileClient({
     setEditingPhotos(false);
   }
 
-  function openListingEditor(listing?: Listing) {
-    if (listing) {
-      setEditingListingId(listing.id);
-      setListingForm({
-        title: listing.title ?? "", breed_id: listing.breed_id ?? "",
-        description: "", litter_date: listing.litter_date ?? "",
-        available_puppies: listing.available_puppies?.toString() ?? "",
-        gender_available: listing.gender_available ?? "",
-        price_on_request: listing.price_on_request,
-        price_min: listing.price_min?.toString() ?? "",
-        price_max: listing.price_max?.toString() ?? "",
-        pedigree_included: listing.pedigree_included,
-        vaccinated: listing.vaccinated, microchipped: listing.microchipped,
-        images: listing.images ?? [], status: listing.status,
+  function getLitterName() {
+    const mother = localDogs.find((d) => d.id === litterForm.mother_id);
+    const motherName = mother?.name || "?";
+    let fatherName: string;
+    if (litterForm.is_external_father && !litterForm.father_id) {
+      fatherName = litterForm.external_father_name || "?";
+    } else {
+      const father = localDogs.find((d) => d.id === litterForm.father_id);
+      fatherName = father?.name || "?";
+    }
+    return `Cucciolata di ${motherName} e ${fatherName}`;
+  }
+
+  function openLitterEditor(litter?: Litter) {
+    if (litter) {
+      setEditingLitterId(litter.id);
+      setLitterForm({
+        mother_id: litter.mother_id, father_id: litter.father_id ?? "",
+        is_external_father: litter.is_external_father,
+        external_father_name: litter.external_father_name ?? "",
+        external_father_kennel: litter.external_father_kennel ?? "",
+        external_father_breed_id: litter.external_father_breed_id ?? "",
+        external_father_color: litter.external_father_color ?? "",
+        external_father_pedigree_number: litter.external_father_pedigree_number ?? "",
+        external_father_photo_url: litter.external_father_photo_url ?? "",
+        external_father_titles: litter.external_father_titles ?? [],
+        external_father_health_screenings: litter.external_father_health_screenings ?? {},
+        litter_date: litter.litter_date ?? "", pedigree_included: litter.pedigree_included,
+        vaccinated: litter.vaccinated, microchipped: litter.microchipped,
+        images: litter.images ?? [], status: litter.status, notes: litter.notes ?? "",
+        puppies: (litter.puppies ?? []).map((p) => ({
+          id: p.id, name: p.name ?? "", sex: p.sex, color: p.color ?? "", variety: (p as any).variety ?? "",
+          status: p.status, photo_url: p.photo_url ?? "", price: p.price?.toString() ?? "",
+          price_on_request: p.price_on_request, microchip_number: p.microchip_number ?? "", notes: p.notes ?? "",
+        })),
       });
     } else {
-      setEditingListingId("new");
-      setListingForm({
-        title: "", breed_id: allBreeds[0]?.id ?? "", description: "", litter_date: "",
-        available_puppies: "", gender_available: "", price_on_request: false,
-        price_min: "", price_max: "", pedigree_included: true,
-        vaccinated: false, microchipped: false, images: [], status: "attivo",
+      setEditingLitterId("new");
+      setLitterForm({
+        mother_id: "", father_id: "", is_external_father: false,
+        external_father_name: "", external_father_kennel: "",
+        external_father_breed_id: "",
+        external_father_color: "", external_father_pedigree_number: "",
+        external_father_photo_url: "", external_father_titles: [],
+        external_father_health_screenings: {},
+        litter_date: "", pedigree_included: true, vaccinated: false,
+        microchipped: false, images: [], status: "attivo", notes: "",
+        puppies: [],
       });
     }
   }
 
-  async function saveListing() {
-    if (!listingForm.title.trim()) return;
-    setSavingListing(true);
+  async function saveLitter() {
+    if (!litterForm.mother_id) return;
+    if (!litterForm.is_external_father && !litterForm.father_id) return;
+    if (litterForm.is_external_father && !litterForm.external_father_name.trim()) return;
+    setSavingLitter(true);
     try {
       const supabase = createClient();
       if (!supabase) return;
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
+      const mother = localDogs.find((d) => d.id === litterForm.mother_id);
+      const litterName = getLitterName();
       const payload = {
-        title: listingForm.title.trim(),
-        breed_id: listingForm.breed_id || null,
-        litter_date: listingForm.litter_date || null,
-        available_puppies: listingForm.available_puppies ? parseInt(listingForm.available_puppies) : null,
-        gender_available: listingForm.gender_available || null,
-        price_on_request: listingForm.price_on_request,
-        price_min: !listingForm.price_on_request && listingForm.price_min ? parseInt(listingForm.price_min) : null,
-        price_max: !listingForm.price_on_request && listingForm.price_max ? parseInt(listingForm.price_max) : null,
-        pedigree_included: listingForm.pedigree_included,
-        vaccinated: listingForm.vaccinated,
-        microchipped: listingForm.microchipped,
-        images: listingForm.images,
-        status: listingForm.status,
+        name: litterName,
+        breed_id: mother?.breed_id || null,
+        mother_id: litterForm.mother_id,
+        father_id: litterForm.is_external_father ? null : (litterForm.father_id || null),
+        is_external_father: litterForm.is_external_father,
+        external_father_name: litterForm.is_external_father ? litterForm.external_father_name.trim() || null : null,
+        external_father_kennel: litterForm.is_external_father ? litterForm.external_father_kennel.trim() || null : null,
+        external_father_breed_id: litterForm.is_external_father ? litterForm.external_father_breed_id || null : null,
+        external_father_color: litterForm.is_external_father ? litterForm.external_father_color.trim() || null : null,
+        external_father_pedigree_number: litterForm.is_external_father ? litterForm.external_father_pedigree_number.trim() || null : null,
+        external_father_photo_url: litterForm.is_external_father ? litterForm.external_father_photo_url || null : null,
+        external_father_titles: litterForm.is_external_father ? litterForm.external_father_titles : [],
+        external_father_health_screenings: litterForm.is_external_father ? litterForm.external_father_health_screenings : {},
+        litter_date: litterForm.litter_date || null,
+        pedigree_included: litterForm.pedigree_included,
+        vaccinated: litterForm.vaccinated,
+        microchipped: litterForm.microchipped,
+        images: litterForm.images,
+        status: litterForm.status,
+        notes: litterForm.notes.trim() || null,
+        puppies: litterForm.puppies.map((p) => ({
+          ...(p.id ? { id: p.id } : {}),
+          name: p.name?.trim() || null,
+          sex: p.sex,
+          color: p.color?.trim() || null,
+          variety: p.variety?.trim() || null,
+          status: p.status,
+          photo_url: p.photo_url || null,
+          price: p.price ? parseInt(p.price) : null,
+          price_on_request: p.price_on_request,
+          microchip_number: p.microchip_number?.trim() || null,
+          notes: p.notes?.trim() || null,
+        })),
       };
-      if (editingListingId === "new") {
-        const res = await fetch("/api/listings", {
+      if (editingLitterId === "new") {
+        const res = await fetch("/api/litters", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (data.id) setLocalListings((prev) => [...prev, data]);
+        if (data.id) {
+          // Re-attach mother/father references for local state
+          data.mother = mother;
+          data.father = litterForm.is_external_father ? undefined : localDogs.find((d) => d.id === litterForm.father_id);
+          setLocalLitters((prev) => [data, ...prev]);
+        }
       } else {
-        const res = await fetch(`/api/listings/${editingListingId}`, {
+        const res = await fetch(`/api/litters/${editingLitterId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (data.id) setLocalListings((prev) => prev.map((l) => (l.id === data.id ? data : l)));
+        if (data.id) setLocalLitters((prev) => prev.map((l) => (l.id === data.id ? data : l)));
       }
-      setEditingListingId(null);
+      setEditingLitterId(null);
     } finally {
-      setSavingListing(false);
+      setSavingLitter(false);
     }
   }
 
-  async function deleteListing(id: string) {
+  async function deleteLitter(id: string) {
     const supabase = createClient();
     if (!supabase) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    await fetch(`/api/listings/${id}`, {
+    await fetch(`/api/litters/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
-    setLocalListings((prev) => prev.filter((l) => l.id !== id));
+    setLocalLitters((prev) => prev.filter((l) => l.id !== id));
   }
 
   // ── Breeding Dogs CRUD ──────────────────────────────────────────────
   function openDogEditor(dog?: BreedingDog) {
     if (dog) {
+      // Determine affisso mode from stored data
+      let affisso_mode: "breeder" | "other" | "none" = "none";
+      if (dog.affisso) {
+        affisso_mode = dog.affisso === breeder.affisso ? "breeder" : "other";
+      } else if (breeder.affisso && !dog.affisso) {
+        affisso_mode = "none";
+      }
       setEditingDogId(dog.id);
       setDogForm({
-        name: dog.name, call_name: dog.call_name ?? "", breed_id: dog.breed_id ?? "",
+        name: dog.name, affisso: dog.affisso ?? "", affisso_mode,
+        breed_id: dog.breed_id ?? "", variety: dog.variety ?? "",
         sex: dog.sex, date_of_birth: dog.date_of_birth ?? "",
-        pedigree_number: dog.pedigree_number ?? "", microchip_number: dog.microchip_number ?? "",
+        pedigree_number: dog.pedigree_number ?? "",
         color: dog.color ?? "", titles: dog.titles ?? [],
         health_screenings: dog.health_screenings ?? {},
         dna_deposited: dog.dna_deposited, photo_url: dog.photo_url ?? "",
@@ -522,8 +643,9 @@ export default function BreederProfileClient({
     } else {
       setEditingDogId("new");
       setDogForm({
-        name: "", call_name: "", breed_id: "", sex: "maschio",
-        date_of_birth: "", pedigree_number: "", microchip_number: "", color: "",
+        name: "", affisso: breeder.affisso ?? "", affisso_mode: breeder.affisso ? "breeder" : "none",
+        breed_id: "", variety: "", sex: "maschio",
+        date_of_birth: "", pedigree_number: "", color: "",
         titles: [], health_screenings: {}, dna_deposited: false,
         photo_url: "", gallery_urls: [], is_external: false,
         external_kennel_name: "", notes: "",
@@ -539,18 +661,19 @@ export default function BreederProfileClient({
       if (!supabase) return;
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
+      const resolvedAffisso = dogForm.affisso_mode === "none" ? null : dogForm.affisso.trim() || null;
       const payload = {
         name: dogForm.name.trim(),
-        call_name: dogForm.call_name.trim() || null,
+        affisso: resolvedAffisso,
         breed_id: dogForm.breed_id || null,
+        variety: dogForm.variety.trim() || null,
         sex: dogForm.sex,
         date_of_birth: dogForm.date_of_birth || null,
         pedigree_number: dogForm.pedigree_number.trim() || null,
-        microchip_number: dogForm.microchip_number.trim() || null,
         color: dogForm.color.trim() || null,
-        titles: dogForm.titles,
+        titles: dogForm.pedigree_number.trim() ? dogForm.titles : [],
         health_screenings: dogForm.health_screenings,
-        dna_deposited: dogForm.dna_deposited,
+        dna_deposited: dogForm.pedigree_number.trim() ? dogForm.dna_deposited : false,
         photo_url: dogForm.photo_url || null,
         gallery_urls: dogForm.gallery_urls,
         is_external: dogForm.is_external,
@@ -708,6 +831,7 @@ export default function BreederProfileClient({
     city: initialBreeder.city ?? "",
     province: initialBreeder.province ?? "",
     address: initialBreeder.address ?? "",
+    show_address: initialBreeder.show_address ?? false,
     phone: initialBreeder.phone ?? "",
     whatsapp: initialBreeder.whatsapp ?? "",
     email_public: initialBreeder.email_public ?? "",
@@ -729,6 +853,7 @@ export default function BreederProfileClient({
       city: breeder.city ?? "",
       province: breeder.province ?? "",
       address: breeder.address ?? "",
+      show_address: breeder.show_address ?? false,
       phone: breeder.phone ?? "",
       whatsapp: breeder.whatsapp ?? "",
       email_public: breeder.email_public ?? "",
@@ -756,6 +881,8 @@ export default function BreederProfileClient({
       region: form.region,
       province: form.province,
       city: form.city,
+      address: form.address.trim() || null,
+      show_address: form.show_address,
       year_established: form.year_established ? parseInt(form.year_established) : null,
       breed_ids: selectedBreedIds,
       slug: newSlug,
@@ -802,17 +929,12 @@ export default function BreederProfileClient({
     }
   }
 
-  const activeListings = localListings.filter((l) => l.status === "attivo");
-  const totalPuppies = activeListings.reduce((s, l) => s + (l.available_puppies ?? 0), 0);
-  const prices = activeListings.filter((l) => !l.price_on_request && (l.price_min || l.price_max));
-  const globalPriceMin = prices.length ? Math.min(...prices.map((l) => l.price_min ?? l.price_max!)) : null;
-  const globalPriceMax = prices.length ? Math.max(...prices.map((l) => l.price_max ?? l.price_min!)) : null;
-  const priceLabel = formatPrice(globalPriceMin, globalPriceMax, prices.length === 0 && activeListings.length > 0);
+  const activeLitters = localLitters.filter((l) => l.status === "attivo");
   const gallery: string[] = breeder.gallery_urls ?? [];
   const initials = breeder.kennel_name?.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase() ?? "K";
   const selectedRegionData = regioni.find((r) => r.nome === form.region);
   const provinceOptions = selectedRegionData?.province ?? [];
-  const location = [breeder.city, breeder.province, breeder.region].filter(Boolean).join(", ");
+  const location = [breeder.show_address ? breeder.address : null, breeder.city, breeder.province, breeder.region].filter(Boolean).join(", ");
 
   return (
     <div className="min-h-screen bg-background">
@@ -904,7 +1026,7 @@ export default function BreederProfileClient({
                               prev.includes(club.enciSlug!) ? prev.filter((s) => s !== club.enciSlug) : [...prev, club.enciSlug!]
                             )}
                           />
-                          {club.shortName}
+                          {club.name}
                         </label>
                       ))}
                     </div>
@@ -929,7 +1051,14 @@ export default function BreederProfileClient({
                     </select>
                   </div>
                 </div>
-                <Field label="Citta'" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+                <Field label="Città" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+                <div>
+                  <Field label="Indirizzo" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
+                  <label className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground cursor-pointer">
+                    <input type="checkbox" className="rounded" checked={form.show_address} onChange={(e) => setForm({ ...form, show_address: e.target.checked })} />
+                    Mostra indirizzo sul profilo pubblico
+                  </label>
+                </div>
                 <Field label="Anno di fondazione" type="number" value={form.year_established} onChange={(v) => setForm({ ...form, year_established: v })} />
               </div>
             ) : (
@@ -955,10 +1084,11 @@ export default function BreederProfileClient({
                 )}
                 {(breeder.breed_club_memberships ?? []).length > 0 && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Membro di {(breeder.breed_club_memberships ?? []).map((slug) => {
+                    Membro di {(breeder.breed_club_memberships ?? []).map((slug, i, arr) => {
                       const club = getClubBySlug(slug);
-                      return club?.shortName ?? slug;
-                    }).join(", ")}
+                      const name = club?.name ?? slug;
+                      return <span key={slug}>{club?.website ? <a href={club.website} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">{name}</a> : name}{i < arr.length - 1 ? ", " : ""}</span>;
+                    })}
                   </p>
                 )}
                 {location && (
@@ -1007,10 +1137,14 @@ export default function BreederProfileClient({
               <div className="flex items-center gap-3">
                 {breeder.affisso && (
                   <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/enci-logo.png" alt="ENCI" title="ENCI" className="h-14 object-contain" style={{ mixBlendMode: "multiply" }} />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/fci-logo.png" alt="FCI" title="FCI" className="h-14 object-contain" style={{ mixBlendMode: "multiply" }} />
+                    <a href="https://www.enci.it" target="_blank" rel="noopener noreferrer" title="ENCI">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/enci-logo.png" alt="ENCI" className="h-14 object-contain" style={{ mixBlendMode: "multiply" }} />
+                    </a>
+                    <a href="https://www.fci.be" target="_blank" rel="noopener noreferrer" title="FCI">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/fci-logo.png" alt="FCI" className="h-14 object-contain" style={{ mixBlendMode: "multiply" }} />
+                    </a>
                   </>
                 )}
                 {(breeder.breed_club_memberships ?? []).map((slug) => {
@@ -1018,9 +1152,9 @@ export default function BreederProfileClient({
                   if (!club) return null;
                   if (!club?.logo) return null;
                   return (
-                    <a key={slug} href={club.website ?? undefined} target="_blank" rel="noopener noreferrer" title={club.shortName}>
+                    <a key={slug} href={club.website ?? undefined} target="_blank" rel="noopener noreferrer" title={club.name}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={club.logo} alt={club.shortName} className="h-14 object-contain" style={{ mixBlendMode: "multiply" }} />
+                      <img src={club.logo} alt={club.name} className="h-14 object-contain" style={{ mixBlendMode: "multiply" }} />
                     </a>
                   );
                 })}
@@ -1049,8 +1183,8 @@ export default function BreederProfileClient({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex border-b border-border mt-4">
             {([
-              { id: "allevamento" as const, label: "L'allevamento" },
-              { id: "riproduttori" as const, label: "Riproduttori" },
+              { id: "allevamento" as const, label: "Chi siamo" },
+              { id: "riproduttori" as const, label: "I nostri cani" },
               { id: "cuccioli" as const, label: "Cuccioli e cucciolate" },
               { id: "attesa" as const, label: "Lista d'attesa" },
               { id: "recensioni" as const, label: "Recensioni" },
@@ -1171,12 +1305,12 @@ export default function BreederProfileClient({
           </div>
         )}
 
-        {/* ── TAB: Riproduttori ─────────────────────────────────────────── */}
+        {/* ── TAB: I nostri cani ─────────────────────────────────────────── */}
         {tab === "riproduttori" && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                Riproduttori{localDogs.length > 0 ? ` (${localDogs.length})` : ""}
+                I nostri cani{localDogs.length > 0 ? ` (${localDogs.length})` : ""}
               </h2>
               {isOwner && !editingDogsMode && (
                 <div className="flex gap-2">
@@ -1196,7 +1330,7 @@ export default function BreederProfileClient({
             {localDogs.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground">
                 <Dog className="h-8 w-8 mx-auto mb-3 text-border" />
-                <p className="text-sm">{isOwner ? "Non hai ancora aggiunto riproduttori." : "Nessun riproduttore registrato."}</p>
+                <p className="text-sm">{isOwner ? "Non hai ancora aggiunto cani." : "Nessun cane registrato."}</p>
                 {isOwner && (
                   <button onClick={() => { setEditingDogsMode(true); openDogEditor(); }} className="text-sm text-primary hover:underline mt-2">
                     Aggiungi il primo
@@ -1223,30 +1357,34 @@ export default function BreederProfileClient({
                         {dog.photo_url
                           ? <img src={dog.photo_url} alt={dog.name} className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center text-3xl">{dog.sex === "maschio" ? "♂" : "♀"}</div>}
-                        {dog.is_external && (
-                          <span className="absolute top-2 left-2 bg-amber-100 text-amber-700 text-[10px] font-medium px-2 py-0.5 rounded-full">Monta esterna</span>
-                        )}
                       </div>
                       <div className="p-4">
-                        <p className="font-medium text-foreground">{dog.call_name || dog.name}</p>
-                        {dog.call_name && <p className="text-xs text-muted-foreground">{dog.name}</p>}
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                          <span>{breed?.name_it}</span>
-                          <span>·</span>
-                          <span>{dog.sex === "maschio" ? "Maschio" : "Femmina"}</span>
-                          {dog.color && <><span>·</span><span>{dog.color}</span></>}
-                        </div>
-                        {dog.titles.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {dog.titles.slice(0, 3).map((t) => (
-                              <span key={t} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{t}</span>
-                            ))}
-                            {dog.titles.length > 3 && <span className="text-[10px] text-muted-foreground">+{dog.titles.length - 3}</span>}
-                          </div>
-                        )}
-                        {Object.keys(dog.health_screenings).length > 0 && (
+                        <p className="font-medium text-foreground">{dog.name}{dog.affisso ? ` ${dog.affisso}` : ""}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {[breed?.name_it, dog.sex === "maschio" ? "Maschio" : "Femmina", dog.color, dog.date_of_birth ? (() => { const y = Math.floor((Date.now() - new Date(dog.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)); return y === 1 ? "1 anno" : `${y} anni`; })() : null].filter(Boolean).join(" · ")}
+                        </p>
+                        {(dog.pedigree_number || dog.titles.length > 0) && (() => {
+                          const titoliEnci = dog.titles.filter((t) => (DOG_TITOLI_ENCI as readonly string[]).includes(t));
+                          const titoli = dog.titles.filter((t) => ([...DOG_TITOLI_ESPOSITIVI, ...DOG_TITOLI_LAVORO] as readonly string[]).includes(t));
+                          const certificati = dog.titles.filter((t) => ([...DOG_CERTIFICATI_ESPOSITIVI, ...DOG_CERTIFICATI_LAVORO] as readonly string[]).includes(t));
+                          return (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {dog.pedigree_number && <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full">Pedigree</span>}
+                              {titoliEnci.map((t) => (
+                                <span key={t} className="text-[10px] font-medium bg-amber-600 text-white px-1.5 py-0.5 rounded-full">{t}</span>
+                              ))}
+                              {titoli.map((t) => (
+                                <span key={t} className="text-[10px] font-medium bg-primary text-white px-1.5 py-0.5 rounded-full">{t}</span>
+                              ))}
+                              {certificati.map((t) => (
+                                <span key={t} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{t}</span>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                        {Object.keys(dog.health_screenings).filter((k) => !k.endsWith("_source") && !k.endsWith("_year")).length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
-                            {Object.entries(dog.health_screenings).map(([key, val]) => (
+                            {Object.entries(dog.health_screenings).filter(([k]) => !k.endsWith("_source") && !k.endsWith("_year")).map(([key, val]) => (
                               <span key={key} className="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full">
                                 {key.toUpperCase()}: {val}
                               </span>
@@ -1279,46 +1417,81 @@ export default function BreederProfileClient({
                     <img src={dog.photo_url} alt={dog.name} className="w-full h-full object-cover" />
                   </div>
                 )}
+                {dog.gallery_urls && dog.gallery_urls.length > 0 && (
+                  <div className="flex gap-1.5 px-4 pt-3 overflow-x-auto">
+                    {dog.gallery_urls.map((url, i) => (
+                      <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-muted cursor-pointer" onClick={() => setLightboxIndex(i)}>
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="p-6 space-y-4">
                   <div>
-                    {dog.call_name && <p className="text-sm text-muted-foreground">{dog.call_name}</p>}
-                    <h3 className="text-lg font-semibold text-foreground">{dog.name}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{dog.name}{dog.affisso ? ` ${dog.affisso}` : ""}</h3>
                     <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <span>{breed?.name_it}</span>
+                      <span>{breed?.name_it}{dog.variety ? ` — ${dog.variety}` : ""}</span>
                       <span>·</span>
                       <span>{dog.sex === "maschio" ? "Maschio ♂" : "Femmina ♀"}</span>
                     </div>
                   </div>
                   {(dog.color || dog.date_of_birth) && (
                     <div className="grid grid-cols-2 gap-3 text-sm">
-                      {dog.color && <div><span className="text-muted-foreground">Colore</span><p className="font-medium">{dog.color}</p></div>}
+                      {dog.color && <div><span className="text-muted-foreground">Mantello</span><p className="font-medium">{dog.color}</p></div>}
                       {dog.date_of_birth && <div><span className="text-muted-foreground">Data di nascita</span><p className="font-medium">{new Date(dog.date_of_birth).toLocaleDateString("it-IT")}</p></div>}
                     </div>
                   )}
-                  {(dog.pedigree_number || dog.microchip_number) && (
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      {dog.pedigree_number && <div><span className="text-muted-foreground">Pedigree (ROI)</span><p className="font-medium">{dog.pedigree_number}</p></div>}
-                      {dog.microchip_number && <div><span className="text-muted-foreground">Microchip</span><p className="font-medium">{dog.microchip_number}</p></div>}
+                  {dog.pedigree_number && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Pedigree (ROI)</span>
+                      <p className="font-medium">{dog.pedigree_number}</p>
                     </div>
                   )}
-                  {dog.titles.length > 0 && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1.5">Titoli</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {dog.titles.map((t) => <span key={t} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t}</span>)}
+                  {dog.titles.length > 0 && (() => {
+                    const titoliEnci = dog.titles.filter((t) => (DOG_TITOLI_ENCI as readonly string[]).includes(t));
+                    const titoli = dog.titles.filter((t) => ([...DOG_TITOLI_ESPOSITIVI, ...DOG_TITOLI_LAVORO] as readonly string[]).includes(t));
+                    const certificati = dog.titles.filter((t) => ([...DOG_CERTIFICATI_ESPOSITIVI, ...DOG_CERTIFICATI_LAVORO] as readonly string[]).includes(t));
+                    return (
+                      <div className="space-y-3">
+                        {titoliEnci.length > 0 && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1.5">Titoli ENCI</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {titoliEnci.map((t) => <span key={t} className="text-xs font-medium bg-amber-600 text-white px-2.5 py-1 rounded-full">{t}</span>)}
+                            </div>
+                          </div>
+                        )}
+                        {titoli.length > 0 && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1.5">Titoli</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {titoli.map((t) => <span key={t} className="text-xs font-medium bg-primary text-white px-2.5 py-1 rounded-full">{t}</span>)}
+                            </div>
+                          </div>
+                        )}
+                        {certificati.length > 0 && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1.5">Certificati</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {certificati.map((t) => <span key={t} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t}</span>)}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
-                  {Object.keys(dog.health_screenings).length > 0 && (
+                    );
+                  })()}
+                  {Object.keys(dog.health_screenings).filter((k) => !k.endsWith("_source") && !k.endsWith("_year")).length > 0 && (
                     <div>
                       <p className="text-sm text-muted-foreground mb-1.5">Screening sanitari</p>
                       <div className="space-y-1">
-                        {Object.entries(dog.health_screenings).map(([key, val]) => {
+                        {Object.entries(dog.health_screenings).filter(([k]) => !k.endsWith("_source") && !k.endsWith("_year")).map(([key, val]) => {
                           const type = HEALTH_SCREENING_TYPES[key as keyof typeof HEALTH_SCREENING_TYPES];
+                          const source = dog.health_screenings[`${key}_source`];
+                          const year = dog.health_screenings[`${key}_year`];
                           return (
                             <div key={key} className="flex items-center justify-between text-sm">
                               <span>{type?.label ?? key}</span>
-                              <span className="font-medium text-emerald-700">{val}</span>
+                              <span className="font-medium text-emerald-700">{val}{source && source !== "veterinario" ? ` (${HEALTH_SOURCE_LABELS[source] ?? source})` : ""}{year ? ` — ${year}` : ""}</span>
                             </div>
                           );
                         })}
@@ -1328,12 +1501,6 @@ export default function BreederProfileClient({
                   {dog.dna_deposited && (
                     <div className="flex items-center gap-2 text-sm text-emerald-600">
                       <CheckCircle className="h-4 w-4" />DNA depositato
-                    </div>
-                  )}
-                  {dog.is_external && dog.external_kennel_name && (
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Monta esterna da: </span>
-                      <span className="font-medium">{dog.external_kennel_name}</span>
                     </div>
                   )}
                   {dog.notes && (
@@ -1353,49 +1520,180 @@ export default function BreederProfileClient({
           <div className="space-y-6">
             {isOwner && (
               <div className="flex justify-end">
-                <Button size="sm" onClick={() => openListingEditor()}><Plus className="h-4 w-4" /> Nuova cucciolata</Button>
+                <Button size="sm" onClick={() => openLitterEditor()}><Plus className="h-4 w-4" /> Nuova cucciolata</Button>
               </div>
             )}
             {(() => {
-              const visibleListings = isOwner ? localListings : activeListings;
-              return visibleListings.length === 0 ? (
+              const visibleLitters = isOwner ? localLitters : activeLitters;
+              return visibleLitters.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground">
                   <Dog className="h-8 w-8 mx-auto mb-3 text-border" />
                   <p className="text-sm">{isOwner ? "Non hai ancora pubblicato cucciolate." : "Nessun cucciolo disponibile al momento."}</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {visibleListings.map((listing) => {
-                    const breed = breeds.find((b) => b.id === listing.breed_id);
-                    const price = formatPrice(listing.price_min, listing.price_max, listing.price_on_request);
-                    const img = listing.images?.[0];
-                    const isDraft = listing.status === "bozza";
+                <div className="space-y-4">
+                  {visibleLitters.map((litter) => {
+                    const breed = breeds.find((b) => b.id === litter.breed_id);
+                    const isDraft = litter.status === "bozza";
+                    const motherPhoto = litter.mother?.photo_url;
+                    const fatherPhoto = litter.is_external_father ? litter.external_father_photo_url : litter.father?.photo_url;
+                    const puppies = litter.puppies ?? [];
+                    const available = puppies.filter((p) => p.status === "disponibile").length;
+                    const reserved = puppies.filter((p) => p.status === "prenotato").length;
+                    const sold = puppies.filter((p) => p.status === "venduto").length;
+                    const isExpanded = expandedLitterId === litter.id;
+
+                    const coverImage = litter.images?.[0] ?? null;
                     return (
-                      <div key={listing.id} className={`bg-white rounded-2xl border overflow-hidden ${isDraft ? "border-dashed border-border" : "border-border"}`}>
-                        <div className="aspect-[4/3] bg-muted relative">
-                          {img
-                            ? <Image src={img} alt={listing.title ?? "Cucciolo"} fill className="object-cover" />
-                            : <div className="w-full h-full flex items-center justify-center text-3xl">🐶</div>}
-                          {isOwner && isDraft && (
-                            <span className="absolute top-2 left-2 bg-amber-100 text-amber-700 text-[10px] font-medium px-2 py-0.5 rounded-full">Bozza</span>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <p className="font-medium text-foreground">{listing.title ?? breed?.name_it ?? "Cucciolo"}</p>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                            {listing.available_puppies != null && <span>{listing.available_puppies} disponibili</span>}
-                            {listing.gender_available && <span>· {listing.gender_available}</span>}
-                          </div>
-                          {price && price !== "Prezzo su richiesta" && (
-                            <p className="text-sm font-semibold text-foreground mt-2">{price}</p>
-                          )}
-                          {isOwner && (
-                            <div className="flex items-center gap-3 mt-2">
-                              <button onClick={() => openListingEditor(listing)} className="text-xs text-primary hover:underline">Modifica</button>
-                              <button onClick={() => { if (confirm("Eliminare questa cucciolata?")) deleteListing(listing.id); }} className="text-xs text-red-500 hover:underline">Elimina</button>
+                      <div key={litter.id} className={`bg-white rounded-2xl border overflow-hidden ${isDraft ? "border-dashed border-border" : "border-border"}`}>
+                        {/* Litter card header */}
+                        <button onClick={() => setExpandedLitterId(isExpanded ? null : litter.id)} className="w-full text-left hover:bg-muted/30 transition-colors">
+                          {coverImage && (
+                            <div className="relative aspect-[3/1] bg-muted">
+                              <Image src={coverImage} alt={litter.name} fill className="object-cover" />
+                              {isDraft && isOwner && <span className="absolute top-3 left-3 bg-amber-100 text-amber-700 text-[10px] font-medium px-2 py-0.5 rounded-full">Bozza</span>}
                             </div>
                           )}
-                        </div>
+                          <div className="p-4">
+                            <div className="flex items-center gap-4">
+                              {/* Parent photos */}
+                              <div className="flex -space-x-3 shrink-0">
+                                <div className="w-12 h-12 rounded-full border-2 border-white bg-muted overflow-hidden">
+                                  {motherPhoto ? <img src={motherPhoto} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">M</div>}
+                                </div>
+                                <div className="w-12 h-12 rounded-full border-2 border-white bg-muted overflow-hidden">
+                                  {fatherPhoto ? <img src={fatherPhoto} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">P</div>}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-foreground truncate">{litter.name}</p>
+                                  {isDraft && isOwner && !coverImage && <span className="bg-amber-100 text-amber-700 text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0">Bozza</span>}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                  {breed && <span>{breed.name_it}</span>}
+                                  {litter.litter_date && <span>· {new Date(litter.litter_date).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}</span>}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                  {available > 0 && <span className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{available} disponibil{available === 1 ? "e" : "i"}</span>}
+                                  {reserved > 0 && <span className="text-[11px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{reserved} prenotat{reserved === 1 ? "o" : "i"}</span>}
+                                  {sold > 0 && <span className="text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{sold} vendut{sold === 1 ? "o" : "i"}</span>}
+                                  {puppies.length === 0 && <span className="text-[11px] text-muted-foreground">Nessun cucciolo inserito</span>}
+                                </div>
+                              </div>
+                              <ArrowRight className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* Expanded content */}
+                        {isExpanded && (
+                          <div className="border-t border-border">
+                            {/* Litter details */}
+                            <div className="p-4 space-y-4">
+                              {/* Parent cards */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {[
+                                  { label: "Madre", dog: litter.mother, photo: motherPhoto },
+                                  { label: litter.is_external_father ? "Padre (Monta esterna)" : "Padre", dog: litter.is_external_father ? null : litter.father, photo: fatherPhoto, external: litter.is_external_father ? { name: litter.external_father_name, kennel: litter.external_father_kennel, color: litter.external_father_color } : null },
+                                ].map(({ label, dog, photo, external }) => (
+                                  <div key={label} className="bg-white rounded-lg border border-border overflow-hidden flex" onClick={() => dog && setSelectedDogId(dog.id)} style={{ cursor: dog ? "pointer" : "default" }}>
+                                    <div className="w-28 shrink-0 bg-muted">
+                                      {photo
+                                        ? <img src={photo} alt="" className="w-full h-full object-cover" />
+                                        : <div className="w-full h-full flex items-center justify-center text-xl text-muted-foreground">{dog?.sex === "maschio" ? "♂" : "♀"}</div>}
+                                    </div>
+                                    <div className="p-3 min-w-0 flex-1">
+                                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+                                      <p className="font-medium text-sm text-foreground mt-0.5 truncate">{dog ? `${dog.name}${dog.affisso ? ` ${dog.affisso}` : ""}` : external?.name}</p>
+                                      {dog && (
+                                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                          {[dog.sex === "maschio" ? "Maschio" : "Femmina", dog.color, dog.date_of_birth ? (() => { const y = Math.floor((Date.now() - new Date(dog.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)); return y === 1 ? "1 anno" : `${y} anni`; })() : null].filter(Boolean).join(" · ")}
+                                        </p>
+                                      )}
+                                      {external?.kennel && <p className="text-[10px] text-muted-foreground mt-0.5">Allevamento: {external.kennel}</p>}
+                                      {dog && (dog.pedigree_number || dog.titles.length > 0) && (() => {
+                                        const titoliEnci = dog.titles.filter((t) => (DOG_TITOLI_ENCI as readonly string[]).includes(t));
+                                        const titoli = dog.titles.filter((t) => ([...DOG_TITOLI_ESPOSITIVI, ...DOG_TITOLI_LAVORO] as readonly string[]).includes(t));
+                                        const certificati = dog.titles.filter((t) => ([...DOG_CERTIFICATI_ESPOSITIVI, ...DOG_CERTIFICATI_LAVORO] as readonly string[]).includes(t));
+                                        return (
+                                          <div className="flex flex-wrap gap-1 mt-1.5">
+                                            {dog.pedigree_number && <span className="text-[9px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full">Pedigree</span>}
+                                            {titoliEnci.map((t) => <span key={t} className="text-[9px] font-medium bg-amber-600 text-white px-1.5 py-0.5 rounded-full">{t}</span>)}
+                                            {titoli.map((t) => <span key={t} className="text-[9px] font-medium bg-primary text-white px-1.5 py-0.5 rounded-full">{t}</span>)}
+                                            {certificati.map((t) => <span key={t} className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{t}</span>)}
+                                          </div>
+                                        );
+                                      })()}
+                                      {dog && Object.keys(dog.health_screenings).filter((k) => !k.endsWith("_source") && !k.endsWith("_year")).length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                          {Object.entries(dog.health_screenings).filter(([k]) => !k.endsWith("_source") && !k.endsWith("_year")).map(([key, val]) => (
+                                            <span key={key} className="text-[9px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full">{key.toUpperCase()}: {val}</span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Badges */}
+                              <div className="flex flex-wrap gap-2">
+                                {litter.pedigree_included && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Pedigree</span>}
+                                {litter.vaccinated && <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">Vaccinati</span>}
+                                {litter.microchipped && <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Microchippati</span>}
+                              </div>
+
+                              {litter.notes && <p className="text-sm text-muted-foreground">{litter.notes}</p>}
+
+                              {/* Individual puppies */}
+                              {puppies.length > 0 && (
+                                <div>
+                                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Cuccioli ({puppies.length})</p>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    {puppies.map((puppy) => (
+                                      <div key={puppy.id} className="bg-muted/30 rounded-xl border border-border p-3">
+                                        {puppy.photo_url && (
+                                          <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-2">
+                                            <img src={puppy.photo_url} alt={puppy.name ?? "Cucciolo"} className="w-full h-full object-cover" />
+                                          </div>
+                                        )}
+                                        <div className="space-y-1">
+                                          {puppy.name && <p className="text-sm font-medium text-foreground">{puppy.name}</p>}
+                                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                            <span>{puppy.sex === "maschio" ? "♂" : "♀"}</span>
+                                            {puppy.color && <span>· {puppy.color}</span>}
+                                          </div>
+                                          <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                                            puppy.status === "disponibile" ? "bg-emerald-100 text-emerald-700" :
+                                            puppy.status === "prenotato" ? "bg-amber-100 text-amber-700" :
+                                            "bg-gray-100 text-gray-500"
+                                          }`}>
+                                            {puppy.status === "disponibile" ? "Disponibile" : puppy.status === "prenotato" ? "Prenotato" : "Venduto"}
+                                          </span>
+                                          {puppy.price != null && !puppy.price_on_request && (
+                                            <p className="text-xs font-semibold text-foreground">{`\u20AC${puppy.price.toLocaleString("it-IT")}`}</p>
+                                          )}
+                                          {puppy.price_on_request && (
+                                            <p className="text-xs text-muted-foreground">Prezzo su richiesta</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Owner actions */}
+                              {isOwner && (
+                                <div className="flex items-center gap-3 pt-2 border-t border-border">
+                                  <button onClick={() => openLitterEditor(litter)} className="text-xs text-primary hover:underline">Modifica</button>
+                                  <button onClick={() => { if (confirm("Eliminare questa cucciolata e tutti i cuccioli?")) deleteLitter(litter.id); }} className="text-xs text-red-500 hover:underline">Elimina</button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1517,79 +1815,246 @@ export default function BreederProfileClient({
         );
       })()}
 
-      {/* ── Listing Editor Modal ─────────────────────────────────────────── */}
-      {editingListingId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setEditingListingId(null)}>
+      {/* ── Litter Editor Modal ──────────────────────────────────────────── */}
+      {editingLitterId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setEditingLitterId(null)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-              <h3 className="font-semibold text-lg">{editingListingId === "new" ? "Nuova cucciolata" : "Modifica cucciolata"}</h3>
-              <button onClick={() => setEditingListingId(null)} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+              <h3 className="font-semibold text-lg">{editingLitterId === "new" ? "Nuova cucciolata" : "Modifica cucciolata"}</h3>
+              <button onClick={() => setEditingLitterId(null)} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
             </div>
-            <div className="p-6 space-y-4">
-              <Field label="Titolo *" value={listingForm.title} onChange={(v) => setListingForm((f) => ({ ...f, title: v }))} placeholder="Es. Cuccioli di Labrador disponibili" />
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Razza</label>
-                <select
-                  value={listingForm.breed_id}
-                  onChange={(e) => setListingForm((f) => ({ ...f, breed_id: e.target.value }))}
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  <option value="">Seleziona razza</option>
-                  {allBreeds.map((b) => <option key={b.id} value={b.id}>{b.name_it}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="Data di nascita" value={listingForm.litter_date} onChange={(v) => setListingForm((f) => ({ ...f, litter_date: v }))} type="date" />
-                <Field label="Cuccioli disponibili" value={listingForm.available_puppies} onChange={(v) => setListingForm((f) => ({ ...f, available_puppies: v }))} type="number" placeholder="4" />
+            <div className="p-6 space-y-6">
+              {/* Section: Genitori */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide">Genitori</h4>
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Sesso</label>
+                  <label className="text-sm text-muted-foreground mb-1 block">Madre *</label>
                   <select
-                    value={listingForm.gender_available}
-                    onChange={(e) => setListingForm((f) => ({ ...f, gender_available: e.target.value }))}
+                    value={litterForm.mother_id}
+                    onChange={(e) => setLitterForm((f) => ({ ...f, mother_id: e.target.value }))}
                     className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                   >
-                    <option value="">Seleziona</option>
-                    <option value="maschio">Solo maschi</option>
-                    <option value="femmina">Solo femmine</option>
-                    <option value="entrambi">Maschi e femmine</option>
+                    <option value="">Seleziona fattrice</option>
+                    {localDogs.filter((d) => d.sex === "femmina").map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
                   </select>
                 </div>
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={listingForm.price_on_request} onChange={(e) => setListingForm((f) => ({ ...f, price_on_request: e.target.checked }))} className="rounded" />
-                  Prezzo su richiesta
-                </label>
-                {!listingForm.price_on_request && (
-                  <div className="grid grid-cols-2 gap-3 mt-2">
-                    <Field label="Prezzo min (€)" value={listingForm.price_min} onChange={(v) => setListingForm((f) => ({ ...f, price_min: v }))} type="number" placeholder="1500" />
-                    <Field label="Prezzo max (€)" value={listingForm.price_max} onChange={(v) => setListingForm((f) => ({ ...f, price_max: v }))} type="number" placeholder="2000" />
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <label className="text-sm text-muted-foreground">Padre *</label>
+                    <label className="flex items-center gap-1.5 text-xs cursor-pointer ml-auto">
+                      <input type="checkbox" checked={litterForm.is_external_father} onChange={(e) => setLitterForm((f) => ({ ...f, is_external_father: e.target.checked, father_id: "" }))} className="rounded" />
+                      Monta esterna
+                    </label>
                   </div>
+                  {!litterForm.is_external_father ? (
+                    <select
+                      value={litterForm.father_id}
+                      onChange={(e) => setLitterForm((f) => ({ ...f, father_id: e.target.value }))}
+                      className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      <option value="">Seleziona stallone</option>
+                      {localDogs.filter((d) => d.sex === "maschio").map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-border">
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label="Nome (con Affisso) *" value={litterForm.external_father_name} onChange={(v) => setLitterForm((f) => ({ ...f, external_father_name: v }))} placeholder="Nome del padre" />
+                        <Field label="Allevamento" value={litterForm.external_father_kennel} onChange={(v) => setLitterForm((f) => ({ ...f, external_father_kennel: v }))} placeholder="Nome allevamento" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label="Colore" value={litterForm.external_father_color} onChange={(v) => setLitterForm((f) => ({ ...f, external_father_color: v }))} />
+                        <Field label="Pedigree (ROI)" value={litterForm.external_father_pedigree_number} onChange={(v) => setLitterForm((f) => ({ ...f, external_father_pedigree_number: v }))} />
+                      </div>
+                      <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Razza</label>
+                        <select
+                          value={litterForm.external_father_breed_id}
+                          onChange={(e) => setLitterForm((f) => ({ ...f, external_father_breed_id: e.target.value }))}
+                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        >
+                          <option value="">Seleziona razza</option>
+                          {allBreeds.map((b) => <option key={b.id} value={b.id}>{b.name_it}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Foto</label>
+                        <ImageUpload images={litterForm.external_father_photo_url ? [litterForm.external_father_photo_url] : []} onChange={(imgs) => setLitterForm((f) => ({ ...f, external_father_photo_url: imgs[0] ?? "" }))} maxImages={1} folder="litters" />
+                      </div>
+                      <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Titoli</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {DOG_TITLES.map((t) => (
+                            <button key={t} type="button"
+                              onClick={() => setLitterForm((f) => ({ ...f, external_father_titles: f.external_father_titles.includes(t) ? f.external_father_titles.filter((x) => x !== t) : [...f.external_father_titles, t] }))}
+                              className={`text-xs px-2 py-1 rounded-full border transition-colors ${litterForm.external_father_titles.includes(t) ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                            >{t}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Screening sanitari</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.entries(HEALTH_SCREENING_TYPES).map(([key, hs]) => (
+                            <div key={key}>
+                              <label className="text-xs text-muted-foreground">{hs.label}</label>
+                              <select
+                                value={litterForm.external_father_health_screenings[key] ?? ""}
+                                onChange={(e) => setLitterForm((f) => {
+                                  const updated = { ...f.external_father_health_screenings };
+                                  if (e.target.value) updated[key] = e.target.value; else delete updated[key];
+                                  return { ...f, external_father_health_screenings: updated };
+                                })}
+                                className="w-full border border-border rounded-lg px-2 py-1 text-xs bg-white"
+                              >
+                                <option value="">—</option>
+                                {hs.grades.map((g) => <option key={g} value={g}>{g}</option>)}
+                              </select>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Auto-generated name */}
+                <div className="bg-muted/50 rounded-lg px-3 py-2">
+                  <p className="text-xs text-muted-foreground">Nome cucciolata</p>
+                  <p className="text-sm font-medium text-foreground">{getLitterName()}</p>
+                </div>
+              </div>
+
+              {/* Section: Dettagli */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide">Dettagli cucciolata</h4>
+                <Field label="Data di nascita" value={litterForm.litter_date} onChange={(v) => setLitterForm((f) => ({ ...f, litter_date: v }))} type="date" />
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={litterForm.pedigree_included} onChange={(e) => setLitterForm((f) => ({ ...f, pedigree_included: e.target.checked }))} className="rounded" />
+                    Pedigree
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={litterForm.vaccinated} onChange={(e) => setLitterForm((f) => ({ ...f, vaccinated: e.target.checked }))} className="rounded" />
+                    Vaccinati
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={litterForm.microchipped} onChange={(e) => setLitterForm((f) => ({ ...f, microchipped: e.target.checked }))} className="rounded" />
+                    Microchippati
+                  </label>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Foto cucciolata</label>
+                  <ImageUpload images={litterForm.images} onChange={(imgs) => setLitterForm((f) => ({ ...f, images: imgs }))} maxImages={6} folder="litters" />
+                </div>
+                <Field label="Note" value={litterForm.notes} onChange={(v) => setLitterForm((f) => ({ ...f, notes: v }))} placeholder="Note aggiuntive sulla cucciolata" />
+              </div>
+
+              {/* Section: Cuccioli */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide">Cuccioli ({litterForm.puppies.length})</h4>
+                  <button type="button" onClick={() => setLitterForm((f) => ({ ...f, puppies: [...f.puppies, { name: "", sex: "maschio", color: "", variety: "", status: "disponibile", photo_url: "", price: "", price_on_request: false, microchip_number: "", notes: "" }] }))} className="text-xs text-primary hover:underline flex items-center gap-1">
+                    <Plus className="h-3 w-3" /> Aggiungi cucciolo
+                  </button>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Numero cuccioli</label>
+                  <input
+                    type="number" min={0} max={20}
+                    value={litterForm.puppies.length || ""}
+                    onChange={(e) => {
+                      const n = Math.max(0, Math.min(20, parseInt(e.target.value) || 0));
+                      setLitterForm((f) => {
+                        const current = f.puppies;
+                        if (n > current.length) {
+                          const toAdd = Array.from({ length: n - current.length }, () => ({ name: "", sex: "maschio" as const, color: "", status: "disponibile" as const, photo_url: "", price: "", price_on_request: false, microchip_number: "", notes: "" }));
+                          return { ...f, puppies: [...current, ...toAdd] };
+                        }
+                        return { ...f, puppies: current.slice(0, n) };
+                      });
+                    }}
+                    placeholder="Es. 6"
+                    className="w-32 border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+                {litterForm.puppies.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">Inserisci il numero di cuccioli o clicca &quot;Aggiungi cucciolo&quot;.</p>
                 )}
-              </div>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={listingForm.pedigree_included} onChange={(e) => setListingForm((f) => ({ ...f, pedigree_included: e.target.checked }))} className="rounded" />
-                  Pedigree
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={listingForm.vaccinated} onChange={(e) => setListingForm((f) => ({ ...f, vaccinated: e.target.checked }))} className="rounded" />
-                  Vaccinati
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={listingForm.microchipped} onChange={(e) => setListingForm((f) => ({ ...f, microchipped: e.target.checked }))} className="rounded" />
-                  Microchippati
-                </label>
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Foto</label>
-                <ImageUpload images={listingForm.images} onChange={(imgs) => setListingForm((f) => ({ ...f, images: imgs }))} maxImages={6} folder="listings" />
+                {litterForm.puppies.map((puppy, idx) => (
+                  <div key={idx} className="p-3 bg-muted/30 rounded-lg border border-border space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground">Cucciolo {idx + 1}</p>
+                      <button type="button" onClick={() => setLitterForm((f) => ({ ...f, puppies: f.puppies.filter((_, i) => i !== idx) }))} className="text-red-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Sesso *</label>
+                        <div className="flex gap-1">
+                          {(["maschio", "femmina"] as const).map((s) => (
+                            <button key={s} type="button"
+                              onClick={() => setLitterForm((f) => ({ ...f, puppies: f.puppies.map((p, i) => i === idx ? { ...p, sex: s } : p) }))}
+                              className={`flex-1 text-xs py-1.5 rounded-lg border transition-colors ${puppy.sex === s ? "bg-primary text-white border-primary" : "border-border text-muted-foreground"}`}
+                            >{s === "maschio" ? "♂ Maschio" : "♀ Femmina"}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <Field label="Mantello" value={puppy.color} onChange={(v) => setLitterForm((f) => ({ ...f, puppies: f.puppies.map((p, i) => i === idx ? { ...p, color: v } : p) }))} />
+                    </div>
+                    {(() => {
+                      const m = localDogs.find((d) => d.id === litterForm.mother_id);
+                      const f = !litterForm.is_external_father ? localDogs.find((d) => d.id === litterForm.father_id) : null;
+                      return m?.variety && f?.variety && m.variety !== f.variety;
+                    })() && (
+                      <Field label="Varietà" value={puppy.variety} onChange={(v) => setLitterForm((f) => ({ ...f, puppies: f.puppies.map((p, i) => i === idx ? { ...p, variety: v } : p) }))} placeholder="Es. pelo lungo" />
+                    )}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Stato</label>
+                        <select
+                          value={puppy.status}
+                          onChange={(e) => setLitterForm((f) => ({ ...f, puppies: f.puppies.map((p, i) => i === idx ? { ...p, status: e.target.value as "disponibile" | "prenotato" | "venduto" } : p) }))}
+                          className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        >
+                          <option value="disponibile">Disponibile</option>
+                          <option value="prenotato">Prenotato</option>
+                          <option value="venduto">Venduto</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1">Prezzo</label>
+                        <div className="flex items-center gap-2">
+                          {!puppy.price_on_request && (
+                            <input type="number" value={puppy.price} onChange={(e) => setLitterForm((f) => ({ ...f, puppies: f.puppies.map((p, i) => i === idx ? { ...p, price: e.target.value } : p) }))} placeholder="€" className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                          )}
+                        </div>
+                        <label className="flex items-center gap-1.5 text-xs mt-1 cursor-pointer">
+                          <input type="checkbox" checked={puppy.price_on_request} onChange={(e) => setLitterForm((f) => ({ ...f, puppies: f.puppies.map((p, i) => i === idx ? { ...p, price_on_request: e.target.checked, price: "" } : p) }))} className="rounded" />
+                          Su richiesta
+                        </label>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Foto</label>
+                        <ImageUpload images={puppy.photo_url ? [puppy.photo_url] : []} onChange={(imgs) => setLitterForm((f) => ({ ...f, puppies: f.puppies.map((p, i) => i === idx ? { ...p, photo_url: imgs[0] ?? "" } : p) }))} maxImages={1} folder="puppies" />
+                      </div>
+                      <Field label="Note" value={puppy.notes} onChange={(v) => setLitterForm((f) => ({ ...f, puppies: f.puppies.map((p, i) => i === idx ? { ...p, notes: v } : p) }))} placeholder="Note sul cucciolo" />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">
-              <button onClick={() => setEditingListingId(null)} className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5">Annulla</button>
-              <button onClick={saveListing} disabled={savingListing || !listingForm.title.trim()} className="text-sm bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary-dark disabled:opacity-40 transition-colors font-medium">
-                {savingListing ? "Salvataggio..." : editingListingId === "new" ? "Pubblica" : "Salva"}
+              <button onClick={() => setEditingLitterId(null)} className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5">Annulla</button>
+              <button
+                onClick={saveLitter}
+                disabled={savingLitter || !litterForm.mother_id || (!litterForm.is_external_father && !litterForm.father_id) || (litterForm.is_external_father && !litterForm.external_father_name.trim())}
+                className="text-sm bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary-dark disabled:opacity-40 transition-colors font-medium"
+              >
+                {savingLitter ? "Salvataggio..." : editingLitterId === "new" ? "Pubblica" : "Salva"}
               </button>
             </div>
           </div>
@@ -1604,58 +2069,76 @@ export default function BreederProfileClient({
               <h3 className="font-semibold text-lg">{editingDogId === "new" ? "Nuovo riproduttore" : "Modifica riproduttore"}</h3>
               <button onClick={() => setEditingDogId(null)} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Nome registrato *" value={dogForm.name} onChange={(v) => setDogForm((f) => ({ ...f, name: v }))} placeholder="Multi Ch. Del Castello Apollo" />
-                <Field label="Nome da chiamata" value={dogForm.call_name} onChange={(v) => setDogForm((f) => ({ ...f, call_name: v }))} placeholder="Apollo" />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
+            <div className="p-6 space-y-6">
+
+              {/* ── Section: Anagrafica ──────────────────────────────── */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide border-b border-border pb-2">Anagrafica</h4>
+                <Field label="Nome (senza Affisso) *" value={dogForm.name} onChange={(v) => setDogForm((f) => ({ ...f, name: v }))} placeholder="Es. Apollo" />
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Sesso *</label>
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => setDogForm((f) => ({ ...f, sex: "maschio" }))}
-                      className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${dogForm.sex === "maschio" ? "bg-primary text-white border-primary" : "border-border hover:border-primary"}`}>
-                      Maschio
+                  <label className="text-sm text-muted-foreground mb-1 block">Affisso</label>
+                  <div className="flex gap-1.5 mb-2">
+                    {breeder.affisso && (
+                      <button type="button" onClick={() => setDogForm((f) => ({ ...f, affisso_mode: "breeder", affisso: breeder.affisso ?? "" }))}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.affisso_mode === "breeder" ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
+                        {breeder.affisso}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => setDogForm((f) => ({ ...f, affisso_mode: "other", affisso: "" }))}
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.affisso_mode === "other" ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
+                      Altro affisso
                     </button>
-                    <button type="button" onClick={() => setDogForm((f) => ({ ...f, sex: "femmina" }))}
-                      className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${dogForm.sex === "femmina" ? "bg-primary text-white border-primary" : "border-border hover:border-primary"}`}>
-                      Femmina
+                    <button type="button" onClick={() => setDogForm((f) => ({ ...f, affisso_mode: "none", affisso: "" }))}
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.affisso_mode === "none" ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
+                      Nessun affisso
                     </button>
                   </div>
+                  {dogForm.affisso_mode === "other" && (
+                    <input type="text" value={dogForm.affisso} onChange={(e) => setDogForm((f) => ({ ...f, affisso: e.target.value }))} placeholder="Es. del Castello Incantato" className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  )}
                 </div>
-                <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Razza</label>
-                  <select value={dogForm.breed_id} onChange={(e) => setDogForm((f) => ({ ...f, breed_id: e.target.value }))}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
-                    <option value="">Seleziona</option>
-                    {allBreeds.filter((b) => (breeder.breed_ids ?? []).includes(b.id)).map((b) => <option key={b.id} value={b.id}>{b.name_it}</option>)}
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-1 block">Sesso *</label>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => setDogForm((f) => ({ ...f, sex: "maschio" }))}
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${dogForm.sex === "maschio" ? "bg-primary text-white border-primary" : "border-border hover:border-primary"}`}>
+                        Maschio
+                      </button>
+                      <button type="button" onClick={() => setDogForm((f) => ({ ...f, sex: "femmina" }))}
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${dogForm.sex === "femmina" ? "bg-primary text-white border-primary" : "border-border hover:border-primary"}`}>
+                        Femmina
+                      </button>
+                    </div>
+                  </div>
+                  <Field label="Mantello" value={dogForm.color} onChange={(v) => setDogForm((f) => ({ ...f, color: v }))} placeholder="Nero focato" />
                 </div>
-                <Field label="Colore/mantello" value={dogForm.color} onChange={(v) => setDogForm((f) => ({ ...f, color: v }))} placeholder="Nero focato" />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="Data di nascita" type="date" value={dogForm.date_of_birth} onChange={(v) => setDogForm((f) => ({ ...f, date_of_birth: v }))} />
-                <Field label="Pedigree (ROI)" value={dogForm.pedigree_number} onChange={(v) => setDogForm((f) => ({ ...f, pedigree_number: v }))} placeholder="ROI 12345" />
-                <Field label="Microchip" value={dogForm.microchip_number} onChange={(v) => setDogForm((f) => ({ ...f, microchip_number: v }))} placeholder="380..." />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-1 block">Razza</label>
+                    <select value={dogForm.breed_id} onChange={(e) => setDogForm((f) => ({ ...f, breed_id: e.target.value }))}
+                      className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
+                      <option value="">Seleziona</option>
+                      {allBreeds.filter((b) => (breeder.breed_ids ?? []).includes(b.id)).map((b) => <option key={b.id} value={b.id}>{b.name_it}</option>)}
+                    </select>
+                  </div>
+                  <Field label="Varietà" value={dogForm.variety} onChange={(v) => setDogForm((f) => ({ ...f, variety: v }))} placeholder="Es. pelo lungo" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Data di nascita" type="date" value={dogForm.date_of_birth} onChange={(v) => setDogForm((f) => ({ ...f, date_of_birth: v }))} />
+                  <Field label="Pedigree (ROI)" value={dogForm.pedigree_number} onChange={(v) => setDogForm((f) => ({ ...f, pedigree_number: v }))} placeholder="ROI 12345" />
+                </div>
+                {dogForm.pedigree_number.trim() && (
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={dogForm.dna_deposited} onChange={(e) => setDogForm((f) => ({ ...f, dna_deposited: e.target.checked }))} className="rounded" />
+                    DNA depositato
+                  </label>
+                )}
               </div>
 
-              {/* Titles */}
-              <div>
-                <label className="text-sm text-muted-foreground mb-2 block">Titoli</label>
-                <div className="flex flex-wrap gap-2">
-                  {DOG_TITLES.map((title) => (
-                    <button key={title} type="button"
-                      onClick={() => setDogForm((f) => ({ ...f, titles: f.titles.includes(title) ? f.titles.filter((t) => t !== title) : [...f.titles, title] }))}
-                      className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.titles.includes(title) ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
-                      {title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Health Screenings */}
-              <div>
-                <label className="text-sm text-muted-foreground mb-2 block">Screening sanitari</label>
+              {/* ── Section: Salute ──────────────────────────────────── */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide border-b border-border pb-2">Salute</h4>
                 <div className="grid grid-cols-2 gap-3">
                   {Object.entries(HEALTH_SCREENING_TYPES).map(([key, config]) => (
                     <div key={key}>
@@ -1666,7 +2149,14 @@ export default function BreederProfileClient({
                           const val = e.target.value;
                           setDogForm((f) => {
                             const hs = { ...f.health_screenings };
-                            if (val) hs[key] = val; else delete hs[key];
+                            if (val) {
+                              hs[key] = val;
+                              if (!hs[`${key}_source`]) hs[`${key}_source`] = "veterinario";
+                            } else {
+                              delete hs[key];
+                              delete hs[`${key}_source`];
+                              delete hs[`${key}_year`];
+                            }
                             return { ...f, health_screenings: hs };
                           });
                         }}
@@ -1675,31 +2165,131 @@ export default function BreederProfileClient({
                         <option value="">Non effettuato</option>
                         {config.grades.map((g) => <option key={g} value={g}>{g}</option>)}
                       </select>
+                      {dogForm.health_screenings[key] && (
+                        <>
+                          {dogForm.pedigree_number.trim() && config.sources.length > 1 ? (
+                            <select
+                              value={dogForm.health_screenings[`${key}_source`] ?? "veterinario"}
+                              onChange={(e) => setDogForm((f) => {
+                                const hs = { ...f.health_screenings, [`${key}_source`]: e.target.value };
+                                return { ...f, health_screenings: hs };
+                              })}
+                              className="w-full border border-border rounded-lg px-2 py-1 text-xs bg-white mt-1 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            >
+                              {config.sources.map((s) => <option key={s} value={s}>{HEALTH_SOURCE_LABELS[s] ?? s}</option>)}
+                            </select>
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Veterinario</p>
+                          )}
+                          {config.hasYear && (
+                            <input
+                              type="number" min={2000} max={2099} placeholder="Anno"
+                              value={dogForm.health_screenings[`${key}_year`] ?? ""}
+                              onChange={(e) => setDogForm((f) => {
+                                const hs = { ...f.health_screenings };
+                                if (e.target.value) hs[`${key}_year`] = e.target.value; else delete hs[`${key}_year`];
+                                return { ...f, health_screenings: hs };
+                              })}
+                              className="w-full border border-border rounded-lg px-2 py-1 text-xs bg-white mt-1 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            />
+                          )}
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={dogForm.dna_deposited} onChange={(e) => setDogForm((f) => ({ ...f, dna_deposited: e.target.checked }))} className="rounded" />
-                  DNA depositato
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={dogForm.is_external} onChange={(e) => setDogForm((f) => ({ ...f, is_external: e.target.checked }))} className="rounded" />
-                  Monta esterna
-                </label>
-              </div>
-              {dogForm.is_external && (
-                <Field label="Allevamento di provenienza" value={dogForm.external_kennel_name} onChange={(v) => setDogForm((f) => ({ ...f, external_kennel_name: v }))} placeholder="Nome allevamento" />
-              )}
+              {/* ── Section: Esposizioni e titoli ────────────────────── */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide border-b border-border pb-2">Esposizioni e titoli{!dogForm.pedigree_number.trim() ? <span className="font-normal text-muted-foreground ml-2 normal-case tracking-normal">(richiede pedigree)</span> : ""}</h4>
 
+                <div className={!dogForm.pedigree_number.trim() ? "opacity-40 pointer-events-none space-y-4" : "space-y-4"}>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">Certificati espositivi</label>
+                    <div className="flex flex-wrap gap-2">
+                      {DOG_CERTIFICATI_ESPOSITIVI.map((title) => (
+                        <button key={title} type="button"
+                          onClick={() => setDogForm((f) => ({ ...f, titles: f.titles.includes(title) ? f.titles.filter((t) => t !== title) : [...f.titles, title] }))}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.titles.includes(title) ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
+                          {title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">Titoli espositivi</label>
+                    <div className="flex flex-wrap gap-2">
+                      {DOG_TITOLI_ESPOSITIVI.map((title) => (
+                        <button key={title} type="button"
+                          onClick={() => setDogForm((f) => ({ ...f, titles: f.titles.includes(title) ? f.titles.filter((t) => t !== title) : [...f.titles, title] }))}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.titles.includes(title) ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
+                          {title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {allBreeds.find((b) => b.id === dogForm.breed_id)?.is_working_breed && (
+                    <>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-2 block">Certificati da lavoro</label>
+                        <div className="flex flex-wrap gap-2">
+                          {DOG_CERTIFICATI_LAVORO.map((title) => (
+                            <button key={title} type="button"
+                              onClick={() => setDogForm((f) => ({ ...f, titles: f.titles.includes(title) ? f.titles.filter((t) => t !== title) : [...f.titles, title] }))}
+                              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.titles.includes(title) ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
+                              {title}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-2 block">Titoli da lavoro</label>
+                        <div className="flex flex-wrap gap-2">
+                          {DOG_TITOLI_LAVORO.map((title) => (
+                            <button key={title} type="button"
+                              onClick={() => setDogForm((f) => ({ ...f, titles: f.titles.includes(title) ? f.titles.filter((t) => t !== title) : [...f.titles, title] }))}
+                              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.titles.includes(title) ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
+                              {title}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">Titoli ENCI</label>
+                    <div className="flex flex-wrap gap-4">
+                      {["Riproduttore Selezionato ENCI", "Campione Riproduttore"].map((title) => (
+                        <label key={title} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input type="checkbox" checked={dogForm.titles.includes(title)} onChange={(e) => setDogForm((f) => ({ ...f, titles: e.target.checked ? [...f.titles, title] : f.titles.filter((t) => t !== title) }))} className="rounded" disabled={!dogForm.pedigree_number.trim()} />
+                          {title}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Section: Foto ────────────────────────────────────── */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide border-b border-border pb-2">Foto</h4>
+                <ImageUpload
+                  images={[...(dogForm.photo_url ? [dogForm.photo_url] : []), ...dogForm.gallery_urls]}
+                  onChange={(imgs) => setDogForm((f) => ({ ...f, photo_url: imgs[0] ?? "", gallery_urls: imgs.slice(1) }))}
+                  maxImages={10}
+                  folder="breeding-dogs"
+                />
+              </div>
+
+              {/* ── Section: Note ────────────────────────────────────── */}
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Foto</label>
-                <ImageUpload images={dogForm.photo_url ? [dogForm.photo_url] : []} onChange={(imgs) => setDogForm((f) => ({ ...f, photo_url: imgs[0] ?? "" }))} maxImages={1} folder="breeding-dogs" />
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide border-b border-border pb-2 mb-4">Note</h4>
+                <Field label="" value={dogForm.notes} onChange={(v) => setDogForm((f) => ({ ...f, notes: v }))} multiline placeholder="Informazioni aggiuntive sul soggetto..." />
               </div>
 
-              <Field label="Note" value={dogForm.notes} onChange={(v) => setDogForm((f) => ({ ...f, notes: v }))} multiline placeholder="Informazioni aggiuntive sul soggetto..." />
             </div>
             <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">
               <button onClick={() => setEditingDogId(null)} className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5">Annulla</button>
