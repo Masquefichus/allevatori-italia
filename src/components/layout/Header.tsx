@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Menu, X, Dog, ChevronUp, ChevronDown,
   MessageCircle, Heart, Settings, LogOut,
-  LayoutDashboard, Megaphone, Star, ExternalLink,
+  LayoutDashboard, Megaphone, Star, ExternalLink, User,
 } from "lucide-react";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
 import Button from "@/components/ui/Button";
@@ -14,12 +14,14 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 const BREEDER_MENU = [
   { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
+  { href: "/dashboard/profilo", label: "Profilo", icon: User },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
   { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
   { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 
 const USER_MENU = [
+  { href: "/dashboard/profilo", label: "Profilo", icon: User },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
   { href: "/dashboard/salvati", label: "Preferiti", icon: Heart },
   { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
