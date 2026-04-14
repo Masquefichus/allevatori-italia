@@ -41,6 +41,16 @@ export async function PATCH(
       return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
     }
 
+    const { data: breeder } = await supabase
+      .from("breeder_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!breeder) {
+      return NextResponse.json({ error: "Profilo allevatore non trovato" }, { status: 403 });
+    }
+
     const { puppies: puppiesData, ...litterBody } = await request.json();
 
     // Update litter fields
@@ -48,6 +58,7 @@ export async function PATCH(
       .from("litters")
       .update(litterBody)
       .eq("id", id)
+      .eq("breeder_id", breeder.id)
       .select()
       .single();
 
@@ -117,10 +128,21 @@ export async function DELETE(
       return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
     }
 
+    const { data: breeder } = await supabase
+      .from("breeder_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!breeder) {
+      return NextResponse.json({ error: "Profilo allevatore non trovato" }, { status: 403 });
+    }
+
     const { error } = await supabase
       .from("litters")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("breeder_id", breeder.id);
 
     if (error) throw error;
     return NextResponse.json({ success: true });
