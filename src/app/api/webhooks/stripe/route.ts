@@ -26,18 +26,7 @@ export async function POST(request: Request) {
         const plan = session.metadata?.plan;
 
         if (userId && plan) {
-          // Upsert subscription
-          await supabase
-            .from("subscriptions")
-            .upsert({
-              user_id: userId,
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: session.subscription as string,
-              plan: plan as "premium" | "elite",
-              status: "active",
-            }, { onConflict: "user_id" });
-
-          // Get breeder profile and update premium status
+          // Get breeder profile first (needed for subscriptions.breeder_id NOT NULL)
           const { data: breeder } = await supabase
             .from("breeder_profiles")
             .select("id")
@@ -45,6 +34,17 @@ export async function POST(request: Request) {
             .single();
 
           if (breeder) {
+            await supabase
+              .from("subscriptions")
+              .upsert({
+                user_id: userId,
+                breeder_id: breeder.id,
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: session.subscription as string,
+                plan: plan as "premium" | "elite",
+                status: "active",
+              }, { onConflict: "user_id" });
+
             await supabase
               .from("breeder_profiles")
               .update({ is_premium: true })
