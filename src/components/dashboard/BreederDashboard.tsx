@@ -1,4 +1,4 @@
-import { Eye, MessageCircle, Star, TrendingUp, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { Eye, MessageCircle, Star, TrendingUp, CheckCircle, AlertCircle, ExternalLink, Clock } from "lucide-react";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -16,7 +16,7 @@ export default async function BreederDashboard({ userId }: { userId: string }) {
 
   const { data: bp } = await supabase
     .from("breeder_profiles")
-    .select("id, kennel_name, slug, review_count, average_rating, view_count, description, phone, email_public, website, breed_ids, region, city, logo_url")
+    .select("id, kennel_name, slug, review_count, average_rating, view_count, description, phone, email_public, website, breed_ids, region, city, logo_url, is_approved")
     .eq("user_id", userId)
     .single();
 
@@ -131,6 +131,19 @@ export default async function BreederDashboard({ userId }: { userId: string }) {
           </Link>
         )}
       </div>
+
+      {/* Approval status banner */}
+      {bp && !bp.is_approved && (
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl">
+          <Clock className="h-5 w-5 shrink-0 mt-0.5 text-amber-500" />
+          <div>
+            <p className="font-medium">Profilo in attesa di approvazione</p>
+            <p className="text-amber-700 mt-0.5">
+              Il tuo profilo è stato inviato e verrà esaminato dal nostro team. Una volta approvato sarà visibile nella directory pubblica.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

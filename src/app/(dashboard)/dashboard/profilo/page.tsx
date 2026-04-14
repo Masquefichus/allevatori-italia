@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import { regioni } from "@/data/regioni";
+import { Clock } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
@@ -41,6 +42,7 @@ export default function ProfiloPage() {
   const [selectedClubs, setSelectedClubs] = useState<string[]>([]);
 
   // UI state
+  const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -63,7 +65,7 @@ export default function ProfiloPage() {
     // Load breed slug→UUID map and existing profile in parallel
     Promise.all([
       supabase.from("breeds").select("id, slug, name_it").order("name_it"),
-      supabase.from("breeder_profiles").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("breeder_profiles").select("*, is_approved").eq("user_id", user.id).maybeSingle(),
     ]).then(([breedsRes, profileRes]) => {
       // Build slug→UUID map
       const slugMap: Record<string, string> = {};
@@ -78,6 +80,7 @@ export default function ProfiloPage() {
       const data = profileRes.data;
       if (data) {
         setProfileId(data.id);
+        setIsApproved(data.is_approved ?? false);
         setKennelName(data.kennel_name || "");
         setEnciNumber(data.enci_number || "");
         setYearEstablished(data.year_established?.toString() || "");
@@ -236,6 +239,16 @@ export default function ProfiloPage() {
           Gestisci le informazioni del tuo allevamento
         </p>
       </div>
+
+      {profileId && isApproved === false && (
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl">
+          <Clock className="h-5 w-5 shrink-0 mt-0.5 text-amber-500" />
+          <div>
+            <p className="font-medium">Profilo in attesa di approvazione</p>
+            <p className="text-amber-700 mt-0.5">Il tuo profilo non è ancora visibile nella directory pubblica. Verrà pubblicato dopo la revisione del nostro team.</p>
+          </div>
+        </div>
+      )}
 
       {success && (
         <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-4 rounded-lg">
