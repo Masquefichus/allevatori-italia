@@ -30,15 +30,19 @@ export default function AdminRecensioniPage() {
   useEffect(() => {
     setLoading(true);
     fetch(`/api/admin/reviews?status=${filter}`)
-      .then((r) => r.json())
-      .then((data) => setReviews(data ?? []))
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => setReviews(Array.isArray(data) ? data : []))
+      .catch(() => setReviews([]))
       .finally(() => setLoading(false));
   }, [filter]);
 
   useEffect(() => {
     fetch("/api/admin/reviews?status=reported")
-      .then((r) => r.json())
-      .then((data) => setReportedCount((data ?? []).length));
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setReportedCount(Array.isArray(data) ? data.length : 0));
   }, []);
 
   const filtered = reviews.filter((r) => {
@@ -52,12 +56,18 @@ export default function AdminRecensioniPage() {
   });
 
   const handleAction = async (review_id: string, action: "approve" | "delete") => {
-    await fetch("/api/admin/reviews", {
+    const r = await fetch("/api/admin/reviews", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ review_id, action }),
     });
-    setReviews((prev) => prev.filter((r) => r.id !== review_id));
+    if (r.ok) {
+      setReviews((prev) => prev.filter((rev) => rev.id !== review_id));
+      // Refresh reported count
+      fetch("/api/admin/reviews?status=reported")
+        .then((r) => r.ok ? r.json() : [])
+        .then((data) => setReportedCount(Array.isArray(data) ? data.length : 0));
+    }
   };
 
   return (

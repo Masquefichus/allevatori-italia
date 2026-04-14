@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { Search, CheckCircle, XCircle, MapPin, Calendar } from "lucide-react";
+import { Search, CheckCircle, XCircle, MapPin, Calendar, ExternalLink } from "lucide-react";
 
 type BreederStatus = "all" | "pending" | "approved";
 
 interface Breeder {
   id: string;
   kennel_name: string;
+  slug: string;
   region: string | null;
   province: string | null;
   is_approved: boolean;
@@ -26,35 +28,43 @@ export default function AdminAllevatoriPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/breeders")
-      .then((r) => r.json())
-      .then((data) => setBreeders(data ?? []))
+    setLoading(true);
+    const qs = filter !== "all" ? `?status=${filter}` : "";
+    fetch(`/api/admin/breeders${qs}`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => setBreeders(Array.isArray(data) ? data : []))
+      .catch(() => setBreeders([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [filter]);
 
   const filtered = breeders.filter((b) => {
-    if (filter === "pending" && b.is_approved) return false;
-    if (filter === "approved" && !b.is_approved) return false;
-    if (search && !b.kennel_name.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
+    if (!search) return true;
+    return b.kennel_name.toLowerCase().includes(search.toLowerCase());
   });
 
   const handleApprove = async (id: string) => {
-    await fetch(`/api/admin/breeders`, {
+    const r = await fetch("/api/admin/breeders", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, is_approved: true }),
+      body: JSON.stringify({ breeder_id: id, action: "approve" }),
     });
-    setBreeders((prev) => prev.map((b) => b.id === id ? { ...b, is_approved: true } : b));
+    if (r.ok) {
+      setBreeders((prev) => prev.map((b) => b.id === id ? { ...b, is_approved: true } : b));
+    }
   };
 
   const handleReject = async (id: string) => {
-    await fetch(`/api/admin/breeders`, {
+    const r = await fetch("/api/admin/breeders", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, is_approved: false }),
+      body: JSON.stringify({ breeder_id: id, action: "reject" }),
     });
-    setBreeders((prev) => prev.filter((b) => b.id !== id));
+    if (r.ok) {
+      setBreeders((prev) => prev.filter((b) => b.id !== id));
+    }
   };
 
   return (
@@ -136,9 +146,12 @@ export default function AdminAllevatoriPage() {
                       </Button>
                     </>
                   )}
-                  <Button size="sm" variant="outline">
-                    Dettagli
-                  </Button>
+                  <Link href={`/allevatori/${breeder.slug}`} target="_blank">
+                    <Button size="sm" variant="outline" className="gap-1">
+                      <ExternalLink className="h-4 w-4" />
+                      Dettagli
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </Card>
