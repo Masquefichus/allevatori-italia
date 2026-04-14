@@ -27,7 +27,7 @@ export default function AdminLayout({
     }
   }, [loading, user, profile, router]);
 
-  if (loading || !user || (profile && profile.role !== "admin")) {
+  if (loading || !user || !profile || profile.role !== "admin") {
     return <div className="min-h-screen bg-muted" />;
   }
 

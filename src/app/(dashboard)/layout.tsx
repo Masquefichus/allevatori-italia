@@ -12,6 +12,7 @@ import {
   Search,
   Heart,
   User,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -37,7 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading } = useAuth();
-  const [role, setRole] = useState<"breeder" | "user" | null>(null);
+  const [role, setRole] = useState<"breeder" | "user" | "admin" | null>(null);
 
   // Auth guard: redirect unauthenticated users
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return <div className="min-h-screen bg-muted" />;
   }
 
-  const nav = role === "breeder" ? BREEDER_NAV : USER_NAV;
+  const nav = role === "breeder" || role === "admin" ? BREEDER_NAV : USER_NAV;
 
   return (
     <div className="min-h-screen bg-muted">
@@ -87,27 +88,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   />
                 ))
               ) : (
-                nav.map((item) => {
-                  const Icon = item.icon;
-                  const isActive =
-                    pathname === item.href ||
-                    (item.href !== "/dashboard" && pathname.startsWith(item.href));
-                  return (
+                <>
+                  {nav.map((item) => {
+                    const Icon = item.icon;
+                    const isActive =
+                      pathname === item.href ||
+                      (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-primary-light text-primary-dark"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                  {role === "admin" && (
                     <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-primary-light text-primary-dark"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
+                      href="/admin"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-amber-600 hover:bg-amber-50 mt-1 border-t border-border pt-2"
                     >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
+                      <Shield className="h-4 w-4" />
+                      Admin Panel
                     </Link>
-                  );
-                })
+                  )}
+                </>
               )}
             </nav>
           </aside>

@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Menu, X, Dog, ChevronUp, ChevronDown,
   MessageCircle, Heart, Settings, LogOut,
-  LayoutDashboard, Megaphone, Star, ExternalLink, User,
+  LayoutDashboard, Megaphone, Star, ExternalLink, User, Shield,
 } from "lucide-react";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
 import Button from "@/components/ui/Button";
@@ -46,7 +46,7 @@ export default function Header() {
 
   // Fetch breeder slug for public profile link
   useEffect(() => {
-    if (!user || profile?.role !== "breeder") return;
+    if (!user || (profile?.role !== "breeder" && profile?.role !== "admin")) return;
     const supabase = createClient();
     if (!supabase) return;
     (supabase as any)
@@ -75,7 +75,7 @@ export default function Header() {
     ? profile.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()
     : (user?.email?.[0] ?? "?").toUpperCase();
 
-  const menuItems = profile?.role === "breeder" ? BREEDER_MENU : USER_MENU;
+  const menuItems = (profile?.role === "breeder" || profile?.role === "admin") ? BREEDER_MENU : USER_MENU;
   const isLoggedIn = !loading && (!!user || !!profile);
 
   return (
@@ -156,6 +156,22 @@ export default function Header() {
                           >
                             <ExternalLink className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                             Profilo pubblico
+                          </Link>
+                        </div>
+                      </>
+                    )}
+
+                    {profile?.role === "admin" && (
+                      <>
+                        <div className="border-t border-border" />
+                        <div className="py-1">
+                          <Link
+                            href="/admin"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-3 px-5 py-2.5 text-sm text-amber-600 hover:bg-amber-50 transition-colors"
+                          >
+                            <Shield className="h-4 w-4" strokeWidth={1.5} />
+                            Admin Panel
                           </Link>
                         </div>
                       </>

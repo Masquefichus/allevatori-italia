@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  if (profile?.role === "breeder") {
+  if (profile?.role === "breeder" || profile?.role === "admin") {
     return <BreederDashboard userId={user.id} />;
   }
 
