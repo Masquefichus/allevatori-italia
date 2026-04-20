@@ -1,4 +1,4 @@
-import { Eye, MessageCircle, Star, TrendingUp, CheckCircle, AlertCircle, ExternalLink, Clock } from "lucide-react";
+import { Eye, MessageCircle, Star, TrendingUp, CheckCircle, AlertCircle, ExternalLink, Clock, PawPrint, GraduationCap, Home, Plus } from "lucide-react";
 import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -11,6 +11,14 @@ type ReviewRow = {
   author: { full_name: string } | null;
 };
 
+type ServiceRole = "allevatore" | "addestratore" | "pensione";
+
+const ROLE_META: Record<ServiceRole, { label: string; icon: typeof PawPrint; manageHref: string }> = {
+  allevatore:    { label: "Allevatore",    icon: PawPrint,       manageHref: "/dashboard" },
+  addestratore:  { label: "Addestratore",  icon: GraduationCap,  manageHref: "/dashboard/addestratore" },
+  pensione:      { label: "Pensione",      icon: Home,           manageHref: "/dashboard/pensione" },
+};
+
 export default async function BreederDashboard({ userId }: { userId: string }) {
   const supabase = await createClient();
 
@@ -19,6 +27,14 @@ export default async function BreederDashboard({ userId }: { userId: string }) {
     .select("id, kennel_name, slug, review_count, average_rating, view_count, description, phone, email_public, website, breed_ids, region, city, logo_url, is_approved")
     .eq("user_id", userId)
     .single();
+
+  const { data: roleRows } = await supabase
+    .from("profile_roles")
+    .select("role")
+    .eq("profile_id", userId);
+
+  const activeRoles = new Set<ServiceRole>((roleRows ?? []).map(r => r.role as ServiceRole));
+  const allServiceRoles: ServiceRole[] = ["allevatore", "addestratore", "pensione"];
 
   // Messaggi non letti
   const { data: convRows } = await supabase
@@ -201,6 +217,49 @@ export default async function BreederDashboard({ userId }: { userId: string }) {
               )}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* I miei servizi */}
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold">I miei servizi</h2>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {allServiceRoles.map((role) => {
+            const meta = ROLE_META[role];
+            const Icon = meta.icon;
+
+            if (!activeRoles.has(role)) {
+              return (
+                <Link
+                  key={role}
+                  href={`/dashboard/aggiungi-servizio/${role}`}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-border hover:border-primary hover:bg-muted/50 transition-colors"
+                >
+                  <Plus className="h-5 w-5 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Aggiungi {meta.label.toLowerCase()}</p>
+                    <p className="text-xs text-muted-foreground">Nuovo servizio</p>
+                  </div>
+                </Link>
+              );
+            }
+
+            return (
+              <Link
+                key={role}
+                href={meta.manageHref}
+                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors"
+              >
+                <Icon className="h-5 w-5 text-primary shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{meta.label}</p>
+                  <p className="text-xs text-muted-foreground">Attivo — Gestisci</p>
+                </div>
+              </Link>
+            );
+          })}
         </CardContent>
       </Card>
 

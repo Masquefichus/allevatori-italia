@@ -28,7 +28,7 @@ export default function RichTextEditor({ content, onChange, onImageUpload, onSav
   const [captionValue, setCaptionValue] = useState("");
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropBlockId, setCropBlockId] = useState<string | null>(null);
-  const hideTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const hideTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const editor = useCreateBlockNote({
     dictionary: itLocale,

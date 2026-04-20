@@ -54,7 +54,50 @@ export default async function BreedDetailPage({ params }: BreedPageProps) {
         .limit(6)
     : { data: [] };
 
-  const qa = breed.quiz_attributes;
+  const sa = breed.seeker_attributes;
+
+  const coatTypeLabels: Record<string, string> = {
+    corto: "Corto",
+    medio: "Medio",
+    lungo: "Lungo",
+    duro: "Duro (Wire)",
+    riccio: "Riccio",
+    senza_pelo: "Senza pelo",
+    doppio: "Doppio",
+  };
+
+  const useLabels: Record<string, string> = {
+    compagnia: "Compagnia",
+    guardia: "Guardia",
+    caccia: "Caccia",
+    sport: "Sport",
+    pastorizia: "Pastorizia",
+    terapia: "Terapia",
+    lavoro: "Lavoro",
+    slitta: "Slitta",
+  };
+
+  type AttributeRow =
+    | { category: string; label: string; type: "bar"; value: number }
+    | { category: string; label: string; type: "text"; value: string }
+    | { category: string; label: string; type: "badges"; value: string[] };
+
+  const attributes: AttributeRow[] = sa
+    ? [
+        { category: "Fisico", label: "Altezza al garrese", type: "text", value: `${sa.height_min_cm}–${sa.height_max_cm} cm` },
+        { category: "Fisico", label: "Tipo di mantello", type: "text", value: coatTypeLabels[sa.coat_type] ?? sa.coat_type },
+        { category: "Fisico", label: "Livello di bava", type: "bar", value: sa.drooling },
+        { category: "Stile di vita", label: "Bisogno di esercizio", type: "bar", value: sa.exercise_needs },
+        { category: "Stile di vita", label: "Adatto in appartamento", type: "bar", value: sa.apartment_suitable },
+        { category: "Stile di vita", label: "Tolleranza alla solitudine", type: "bar", value: sa.alone_tolerance },
+        { category: "Stile di vita", label: "Adatto al primo proprietario", type: "bar", value: sa.first_time_owner },
+        { category: "Ambiente", label: "Tolleranza al caldo", type: "bar", value: sa.heat_tolerance },
+        { category: "Ambiente", label: "Tolleranza al freddo", type: "bar", value: sa.cold_tolerance },
+        { category: "Salute", label: "Problemi di salute comuni", type: "text", value: sa.health_issues.join(", ") },
+        { category: "Utilizzo", label: "Utilizzo principale", type: "badges", value: sa.primary_use.map((u) => useLabels[u] ?? u) },
+        { category: "Cura", label: "Colori del mantello", type: "text", value: sa.coat_colors.join(", ") },
+      ]
+    : [];
 
   return (
     <div className="min-h-screen bg-muted">
@@ -153,53 +196,69 @@ export default async function BreedDetailPage({ params }: BreedPageProps) {
               </Card>
             )}
 
-            {/* Quiz attributes */}
-            {qa && Object.values(qa).some((v) => v !== null) && (
+            {/* Seeker attributes table */}
+            {sa && attributes.length > 0 && (
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold">Caratteristiche</h2>
-                    <a
-                      href={breed.sources.quiz_attributes}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-muted-foreground hover:underline flex items-center gap-1"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      Fonte: AKC
-                    </a>
+                    {breed.sources.seeker_attributes && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Info className="h-3 w-3" />
+                        Fonte: {breed.sources.seeker_attributes}
+                      </span>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      { label: "Energia", value: qa.energy },
-                      { label: "Addestrabilità", value: qa.trainability },
-                      { label: "Perdita di pelo", value: qa.shedding },
-                      { label: "Abbaiamento", value: qa.barking },
-                      { label: "Con i bambini", value: qa.good_with_children },
-                      { label: "Con altri cani", value: qa.good_with_other_dogs },
-                      { label: "Con gli estranei", value: qa.good_with_strangers },
-                      { label: "Giocosità", value: qa.playfulness },
-                      { label: "Istinto protettivo", value: qa.protectiveness },
-                      { label: "Adattabilità", value: qa.adaptability },
-                      { label: "Stimolazione mentale", value: qa.mental_stimulation_needs },
-                    ]
-                      .filter(({ value }) => value !== null)
-                      .map(({ label, value }) => (
-                        <div key={label}>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="text-muted-foreground">{label}</span>
-                            <span className="font-medium">{value}/5</span>
-                          </div>
-                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary rounded-full"
-                              style={{ width: `${((value as number) / 5) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-left">
+                          <th className="py-2 pr-4 font-medium text-muted-foreground">Categoria</th>
+                          <th className="py-2 pr-4 font-medium text-muted-foreground">Attributo</th>
+                          <th className="py-2 font-medium text-muted-foreground">Valore</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {attributes.map((attr, i) => {
+                          const showCategory =
+                            i === 0 || attributes[i - 1].category !== attr.category;
+                          return (
+                            <tr
+                              key={attr.label}
+                              className={showCategory && i > 0 ? "border-t border-border" : ""}
+                            >
+                              <td className="py-2.5 pr-4 text-muted-foreground align-top whitespace-nowrap">
+                                {showCategory ? attr.category : ""}
+                              </td>
+                              <td className="py-2.5 pr-4 align-top">{attr.label}</td>
+                              <td className="py-2.5 align-top">
+                                {attr.type === "bar" ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-2 w-24 bg-muted rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-primary rounded-full"
+                                        style={{ width: `${(attr.value / 5) * 100}%` }}
+                                      />
+                                    </div>
+                                    <span className="font-medium text-xs">{attr.value}/5</span>
+                                  </div>
+                                ) : attr.type === "badges" ? (
+                                  <div className="flex flex-wrap gap-1">
+                                    {attr.value.map((v) => (
+                                      <Badge key={v} variant="outline">{v}</Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span>{attr.value}</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </CardContent>
               </Card>
@@ -255,7 +314,7 @@ export default async function BreedDetailPage({ params }: BreedPageProps) {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Physical data */}
-            {(breed.weight_min_kg || breed.lifespan_min || breed.hypoallergenic !== null) && (
+            {(breed.weight_min_kg || breed.lifespan_min || breed.hypoallergenic !== null || sa?.height_min_cm) && (
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -272,6 +331,12 @@ export default async function BreedDetailPage({ params }: BreedPageProps) {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
+                  {sa?.height_min_cm && sa?.height_max_cm && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Altezza</span>
+                      <span className="font-medium">{sa.height_min_cm}–{sa.height_max_cm} cm</span>
+                    </div>
+                  )}
                   {breed.weight_min_kg && breed.weight_max_kg && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Peso</span>

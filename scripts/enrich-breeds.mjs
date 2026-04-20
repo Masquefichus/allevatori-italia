@@ -4,7 +4,8 @@
  * Enriches the FCI breed list with data from three sources:
  *   1. dogapi.dog      — weight, lifespan, hypoallergenic (free, no key)
  *   2. Italian Wikipedia REST API — Italian descriptions + photos (free, CC license)
- *   3. AKC website     — quiz attributes: energy, trainability, shedding, etc. (1–5 scores)
+ *
+ * Seeker attributes are generated separately by generate-seeker-attributes.mjs (Claude API).
  *
  * Output: src/data/razze-enriched.json
  *         scripts/manual-overrides.json  (created on first run if missing, never overwritten)
@@ -15,7 +16,6 @@
  * Refresh cadence:
  *   dogapi.dog   → monthly
  *   Wikipedia    → quarterly
- *   AKC          → annually
  */
 
 import { readFileSync, writeFileSync, existsSync } from "fs";
@@ -213,51 +213,6 @@ async function fetchFCIIllustration(fciId, groupFci) {
   return null;
 }
 
-// ─── Source 3: AKC quiz attributes ───────────────────────────────────────────
-// AKC exposes breed traits via their WordPress REST API.
-// Traits are stored as taxonomy term IDs which we map to 1–5 scores.
-
-// Term ID → numeric score mappings (fetched manually, stable)
-const AKC_ACTIVITY = { 19: 1, 2729: 1, 2640: 2, 2645: 4, 21: 5 };        // Couch Potato→1 … Needs Lots→5
-const AKC_BARKING  = { 22: 1, 23: 2, 24: 3, 25: 4, 26: 5, 50293: 1 };   // When Necessary→1 … Vocal→5
-const AKC_CHILDREN = { 33: 1, 31: 2, 32: 3, 34: 5, 50293: 1 };           // Not Recommended→1 … Yes→5
-const AKC_DOGS     = { 35: 1, 36: 3, 37: 5 };                             // Not Recommended→1 … Yes→5
-const AKC_SHEDDING = { 38: 1, 2648: 2, 39: 3, 40: 4, 2673: 5 };          // Infrequent→1 … Regularly→5
-const AKC_TRAIN    = { 46: 1, 49: 2, 47: 3, 48: 4, 50: 5 };              // Stubborn→1 … Easy→5
-
-function termScore(ids, map) {
-  for (const id of (ids ?? [])) {
-    if (map[id] !== undefined) return map[id];
-  }
-  return null;
-}
-
-async function fetchAKC(breedNameEN) {
-  const slug = breedNameEN
-    .toLowerCase()
-    .replace(/[()]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-
-  const data = await fetchJson(
-    `https://www.akc.org/wp-json/wp/v2/breed?slug=${slug}&_fields=activity_level,barking_level,good_with_children,good_with_dogs,shedding,trainability`
-  );
-  if (!data?.length) return null;
-
-  const b = data[0];
-  const energy        = termScore(b.activity_level,    AKC_ACTIVITY);
-  const barking       = termScore(b.barking_level,     AKC_BARKING);
-  const good_children = termScore(b.good_with_children,AKC_CHILDREN);
-  const good_dogs     = termScore(b.good_with_dogs,    AKC_DOGS);
-  const shedding      = termScore(b.shedding,          AKC_SHEDDING);
-  const trainability  = termScore(b.trainability,      AKC_TRAIN);
-
-  if ([energy, barking, good_children, good_dogs, shedding, trainability].every((v) => v === null)) return null;
-
-  return { energy, trainability, shedding, barking, good_with_children: good_children, good_with_other_dogs: good_dogs };
-}
-
 // ─── Load manual overrides ────────────────────────────────────────────────────
 
 const overridesPath = resolve(__dirname, "manual-overrides.json");
@@ -267,13 +222,14 @@ if (!existsSync(overridesPath)) {
     "_example": {
       "cirneco-dell-etna": {
         "description_it": "Il Cirneco dell'Etna è una razza canina italiana antica originaria della Sicilia...",
-        "quiz_attributes": {
-          "energy": 4,
-          "trainability": 3,
-          "shedding": 2,
-          "grooming": 1,
-          "good_with_children": 4,
-          "good_with_other_dogs": 3
+        "seeker_attributes": {
+          "height_min_cm": 42,
+          "height_max_cm": 50,
+          "coat_type": "corto",
+          "drooling": 1,
+          "exercise_needs": 4,
+          "apartment_suitable": 3,
+          "first_time_owner": 3
         }
       }
     }
@@ -284,9 +240,19 @@ const overrides = JSON.parse(readFileSync(overridesPath, "utf8"));
 
 // ─── Main enrichment loop ─────────────────────────────────────────────────────
 
+// ─── Load existing enriched data (to preserve seeker_attributes) ─────────────
+
+const existingPath = resolve(ROOT, "src/data/razze-enriched.json");
+const existingData = {};
+if (existsSync(existingPath)) {
+  const existing = JSON.parse(readFileSync(existingPath, "utf8"));
+  for (const b of existing) existingData[b.slug] = b;
+  console.log(`   Loaded ${existing.length} existing enriched breeds (preserving seeker_attributes).\n`);
+}
+
 console.log("🔄 Enriching breeds...\n");
 const enriched = [];
-let dogapiHits = 0, wikiHits = 0, akcHits = 0, commonsHits = 0, fciHits = 0;
+let dogapiHits = 0, wikiHits = 0, commonsHits = 0, fciHits = 0;
 
 for (let i = 0; i < breeds.length; i++) {
   const breed = breeds[i];
@@ -318,7 +284,7 @@ for (let i = 0; i < breeds.length; i++) {
     lifespan_min: null,
     lifespan_max: null,
     hypoallergenic: null,
-    quiz_attributes: null,
+    seeker_attributes: null,
   };
 
   // 1. dogapi.dog
@@ -374,16 +340,6 @@ for (let i = 0; i < breeds.length; i++) {
     }
   }
 
-  // 3. AKC quiz attributes
-  if (!override.quiz_attributes) {
-    const akc = await fetchAKC(breed.name_en);
-    if (akc) {
-      result.quiz_attributes = akc;
-      result.sources.quiz_attributes = `https://www.akc.org/dog-breeds/${breed.name_en.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "-")}/`;
-      akcHits++;
-    }
-  }
-
   // Apply manual overrides (always win)
   if (override.description_it) {
     result.description_it = override.description_it;
@@ -394,14 +350,20 @@ for (let i = 0; i < breeds.length; i++) {
     result.photo_credit = override.photo_credit ?? "manual";
     result.sources.photo = "manual";
   }
-  if (override.quiz_attributes) {
-    result.quiz_attributes = override.quiz_attributes;
-    result.sources.quiz_attributes = "manual";
+  if (override.seeker_attributes) {
+    result.seeker_attributes = override.seeker_attributes;
+    result.sources.seeker_attributes = "manual";
   }
   if (override.weight_min_kg) result.weight_min_kg = override.weight_min_kg;
   if (override.weight_max_kg) result.weight_max_kg = override.weight_max_kg;
   if (override.lifespan_min) result.lifespan_min = override.lifespan_min;
   if (override.lifespan_max) result.lifespan_max = override.lifespan_max;
+
+  // Preserve existing seeker_attributes from previous generation run
+  if (!result.seeker_attributes && existingData[breed.slug]?.seeker_attributes) {
+    result.seeker_attributes = existingData[breed.slug].seeker_attributes;
+    result.sources.seeker_attributes = existingData[breed.slug].sources?.seeker_attributes ?? "Claude AI";
+  }
 
   enriched.push(result);
 
@@ -409,7 +371,7 @@ for (let i = 0; i < breeds.length; i++) {
     dogapiMatch ? "🐶" : "  ",
     result.description_it ? "📝" : "  ",
     result.photo_url ? "📷" : "  ",
-    result.quiz_attributes ? "🎯" : "  ",
+    result.seeker_attributes ? "🎯" : "  ",
   ].join("");
   process.stdout.write(`${flags}\n`);
 
@@ -425,7 +387,7 @@ writeFileSync(outputPath, JSON.stringify(enriched, null, 2));
 
 const withDesc   = enriched.filter((b) => b.description_it).length;
 const withPhoto  = enriched.filter((b) => b.photo_url).length;
-const withQuiz   = enriched.filter((b) => b.quiz_attributes).length;
+const withSeeker = enriched.filter((b) => b.seeker_attributes).length;
 const withWeight = enriched.filter((b) => b.weight_min_kg).length;
 
 const wikiPhotos  = enriched.filter((b) => b.photo_url && b.sources.photo?.includes("Wikimedia")).length;
@@ -442,10 +404,11 @@ console.log(`
     ↳ Wikipedia:        ${wikiPhotos}
     ↳ Commons search:   ${commonsHits}
     ↳ FCI illustration: ${fciHits}
-  Quiz attributes:      ${withQuiz} / ${enriched.length}  (AKC)
+  Seeker attributes:    ${withSeeker} / ${enriched.length}  (Claude AI)
   Weight data:          ${withWeight} / ${enriched.length}  (dogapi.dog)
 
   Still missing photos: ${enriched.length - withPhoto} — add to scripts/manual-overrides.json
+  Missing seeker attrs: ${enriched.length - withSeeker} — run generate-seeker-attributes.mjs
 
 Data sources per breed are stored in each entry's "sources" field.
 `);

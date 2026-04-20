@@ -12,22 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function RazzePage() {
-  const italianBreeds = razze.filter((r) => r.is_italian_breed);
-  const breedsByGroup = razze.reduce(
-    (acc, breed) => {
-      const group = breed.group_fci;
-      if (!acc[group]) acc[group] = [];
-      acc[group].push(breed);
-      return acc;
-    },
-    {} as Record<number, RazzaEnricched[]>
-  );
-
-  return (
-    <RazzePageClient
-      italianBreeds={italianBreeds}
-      breedsByGroup={breedsByGroup}
-      totalCount={razze.length}
-    />
-  );
+  return <RazzePageClient allBreeds={razze} />;
 }

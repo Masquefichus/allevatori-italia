@@ -4,31 +4,56 @@
  * To add missing data for a breed, edit scripts/manual-overrides.json.
  */
 
-export interface QuizAttributes {
-  /** 1 (low) – 5 (high). Source: AKC */
-  energy: number | null;
-  /** 1 (stubborn) – 5 (eager to please). Source: AKC */
-  trainability: number | null;
-  /** 1 (minimal) – 5 (heavy). Source: AKC */
-  shedding: number | null;
-  /** 1 (minimal) – 5 (frequent). Source: AKC */
-  grooming: number | null;
-  /** 1 (quiet) – 5 (vocal). Source: AKC */
-  barking: number | null;
-  /** 1 (not recommended) – 5 (great). Source: AKC */
-  good_with_children: number | null;
-  /** 1 (not recommended) – 5 (great). Source: AKC */
-  good_with_other_dogs: number | null;
-  /** 1 (reserved) – 5 (very open). Source: AKC */
-  good_with_strangers: number | null;
-  /** 1 (serious) – 5 (very playful). Source: AKC */
-  playfulness: number | null;
-  /** 1 (relaxed) – 5 (very protective). Source: AKC */
-  protectiveness: number | null;
-  /** 1 (low) – 5 (highly adaptable). Source: AKC */
-  adaptability: number | null;
-  /** 1 (low) – 5 (high). Source: AKC */
-  mental_stimulation_needs: number | null;
+// ── Seeker-oriented breed attributes ────────────────────────────────────────
+
+export type CoatType = "corto" | "medio" | "lungo" | "duro" | "riccio" | "senza_pelo" | "doppio";
+
+export type PrimaryUse =
+  | "compagnia"
+  | "guardia"
+  | "caccia"
+  | "sport"
+  | "pastorizia"
+  | "terapia"
+  | "lavoro"
+  | "slitta";
+
+export interface SeekerAttributes {
+  // Physical
+  /** Minimum adult height at withers in cm */
+  height_min_cm: number;
+  /** Maximum adult height at withers in cm */
+  height_max_cm: number;
+  /** Coat type */
+  coat_type: CoatType;
+  /** 1 (minimal) – 5 (heavy drooler) */
+  drooling: number;
+  /** Common coat colors in Italian */
+  coat_colors: string[];
+
+  // Lifestyle
+  /** 1 (low, ~20min/day) – 5 (very high, 90+ min/day) */
+  exercise_needs: number;
+  /** 1 (not suitable) – 5 (ideal for apartments) */
+  apartment_suitable: number;
+  /** 1 (cannot be left alone) – 5 (handles 8+ hours) */
+  alone_tolerance: number;
+  /** 1 (not recommended) – 5 (ideal for beginners) */
+  first_time_owner: number;
+
+  // Environment
+  /** 1 (very low) – 5 (excellent) */
+  heat_tolerance: number;
+  /** 1 (very low) – 5 (excellent) */
+  cold_tolerance: number;
+
+  // Health
+  /** 2-5 common health concerns in Italian */
+  health_issues: string[];
+
+  // Purpose
+  /** Primary uses for this breed */
+  primary_use: PrimaryUse[];
 }
 
 export interface BreedSources {
@@ -40,8 +65,8 @@ export interface BreedSources {
   description_en?: string;
   /** Present if photo was found. */
   photo?: string;
-  /** Present if quiz attributes were found. */
-  quiz_attributes?: string;
+  /** Present if seeker attributes were generated. */
+  seeker_attributes?: string;
 }
 
 export interface RazzaEnricched {
@@ -86,9 +111,9 @@ export interface RazzaEnricched {
   /** Whether the breed is considered hypoallergenic. Source: dogapi.dog. Null if unknown. */
   hypoallergenic: boolean | null;
 
-  // ── Quiz attributes ───────────────────────────────────────────────────────
-  /** Structured 1–5 scores for breed matchmaking quiz. Source: AKC. Null if not found. */
-  quiz_attributes: QuizAttributes | null;
+  // ── Seeker attributes ─────────────────────────────────────────────────────
+  /** Structured attributes for breed discovery and filtering. Null if not yet generated. */
+  seeker_attributes: SeekerAttributes | null;
 
   // ── Source attribution (display to users) ─────────────────────────────────
   /** Per-field source URLs and labels */

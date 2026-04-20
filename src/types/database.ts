@@ -35,6 +35,10 @@ export interface Breed {
   is_italian_breed: boolean;
   is_popular: boolean;
   is_working_breed: boolean;
+  seeker_attributes: Record<string, unknown> | null;
+  height_min_cm: number | null;
+  height_max_cm: number | null;
+  coat_type: string | null;
   created_at: string;
 }
 

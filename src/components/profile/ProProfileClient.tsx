@@ -8,7 +8,9 @@ import Link from "next/link";
 import {
   MapPin, Star, CheckCircle, Facebook, Instagram, ExternalLink,
   Dog, Pencil, X, Save, Loader2, Heart, Camera, Plus, Trash2, ArrowLeft, ArrowRight, Crop, GripVertical,
+  GraduationCap, Home, Mail, Phone, Globe, CheckCircle2,
 } from "lucide-react";
+import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -23,6 +25,20 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { getClubBySlug, getClubsForFciId, type BreedClub } from "@/lib/breed-clubs";
 import { razze } from "@/data/razze";
 import { regioni } from "@/data/regioni";
+
+interface Trainer {
+  id: string; user_id: string; slug: string; name: string;
+  description: string | null; region: string | null; city: string | null;
+  phone: string | null; email_public: string | null; website: string | null;
+  logo_url: string | null;
+}
+interface Boarding {
+  id: string; user_id: string; slug: string; name: string;
+  description: string | null; region: string | null; city: string | null;
+  phone: string | null; email_public: string | null; website: string | null;
+  logo_url: string | null;
+}
+type TabId = "chi-siamo" | "riproduttori" | "cucciolate" | "attesa" | "corsi" | "prenotazioni" | "recensioni";
 
 interface Breed { id: string; name_it: string; slug: string; is_working_breed?: boolean; }
 interface Puppy {
@@ -83,13 +99,17 @@ interface BreedingDog {
 }
 
 interface Props {
-  breeder: Breeder;
+  urlRole: "allevatore" | "addestratore" | "pensione";
+  breeder: Breeder | null;
   breeds: Breed[];
   allBreeds: Breed[];
   litters: Litter[];
   breedingDogs: BreedingDog[];
   reviews: Review[];
-  breederUserId: string | null;
+  trainer: Trainer | null;
+  boarding: Boarding | null;
+  ownerUserId: string | null;
+  initialTab: TabId;
   ChatModalComponent: React.ReactNode;
   ReviewFormComponent: React.ReactNode;
 }
@@ -264,14 +284,27 @@ function Field({ label, value, onChange, placeholder, type = "text", multiline =
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function BreederProfileClient({
-  breeder: initialBreeder, breeds: initialBreeds, allBreeds,
-  litters: initialLitters, breedingDogs: initialBreedingDogs, reviews, breederUserId, ChatModalComponent, ReviewFormComponent,
+export default function ProProfileClient({
+  urlRole, breeder: initialBreeder, breeds: initialBreeds, allBreeds,
+  litters: initialLitters, breedingDogs: initialBreedingDogs, reviews,
+  trainer, boarding, ownerUserId, initialTab, ChatModalComponent, ReviewFormComponent,
 }: Props) {
   const { user } = useAuth();
   const router = useRouter();
-  const isOwner = !!user && !!breederUserId && user.id === breederUserId;
-  const [tab, setTab] = useState<"allevamento" | "riproduttori" | "cuccioli" | "attesa" | "recensioni">("allevamento");
+  const isOwner = !!user && !!ownerUserId && user.id === ownerUserId;
+  const [tab, setTab] = useState<TabId>(initialTab);
+
+  const visibleTabs: { id: TabId; label: string }[] = [
+    { id: "chi-siamo", label: "Chi siamo" },
+    ...(initialBreeder ? [
+      { id: "riproduttori" as const, label: "I nostri cani" },
+      { id: "cucciolate" as const, label: "Cucciolate" },
+      { id: "attesa" as const, label: "Lista d'attesa" },
+    ] : []),
+    ...(trainer ? [{ id: "corsi" as const, label: "Corsi" }] : []),
+    ...(boarding ? [{ id: "prenotazioni" as const, label: "Prenotazioni" }] : []),
+    { id: "recensioni", label: "Recensioni" },
+  ];
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -349,14 +382,16 @@ export default function BreederProfileClient({
       const json = await res.json();
       if (!json.url) return;
 
+      if (!breeder) return;
       await (supabase as any).from("breeder_profiles").update({ [field]: json.url }).eq("id", breeder.id);
-      setBreeder((prev) => ({ ...prev, [field]: json.url }));
+      setBreeder((prev) => prev ? ({ ...prev, [field]: json.url }) : prev);
     } finally {
       setUploading(false);
     }
   }
 
   function startEditingPhotos() {
+    if (!breeder) return;
     const current = [
       breeder.cover_image_url,
       ...(breeder.gallery_urls ?? []),
@@ -438,12 +473,13 @@ export default function BreederProfileClient({
   }
 
   async function saveDescription() {
+    if (!breeder) return;
     const supabase = createClient();
     if (!supabase) return;
     // Clean empty editor output
     const desc = descriptionDraft === "<p></p>" ? null : descriptionDraft || null;
     await (supabase as any).from("breeder_profiles").update({ description: desc }).eq("id", breeder.id);
-    setBreeder((prev) => ({ ...prev, description: desc }));
+    setBreeder((prev) => prev ? ({ ...prev, description: desc }) : prev);
     setEditingDescription(false);
   }
 
@@ -466,6 +502,7 @@ export default function BreederProfileClient({
   }
 
   async function savePhotos() {
+    if (!breeder) return;
     const supabase = createClient();
     if (!supabase) return;
     const cover = managedPhotos[0] ?? null;
@@ -474,7 +511,7 @@ export default function BreederProfileClient({
       cover_image_url: cover,
       gallery_urls: galleryUrls,
     }).eq("id", breeder.id);
-    setBreeder((prev) => ({ ...prev, cover_image_url: cover, gallery_urls: galleryUrls }));
+    setBreeder((prev) => prev ? ({ ...prev, cover_image_url: cover, gallery_urls: galleryUrls }) : prev);
     setEditingPhotos(false);
   }
 
@@ -623,8 +660,8 @@ export default function BreederProfileClient({
       // Determine affisso mode from stored data
       let affisso_mode: "breeder" | "other" | "none" = "none";
       if (dog.affisso) {
-        affisso_mode = dog.affisso === breeder.affisso ? "breeder" : "other";
-      } else if (breeder.affisso && !dog.affisso) {
+        affisso_mode = dog.affisso === breeder?.affisso ? "breeder" : "other";
+      } else if (breeder?.affisso && !dog.affisso) {
         affisso_mode = "none";
       }
       setEditingDogId(dog.id);
@@ -643,7 +680,7 @@ export default function BreederProfileClient({
     } else {
       setEditingDogId("new");
       setDogForm({
-        name: "", affisso: breeder.affisso ?? "", affisso_mode: breeder.affisso ? "breeder" : "none",
+        name: "", affisso: breeder?.affisso ?? "", affisso_mode: breeder?.affisso ? "breeder" : "none",
         breed_id: "", variety: "", sex: "maschio",
         date_of_birth: "", pedigree_number: "", color: "",
         titles: [], health_screenings: {}, dna_deposited: false,
@@ -741,7 +778,7 @@ export default function BreederProfileClient({
   }
 
   useEffect(() => {
-    if (!user || isOwner) return;
+    if (!user || isOwner || !initialBreeder) return;
     const supabase = createClient();
     if (!supabase) return;
     (supabase as any)
@@ -753,10 +790,11 @@ export default function BreederProfileClient({
       .then(({ data }: { data: { id: string } | null }) => {
         setIsSaved(!!data);
       });
-  }, [user, isOwner, initialBreeder.id]);
+  }, [user, isOwner, initialBreeder]);
 
   async function toggleFavorite() {
     if (!user) { window.location.href = `/accedi?redirect=${window.location.pathname}`; return; }
+    if (!initialBreeder) return;
     const supabase = createClient();
     if (!supabase) return;
     setSavingFav(true);
@@ -770,13 +808,93 @@ export default function BreederProfileClient({
     setSavingFav(false);
   }
 
-  const [breeder, setBreeder] = useState(initialBreeder);
+  async function removeRole(role: string) {
+    const labels: Record<string, string> = { allevatore: "Allevatore", addestratore: "Addestratore", pensione: "Pensione" };
+    const warn = role === "allevatore"
+      ? "Sei sicuro? Rimuovendo il ruolo Allevatore eliminerai tutti i dati dell'allevamento (cani, cucciolate, recensioni). Questa operazione è irreversibile."
+      : `Sei sicuro di voler rimuovere il ruolo ${labels[role]}?`;
+    if (!confirm(warn)) return;
+
+    const supabase = createClient();
+    if (!supabase) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const tableMap: Record<string, string> = {
+      allevatore: "breeder_profiles",
+      addestratore: "trainer_profiles",
+      pensione: "boarding_profiles",
+    };
+    await Promise.all([
+      (supabase as any).from(tableMap[role]).delete().eq("user_id", session.user.id),
+      (supabase as any).from("profile_roles").delete().eq("profile_id", session.user.id).eq("role", role),
+    ]);
+
+    // If we removed the role this URL was built around, go to dashboard
+    if (role === urlRole) {
+      router.push("/dashboard");
+    } else {
+      router.refresh();
+    }
+  }
+
+  const ROLE_COPY: Record<string, { label: string; blurb: string }> = {
+    allevatore: { label: "Allevatore", blurb: "Registra il tuo allevamento per pubblicare cucciolate e gestire riproduttori." },
+    addestratore: { label: "Addestratore", blurb: "Offri corsi di addestramento, educazione di base e discipline sportive." },
+    pensione: { label: "Pensione per cani", blurb: "Offri servizi di pensione, dog sitting e pet hotel." },
+  };
+
+  const [confirmingRole, setConfirmingRole] = useState<string | null>(null);
+  const [addingRole, setAddingRole] = useState(false);
+  const [addError, setAddError] = useState("");
+  const [addDone, setAddDone] = useState(false);
+
+  async function addRole(role: string) {
+    setAddError("");
+    setAddingRole(true);
+    const supabase = createClient();
+    if (!supabase) { setAddError("Supabase non configurato."); setAddingRole(false); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setAddError("Sessione non valida. Riaccedi."); setAddingRole(false); return; }
+
+    const { error: roleError } = await supabase
+      .from("profile_roles")
+      .insert({ profile_id: user.id, role, is_active: true, is_approved: true });
+    if (roleError && roleError.code !== "23505") {
+      setAddError(roleError.message); setAddingRole(false); return;
+    }
+
+    if (role !== "allevatore") {
+      const table = role === "addestratore" ? "trainer_profiles" : "boarding_profiles";
+      const { data: breederRow } = await (supabase as any)
+        .from("breeder_profiles").select("kennel_name, slug, region, province, city").eq("user_id", user.id).maybeSingle();
+      const { data: profileRow } = await (supabase as any)
+        .from("profiles").select("full_name").eq("id", user.id).single();
+      const baseName = breederRow?.kennel_name ?? profileRow?.full_name ?? "Profilo";
+      const baseSlug = breederRow?.slug ?? slugify(baseName);
+      const { data: existing } = await (supabase as any).from(table).select("id").eq("slug", baseSlug).maybeSingle();
+      const finalSlug = existing ? `${baseSlug}-${user.id.slice(0, 8)}` : baseSlug;
+      const { error: profileError } = await (supabase as any).from(table).insert({
+        user_id: user.id, name: baseName, slug: finalSlug,
+        region: breederRow?.region ?? null, province: breederRow?.province ?? null, city: breederRow?.city ?? null,
+      });
+      if (profileError && profileError.code !== "23505") {
+        setAddError(profileError.message); setAddingRole(false); return;
+      }
+    }
+
+    setAddDone(true);
+    setAddingRole(false);
+    router.refresh();
+  }
+
+  const [breeder, setBreeder] = useState<Breeder | null>(initialBreeder);
   const [breeds, setBreeds] = useState(initialBreeds);
 
   // Photo repositioning (logo only)
   const [repositioning, setRepositioning] = useState<"logo" | null>(null);
   const [logoPos, setLogoPos] = useState<{ x: number; y: number }>(() => {
-    const parts = (initialBreeder.logo_position ?? "50% 50%").split(" ");
+    const parts = (initialBreeder?.logo_position ?? "50% 50%").split(" ");
     return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 };
   });
   const dragStart = useRef<{ mouseX: number; mouseY: number; posX: number; posY: number } | null>(null);
@@ -814,36 +932,38 @@ export default function BreederProfileClient({
   }
 
   async function savePosition() {
+    if (!breeder) return;
     const supabase = createClient();
     if (!supabase) return;
     const value = `${logoPos.x.toFixed(1)}% ${logoPos.y.toFixed(1)}%`;
     await (supabase as any).from("breeder_profiles").update({ logo_position: value }).eq("id", breeder.id);
-    setBreeder((prev) => ({ ...prev, logo_position: value }));
+    setBreeder((prev) => prev ? ({ ...prev, logo_position: value }) : prev);
     setRepositioning(null);
   }
 
   const [form, setForm] = useState({
-    kennel_name: initialBreeder.kennel_name ?? "",
-    description: initialBreeder.description ?? "",
-    enci_number: initialBreeder.enci_number ?? "",
-    year_established: initialBreeder.year_established?.toString() ?? "",
-    region: initialBreeder.region ?? "",
-    city: initialBreeder.city ?? "",
-    province: initialBreeder.province ?? "",
-    address: initialBreeder.address ?? "",
-    show_address: initialBreeder.show_address ?? false,
-    phone: initialBreeder.phone ?? "",
-    whatsapp: initialBreeder.whatsapp ?? "",
-    email_public: initialBreeder.email_public ?? "",
-    website: initialBreeder.website ?? "",
-    facebook_url: initialBreeder.facebook_url ?? "",
-    instagram_url: initialBreeder.instagram_url ?? "",
-    affisso: initialBreeder.affisso ?? (null as unknown as string),
+    kennel_name: initialBreeder?.kennel_name ?? "",
+    description: initialBreeder?.description ?? "",
+    enci_number: initialBreeder?.enci_number ?? "",
+    year_established: initialBreeder?.year_established?.toString() ?? "",
+    region: initialBreeder?.region ?? "",
+    city: initialBreeder?.city ?? "",
+    province: initialBreeder?.province ?? "",
+    address: initialBreeder?.address ?? "",
+    show_address: initialBreeder?.show_address ?? false,
+    phone: initialBreeder?.phone ?? "",
+    whatsapp: initialBreeder?.whatsapp ?? "",
+    email_public: initialBreeder?.email_public ?? "",
+    website: initialBreeder?.website ?? "",
+    facebook_url: initialBreeder?.facebook_url ?? "",
+    instagram_url: initialBreeder?.instagram_url ?? "",
+    affisso: initialBreeder?.affisso ?? (null as unknown as string),
   });
-  const [selectedBreedIds, setSelectedBreedIds] = useState<string[]>(initialBreeder.breed_ids ?? []);
-  const [selectedClubSlugs, setSelectedClubSlugs] = useState<string[]>(initialBreeder.breed_club_memberships ?? []);
+  const [selectedBreedIds, setSelectedBreedIds] = useState<string[]>(initialBreeder?.breed_ids ?? []);
+  const [selectedClubSlugs, setSelectedClubSlugs] = useState<string[]>(initialBreeder?.breed_club_memberships ?? []);
 
   function startEditing() {
+    if (!breeder) return;
     setForm({
       kennel_name: breeder.kennel_name ?? "",
       description: breeder.description ?? "",
@@ -870,6 +990,7 @@ export default function BreederProfileClient({
   }
 
   async function handleSave() {
+    if (!breeder) return;
     setSaving(true);
     setSaveError(null);
     const supabase = createClient();
@@ -915,7 +1036,7 @@ export default function BreederProfileClient({
       return;
     }
 
-    setBreeder((prev) => ({ ...prev, ...updates }));
+    setBreeder((prev) => prev ? ({ ...prev, ...updates }) : prev);
     setBreeds(allBreeds.filter((b) => selectedBreedIds.includes(b.id)));
     setEditing(false);
     setSaving(false);
@@ -930,11 +1051,49 @@ export default function BreederProfileClient({
   }
 
   const activeLitters = localLitters.filter((l) => l.status === "attivo");
-  const gallery: string[] = breeder.gallery_urls ?? [];
-  const initials = breeder.kennel_name?.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase() ?? "K";
+  const gallery: string[] = breeder?.gallery_urls ?? [];
+  const initials = breeder?.kennel_name?.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase() ?? "P";
   const selectedRegionData = regioni.find((r) => r.nome === form.region);
   const provinceOptions = selectedRegionData?.province ?? [];
-  const location = [breeder.show_address ? breeder.address : null, breeder.city, breeder.province, breeder.region].filter(Boolean).join(", ");
+  const location = breeder ? [breeder.show_address ? breeder.address : null, breeder.city, breeder.province, breeder.region].filter(Boolean).join(", ") : "";
+
+  const activeRoleIds = new Set([
+    ...(initialBreeder ? ["allevatore"] : []),
+    ...(trainer ? ["addestratore"] : []),
+    ...(boarding ? ["pensione"] : []),
+  ]);
+  const roleDefs = [
+    { id: "allevatore", label: "Allevatore", Icon: Dog },
+    { id: "addestratore", label: "Addestratore", Icon: GraduationCap },
+    { id: "pensione", label: "Pensione", Icon: Home },
+  ];
+  const roleBadges = (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {(isOwner ? roleDefs : roleDefs.filter(r => activeRoleIds.has(r.id))).map(({ id, label, Icon }) =>
+        activeRoleIds.has(id) ? (
+          <span key={id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-foreground">
+            <Icon className="h-3 w-3" /> {label}
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => removeRole(id)}
+                className="ml-0.5 opacity-40 hover:opacity-100 transition-opacity"
+                title={`Rimuovi ${label}`}
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            )}
+          </span>
+        ) : (
+          <button key={id} type="button"
+            onClick={() => { setConfirmingRole(id); setAddDone(false); setAddError(""); }}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors">
+            <Plus className="h-3 w-3" /> {label}
+          </button>
+        )
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -949,8 +1108,36 @@ export default function BreederProfileClient({
         </div>
       )}
 
-      {/* ── Header: profile pic + name + info ───────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {!initialBreeder && (() => {
+        const pro = trainer ?? boarding!;
+        const icon = trainer
+          ? <GraduationCap className="h-10 w-10 text-muted-foreground" />
+          : <Home className="h-10 w-10 text-muted-foreground" />;
+        const proLocation = [pro.city, pro.region].filter(Boolean).join(", ");
+        return (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-start gap-4">
+              {pro.logo_url
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={pro.logo_url} alt={pro.name} className="h-20 w-20 rounded-full object-cover shrink-0" />
+                : <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center shrink-0">{icon}</div>}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl font-bold">{pro.name}</h1>
+                {proLocation && (
+                  <p className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" />{proLocation}
+                  </p>
+                )}
+                {roleBadges}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Header: profile pic + name + info (breeder only) ─────────────── */}
+      {initialBreeder && <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
         <div className="relative flex items-start gap-5">
           {/* Edit/Save buttons moved to right-side column below */}
 
@@ -959,8 +1146,8 @@ export default function BreederProfileClient({
             <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f, "logo_url", setUploadingLogo); e.target.value = ""; }} />
             <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary overflow-hidden flex items-center justify-center text-white text-xl md:text-2xl font-bold">
-              {breeder.logo_url
-                ? <Image src={breeder.logo_url} alt={breeder.kennel_name} fill draggable={false}
+              {breeder?.logo_url
+                ? <Image src={breeder.logo_url} alt={breeder!.kennel_name} fill draggable={false}
                     className="object-cover select-none"
                     style={{ objectPosition: `${logoPos.x.toFixed(1)}% ${logoPos.y.toFixed(1)}%` }} />
                 : initials}
@@ -1063,7 +1250,7 @@ export default function BreederProfileClient({
               </div>
             ) : (
               <>
-                <h1 className="text-xl md:text-2xl font-semibold text-foreground leading-tight">{breeder.kennel_name}</h1>
+                <h1 className="text-xl md:text-2xl font-semibold text-foreground leading-tight">{breeder!.kennel_name}</h1>
                 {breeds.length > 0 && (
                   <p className="text-sm text-muted-foreground mt-1">
                     Allevatore di{" "}
@@ -1076,15 +1263,15 @@ export default function BreederProfileClient({
                     ))}
                   </p>
                 )}
-                {breeder.affisso && (
+                {breeder!.affisso && (
                   <p className="text-sm text-primary font-medium mt-1 flex items-center gap-1">
                     <CheckCircle className="h-3.5 w-3.5" />
-                    Affisso: {breeder.affisso}
+                    Affisso: {breeder!.affisso}
                   </p>
                 )}
-                {(breeder.breed_club_memberships ?? []).length > 0 && (
+                {(breeder!.breed_club_memberships ?? []).length > 0 && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Membro di {(breeder.breed_club_memberships ?? []).map((slug, i, arr) => {
+                    Membro di {(breeder!.breed_club_memberships ?? []).map((slug, i, arr) => {
                       const club = getClubBySlug(slug);
                       const name = club?.name ?? slug;
                       return <span key={slug}>{club?.website ? <a href={club.website} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">{name}</a> : name}{i < arr.length - 1 ? ", " : ""}</span>;
@@ -1094,15 +1281,16 @@ export default function BreederProfileClient({
                 {location && (
                   <p className="flex items-center gap-1 mt-1.5 text-sm text-muted-foreground"><MapPin className="h-3.5 w-3.5" />{location}</p>
                 )}
-                {breeder.year_established && (
-                  <p className="text-sm text-muted-foreground mt-0.5">Dal {breeder.year_established}</p>
+                {breeder!.year_established && (
+                  <p className="text-sm text-muted-foreground mt-0.5">Dal {breeder!.year_established}</p>
                 )}
-                {breeder.review_count > 0 && (
+                {breeder!.review_count > 0 && (
                   <p className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
                     <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-                    {breeder.average_rating.toFixed(1)} ({breeder.review_count})
+                    {breeder!.average_rating.toFixed(1)} ({breeder!.review_count})
                   </p>
                 )}
+                {roleBadges}
               </>
             )}
           </div>
@@ -1120,22 +1308,9 @@ export default function BreederProfileClient({
                 <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={saving}><X className="h-3.5 w-3.5" /></Button>
               </div>
             )}
-            {!isOwner && (
-              <div className="flex items-center gap-2">
-                {ChatModalComponent && <div key="chat">{ChatModalComponent}</div>}
-                <button
-                  onClick={toggleFavorite}
-                  disabled={savingFav}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                >
-                  <Heart className={`h-4 w-4 ${isSaved ? "fill-rose-500 text-rose-500" : ""}`} />
-                  {isSaved ? "Salvato" : "Salva"}
-                </button>
-              </div>
-            )}
-            {!editing && (breeder.affisso || (breeder.breed_club_memberships ?? []).length > 0) && (
+            {!editing && (breeder!.affisso || (breeder!.breed_club_memberships ?? []).length > 0) && (
               <div className="flex items-center gap-3">
-                {breeder.affisso && (
+                {breeder!.affisso && (
                   <>
                     <a href="https://www.enci.it" target="_blank" rel="noopener noreferrer" title="ENCI">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1147,7 +1322,7 @@ export default function BreederProfileClient({
                     </a>
                   </>
                 )}
-                {(breeder.breed_club_memberships ?? []).map((slug) => {
+                {(breeder!.breed_club_memberships ?? []).map((slug) => {
                   const club = getClubBySlug(slug);
                   if (!club) return null;
                   if (!club?.logo) return null;
@@ -1158,6 +1333,19 @@ export default function BreederProfileClient({
                     </a>
                   );
                 })}
+              </div>
+            )}
+            {!isOwner && (
+              <div className="flex items-center gap-2 mt-2">
+                {ChatModalComponent && <div key="chat">{ChatModalComponent}</div>}
+                <button
+                  onClick={toggleFavorite}
+                  disabled={savingFav}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                >
+                  <Heart className={`h-4 w-4 ${isSaved ? "fill-rose-500 text-rose-500" : ""}`} />
+                  {isSaved ? "Salvato" : "Salva"}
+                </button>
               </div>
             )}
           </div>
@@ -1177,18 +1365,12 @@ export default function BreederProfileClient({
             </button>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* ── Tabs ─────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex border-b border-border mt-4">
-            {([
-              { id: "allevamento" as const, label: "Chi siamo" },
-              { id: "riproduttori" as const, label: "I nostri cani" },
-              { id: "cuccioli" as const, label: "Cuccioli e cucciolate" },
-              { id: "attesa" as const, label: "Lista d'attesa" },
-              { id: "recensioni" as const, label: "Recensioni" },
-            ]).map((t) => (
+            {visibleTabs.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
@@ -1207,8 +1389,39 @@ export default function BreederProfileClient({
       {/* ── Content ──────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* ── TAB: L'allevamento ─────────────────────────────────────────── */}
-        {tab === "allevamento" && (
+        {/* ── TAB: Chi siamo ─────────────────────────────────────────────── */}
+        {tab === "chi-siamo" && !initialBreeder && (() => {
+          const pro = trainer ?? boarding!;
+          const hasContacts = pro.phone || pro.email_public || pro.website;
+          return (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader><h2 className="font-semibold">Chi siamo</h2></CardHeader>
+                <CardContent>
+                  {pro.description
+                    ? <p className="text-sm text-foreground whitespace-pre-wrap">{pro.description}</p>
+                    : <p className="text-sm text-muted-foreground italic">Descrizione non ancora disponibile.</p>}
+                </CardContent>
+              </Card>
+              {hasContacts && (
+                <Card>
+                  <CardHeader><h2 className="font-semibold">Contatti</h2></CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {pro.phone && <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" />{pro.phone}</p>}
+                    {pro.email_public && <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" />{pro.email_public}</p>}
+                    {pro.website && (
+                      <p className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <a href={pro.website} target="_blank" rel="noopener noreferrer" className="underline">{pro.website}</a>
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          );
+        })()}
+        {tab === "chi-siamo" && initialBreeder && (
           <div className="space-y-6">
             {/* Description — rich text editor for owner */}
             <section>
@@ -1223,17 +1436,17 @@ export default function BreederProfileClient({
                     placeholder="Racconta la storia del tuo allevamento, la tua filosofia, come cresci i cuccioli..."
                   />
                 </Suspense>
-              ) : breeder.description ? (
+              ) : breeder!.description ? (
                 <div className="relative">
                   {isOwner && (
-                    <button onClick={() => { setDescriptionDraft(breeder.description ?? ""); setEditingDescription(true); }}
+                    <button onClick={() => { setDescriptionDraft(breeder!.description ?? ""); setEditingDescription(true); }}
                       className="absolute top-0 right-0 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
                       <Pencil className="h-3 w-3" /> Modifica
                     </button>
                   )}
                   <div
                     className="prose prose-sm max-w-none text-muted-foreground [&_h1]:text-foreground [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-foreground [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1.5 [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-primary [&_a]:underline [&_img]:rounded-xl [&_img]:my-3 [&_strong]:text-foreground"
-                    dangerouslySetInnerHTML={{ __html: breeder.description }}
+                    dangerouslySetInnerHTML={{ __html: breeder!.description! }}
                   />
                 </div>
               ) : isOwner ? (
@@ -1284,7 +1497,7 @@ export default function BreederProfileClient({
                       className={`relative rounded-xl overflow-hidden bg-muted cursor-pointer ${gallery.length >= 2 && i === 0 ? "row-span-3" : ""}`}
                       onClick={() => setLightboxIndex(i)}
                     >
-                      <Image src={url} alt={`${breeder.kennel_name} ${i + 1}`} fill className="object-cover" />
+                      <Image src={url} alt={`${breeder?.kennel_name ?? ""} ${i + 1}`} fill className="object-cover" />
                       {i === 3 && gallery.length > 4 && (
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                           <span className="text-white text-2xl font-semibold">+{gallery.length - 4}</span>
@@ -1515,8 +1728,8 @@ export default function BreederProfileClient({
           );
         })()}
 
-        {/* ── TAB: Cuccioli e cucciolate ─────────────────────────────────── */}
-        {tab === "cuccioli" && (
+        {/* ── TAB: Cucciolate ──────────────────────────────────────────────── */}
+        {tab === "cucciolate" && (
           <div className="space-y-6">
             {isOwner && (
               <div className="flex justify-end">
@@ -1549,7 +1762,7 @@ export default function BreederProfileClient({
                         {/* Litter card header */}
                         <button onClick={() => setExpandedLitterId(isExpanded ? null : litter.id)} className="w-full text-left hover:bg-muted/30 transition-colors">
                           {coverImage && (
-                            <div className="relative aspect-[3/1] bg-muted">
+                            <div className="relative aspect-[5/1] bg-muted">
                               <Image src={coverImage} alt={litter.name} fill className="object-cover" />
                               {isDraft && isOwner && <span className="absolute top-3 left-3 bg-amber-100 text-amber-700 text-[10px] font-medium px-2 py-0.5 rounded-full">Bozza</span>}
                             </div>
@@ -1710,8 +1923,39 @@ export default function BreederProfileClient({
           </div>
         )}
 
+        {/* ── TAB: Corsi ─────────────────────────────────────────────────── */}
+        {tab === "corsi" && (
+          <Card>
+            <CardHeader><h2 className="font-semibold">Corsi</h2></CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground italic">
+                Questa sezione è in costruzione. Presto troverai corsi, discipline e calendario.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── TAB: Prenotazioni ──────────────────────────────────────────── */}
+        {tab === "prenotazioni" && (
+          <Card>
+            <CardHeader><h2 className="font-semibold">Prenotazioni</h2></CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground italic">
+                Questa sezione è in costruzione. Presto troverai disponibilità, prezzi e prenotazioni.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── TAB: Recensioni ────────────────────────────────────────────── */}
-        {tab === "recensioni" && (
+        {tab === "recensioni" && !breeder && (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-sm text-muted-foreground italic">Le recensioni saranno presto disponibili.</p>
+            </CardContent>
+          </Card>
+        )}
+        {tab === "recensioni" && breeder && (
           <div className="">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
@@ -1763,6 +2007,55 @@ export default function BreederProfileClient({
           />
         </Suspense>
       )}
+
+      {/* ── Add Role Modal ───────────────────────────────────────────────── */}
+      {confirmingRole && (() => {
+        const copy = ROLE_COPY[confirmingRole];
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            onClick={() => { if (!addingRole) setConfirmingRole(null); }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+              <div className="px-6 py-5 border-b border-border">
+                <h2 className="text-xl font-bold">Aggiungi servizio: {copy.label}</h2>
+                <p className="text-sm text-muted-foreground mt-1">{copy.blurb}</p>
+              </div>
+              <div className="p-6 space-y-4">
+                {addDone ? (
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-green-50 border border-green-200">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-green-900">Servizio aggiunto</p>
+                      <p className="text-sm text-green-800 mt-0.5">
+                        <strong>{copy.label}</strong> è ora attivo sul tuo profilo.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border">
+                      <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <p className="text-sm text-muted-foreground">
+                        Stai per aggiungere il ruolo <strong>{copy.label}</strong> al tuo account. Una volta confermato, potrai compilare i dettagli del servizio.
+                      </p>
+                    </div>
+                    {addError && (
+                      <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">{addError}</div>
+                    )}
+                    <div className="flex gap-3">
+                      <Button onClick={() => addRole(confirmingRole)} isLoading={addingRole}>
+                        Aggiungi servizio
+                      </Button>
+                      <Button variant="outline" onClick={() => setConfirmingRole(null)} disabled={addingRole}>
+                        Annulla
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Lightbox ─────────────────────────────────────────────────────── */}
       {lightboxIndex !== null && (() => {
@@ -1970,7 +2263,7 @@ export default function BreederProfileClient({
                       setLitterForm((f) => {
                         const current = f.puppies;
                         if (n > current.length) {
-                          const toAdd = Array.from({ length: n - current.length }, () => ({ name: "", sex: "maschio" as const, color: "", status: "disponibile" as const, photo_url: "", price: "", price_on_request: false, microchip_number: "", notes: "" }));
+                          const toAdd = Array.from({ length: n - current.length }, () => ({ name: "", sex: "maschio" as const, color: "", variety: "", status: "disponibile" as const, photo_url: "", price: "", price_on_request: false, microchip_number: "", notes: "" }));
                           return { ...f, puppies: [...current, ...toAdd] };
                         }
                         return { ...f, puppies: current.slice(0, n) };
@@ -2078,10 +2371,10 @@ export default function BreederProfileClient({
                 <div>
                   <label className="text-sm text-muted-foreground mb-1 block">Affisso</label>
                   <div className="flex gap-1.5 mb-2">
-                    {breeder.affisso && (
-                      <button type="button" onClick={() => setDogForm((f) => ({ ...f, affisso_mode: "breeder", affisso: breeder.affisso ?? "" }))}
+                    {breeder?.affisso && (
+                      <button type="button" onClick={() => setDogForm((f) => ({ ...f, affisso_mode: "breeder", affisso: breeder?.affisso ?? "" }))}
                         className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${dogForm.affisso_mode === "breeder" ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
-                        {breeder.affisso}
+                        {breeder?.affisso}
                       </button>
                     )}
                     <button type="button" onClick={() => setDogForm((f) => ({ ...f, affisso_mode: "other", affisso: "" }))}
@@ -2119,7 +2412,7 @@ export default function BreederProfileClient({
                     <select value={dogForm.breed_id} onChange={(e) => setDogForm((f) => ({ ...f, breed_id: e.target.value }))}
                       className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
                       <option value="">Seleziona</option>
-                      {allBreeds.filter((b) => (breeder.breed_ids ?? []).includes(b.id)).map((b) => <option key={b.id} value={b.id}>{b.name_it}</option>)}
+                      {allBreeds.filter((b) => (breeder?.breed_ids ?? []).includes(b.id)).map((b) => <option key={b.id} value={b.id}>{b.name_it}</option>)}
                     </select>
                   </div>
                   <Field label="Varietà" value={dogForm.variety} onChange={(v) => setDogForm((f) => ({ ...f, variety: v }))} placeholder="Es. pelo lungo" />
