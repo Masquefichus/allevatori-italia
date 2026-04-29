@@ -1,13 +1,20 @@
 "use client";
 
-import { Suspense, lazy, useRef, useState } from "react";
-import { MapPin, Stethoscope, Award, Camera, Loader2, Pencil, Save, X } from "lucide-react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  MapPin, Stethoscope, Award, Camera, Loader2, Pencil, Save, X,
+  Phone, Mail, Globe, Facebook, Instagram, Clock, AlertCircle,
+} from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
+import Card, { CardContent, CardHeader } from "@/components/ui/Card";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { createClient } from "@/lib/supabase/client";
 import { regioni } from "@/data/regioni";
+import { VET_SPECIALIZATIONS, VET_LANGUAGES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import type { VetProfileRow } from "@/types/database";
 
 const RichTextEditor = lazy(() => import("@/components/ui/RichTextEditor"));
@@ -17,31 +24,63 @@ type TabId = "chi-siamo";
 interface Props {
   vet: VetProfileRow;
   ownerUserId: string | null;
+  isApproved: boolean;
 }
 
-export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }: Props) {
+export default function VetPublicProfileClient({
+  vet: initialVet,
+  ownerUserId,
+  isApproved,
+}: Props) {
   const { user } = useAuth();
+  const router = useRouter();
   const isOwner = !!user && !!ownerUserId && user.id === ownerUserId;
 
   const [vet, setVet] = useState<VetProfileRow>(initialVet);
   const [tab, setTab] = useState<TabId>("chi-siamo");
 
-  // ── Edit states ──
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [editingHero, setEditingHero] = useState(false);
   const [savingHero, setSavingHero] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState("");
+
   const [heroForm, setHeroForm] = useState({
     name: vet.name,
     clinic_name: vet.clinic_name ?? "",
     region: vet.region ?? "",
     province: vet.province ?? "",
     city: vet.city ?? "",
+    address: vet.address ?? "",
+    specializations: vet.specializations ?? [],
+    languages: vet.languages ?? [],
+    emergency_available: vet.emergency_available,
+    house_visits: vet.house_visits,
+    phone: vet.phone ?? "",
+    whatsapp: vet.whatsapp ?? "",
+    email_public: vet.email_public ?? "",
+    website: vet.website ?? "",
+    facebook_url: vet.facebook_url ?? "",
+    instagram_url: vet.instagram_url ?? "",
   });
 
-  const [editingDescription, setEditingDescription] = useState(false);
-  const [descriptionDraft, setDescriptionDraft] = useState("");
-
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Bounce non-owners off unapproved profiles client-side. The server can't
+  // reliably do this gate (auth is client-only — see CLAUDE.md "Auth Session").
+  useEffect(() => {
+    if (!isApproved && !isOwner) {
+      router.replace("/veterinari");
+    }
+  }, [isApproved, isOwner, router]);
+
+  if (!isApproved && !isOwner) {
+    return (
+      <div className="flex items-center justify-center py-24 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </div>
+    );
+  }
 
   const visibleTabs: { id: TabId; label: string }[] = [
     { id: "chi-siamo", label: "Chi siamo" },
@@ -52,7 +91,16 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
     ? regioni.find((r) => r.nome === heroForm.region)?.province ?? []
     : [];
 
-  // ── Edit helpers ────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function patchVet(payload: Record<string, any>) {
+    const supabase = createClient();
+    if (!supabase) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("vet_profiles").update(payload).eq("id", vet.id);
+    setVet((prev) => ({ ...prev, ...payload }));
+  }
 
   async function uploadLogo(file: File) {
     setUploadingLogo(true);
@@ -75,9 +123,7 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
       const json = await res.json();
       if (!json.url) return;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("vet_profiles").update({ logo_url: json.url }).eq("id", vet.id);
-      setVet((prev) => ({ ...prev, logo_url: json.url }));
+      await patchVet({ logo_url: json.url });
     } finally {
       setUploadingLogo(false);
     }
@@ -90,6 +136,17 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
       region: vet.region ?? "",
       province: vet.province ?? "",
       city: vet.city ?? "",
+      address: vet.address ?? "",
+      specializations: vet.specializations ?? [],
+      languages: vet.languages ?? [],
+      emergency_available: vet.emergency_available,
+      house_visits: vet.house_visits,
+      phone: vet.phone ?? "",
+      whatsapp: vet.whatsapp ?? "",
+      email_public: vet.email_public ?? "",
+      website: vet.website ?? "",
+      facebook_url: vet.facebook_url ?? "",
+      instagram_url: vet.instagram_url ?? "",
     });
     setEditingHero(true);
   }
@@ -97,18 +154,24 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
   async function saveHero() {
     setSavingHero(true);
     try {
-      const supabase = createClient();
-      if (!supabase) return;
-      const payload = {
+      await patchVet({
         name: heroForm.name.trim() || vet.name,
         clinic_name: heroForm.clinic_name.trim() || null,
         region: heroForm.region || null,
         province: heroForm.province || null,
         city: heroForm.city.trim() || null,
-      };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("vet_profiles").update(payload).eq("id", vet.id);
-      setVet((prev) => ({ ...prev, ...payload }));
+        address: heroForm.address.trim() || null,
+        specializations: heroForm.specializations,
+        languages: heroForm.languages,
+        emergency_available: heroForm.emergency_available,
+        house_visits: heroForm.house_visits,
+        phone: heroForm.phone.trim() || null,
+        whatsapp: heroForm.whatsapp.trim() || null,
+        email_public: heroForm.email_public.trim() || null,
+        website: heroForm.website.trim() || null,
+        facebook_url: heroForm.facebook_url.trim() || null,
+        instagram_url: heroForm.instagram_url.trim() || null,
+      });
       setEditingHero(false);
     } finally {
       setSavingHero(false);
@@ -116,12 +179,8 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
   }
 
   async function saveDescription() {
-    const supabase = createClient();
-    if (!supabase) return;
     const desc = descriptionDraft === "<p></p>" ? null : (descriptionDraft || null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from("vet_profiles").update({ description: desc }).eq("id", vet.id);
-    setVet((prev) => ({ ...prev, description: desc }));
+    await patchVet({ description: desc });
     setEditingDescription(false);
   }
 
@@ -143,11 +202,50 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
     return json.url ?? null;
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────
+  function toggleSpec(value: string) {
+    setHeroForm((p) => ({
+      ...p,
+      specializations: p.specializations.includes(value)
+        ? p.specializations.filter((s) => s !== value)
+        : [...p.specializations, value],
+    }));
+  }
+
+  function toggleLang(value: string) {
+    setHeroForm((p) => ({
+      ...p,
+      languages: p.languages.includes(value)
+        ? p.languages.filter((l) => l !== value)
+        : [...p.languages, value],
+    }));
+  }
+
+  // ── Render ────────────────────────────────────────────────────────
+
+  const specializations = vet.specializations ?? [];
+  const languages = vet.languages ?? [];
+  const hasContact =
+    vet.phone || vet.whatsapp || vet.email_public || vet.website ||
+    vet.facebook_url || vet.instagram_url || vet.address;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ── Hero ───────────────────────────────────────────────────────── */}
+      {/* Pending-approval banner (owner only) */}
+      {!isApproved && isOwner && (
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
+            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold">Profilo in attesa di approvazione</p>
+              <p className="text-amber-800/80 mt-0.5">
+                Solo tu puoi vederlo. Dopo l&apos;approvazione sarà pubblicato e visibile a tutti.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Hero ───────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-start gap-4">
           {/* Profile photo */}
@@ -188,7 +286,7 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
           {/* Hero text */}
           <div className="min-w-0 flex-1 pt-1">
             {editingHero ? (
-              <div className="space-y-3 max-w-lg">
+              <div className="space-y-3 max-w-xl">
                 <Input
                   label="Nome professionale"
                   value={heroForm.name}
@@ -199,7 +297,77 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
                   value={heroForm.clinic_name}
                   onChange={(e) => setHeroForm({ ...heroForm, clinic_name: e.target.value })}
                 />
-                <div className="grid grid-cols-2 gap-3">
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">Specializzazioni</label>
+                  <div className="flex flex-wrap gap-2">
+                    {VET_SPECIALIZATIONS.map((s) => {
+                      const active = heroForm.specializations.includes(s);
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => toggleSpec(s)}
+                          className={cn(
+                            "px-3 py-1 rounded-full text-xs border transition-colors",
+                            active
+                              ? "bg-primary text-white border-primary"
+                              : "border-border text-muted-foreground hover:border-primary"
+                          )}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">Lingue parlate</label>
+                  <div className="flex flex-wrap gap-2">
+                    {VET_LANGUAGES.map((l) => {
+                      const active = heroForm.languages.includes(l);
+                      return (
+                        <button
+                          key={l}
+                          type="button"
+                          onClick={() => toggleLang(l)}
+                          className={cn(
+                            "px-3 py-1 rounded-full text-xs border transition-colors capitalize",
+                            active
+                              ? "bg-primary text-white border-primary"
+                              : "border-border text-muted-foreground hover:border-primary"
+                          )}
+                        >
+                          {l}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      checked={heroForm.emergency_available}
+                      onChange={(e) => setHeroForm({ ...heroForm, emergency_available: e.target.checked })}
+                    />
+                    Disponibile per emergenze
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      checked={heroForm.house_visits}
+                      onChange={(e) => setHeroForm({ ...heroForm, house_visits: e.target.checked })}
+                    />
+                    Effettuo visite a domicilio
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
                   <Select
                     label="Regione"
                     placeholder="Seleziona regione"
@@ -221,7 +389,52 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
                   value={heroForm.city}
                   onChange={(e) => setHeroForm({ ...heroForm, city: e.target.value })}
                 />
-                <div className="flex gap-2 pt-1">
+                <Input
+                  label="Indirizzo"
+                  value={heroForm.address}
+                  onChange={(e) => setHeroForm({ ...heroForm, address: e.target.value })}
+                  placeholder="Via e numero civico"
+                />
+
+                <div className="pt-2 mt-2 border-t border-border space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contatti</p>
+                  <Input
+                    label="Telefono"
+                    value={heroForm.phone}
+                    onChange={(e) => setHeroForm({ ...heroForm, phone: e.target.value })}
+                  />
+                  <Input
+                    label="WhatsApp"
+                    value={heroForm.whatsapp}
+                    onChange={(e) => setHeroForm({ ...heroForm, whatsapp: e.target.value })}
+                  />
+                  <Input
+                    label="Email pubblica"
+                    type="email"
+                    value={heroForm.email_public}
+                    onChange={(e) => setHeroForm({ ...heroForm, email_public: e.target.value })}
+                  />
+                  <Input
+                    label="Sito web"
+                    value={heroForm.website}
+                    onChange={(e) => setHeroForm({ ...heroForm, website: e.target.value })}
+                    placeholder="https://"
+                  />
+                  <Input
+                    label="Facebook"
+                    value={heroForm.facebook_url}
+                    onChange={(e) => setHeroForm({ ...heroForm, facebook_url: e.target.value })}
+                    placeholder="https://facebook.com/..."
+                  />
+                  <Input
+                    label="Instagram"
+                    value={heroForm.instagram_url}
+                    onChange={(e) => setHeroForm({ ...heroForm, instagram_url: e.target.value })}
+                    placeholder="https://instagram.com/..."
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
                   <Button size="sm" onClick={saveHero} isLoading={savingHero}>
                     <Save className="h-3.5 w-3.5" /> Salva
                   </Button>
@@ -246,8 +459,18 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
                 {vet.clinic_name && (
                   <p className="text-sm text-muted-foreground mt-0.5">{vet.clinic_name}</p>
                 )}
+                {specializations.length > 0 && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Specializzato in {specializations.join(", ")}
+                  </p>
+                )}
+                {languages.length > 0 && (
+                  <p className="text-sm text-muted-foreground mt-1 capitalize">
+                    Lingue: {languages.join(", ")}
+                  </p>
+                )}
                 {location && (
-                  <p className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                  <p className="flex items-center gap-1 mt-1.5 text-sm text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5" />
                     {location}
                   </p>
@@ -261,6 +484,16 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
                       <Award className="h-3 w-3" /> Albo verificato
                     </span>
                   )}
+                  {vet.emergency_available && (
+                    <span className="inline-flex items-center gap-1 text-xs text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+                      <Clock className="h-3 w-3" /> Emergenze
+                    </span>
+                  )}
+                  {vet.house_visits && (
+                    <span className="inline-flex items-center gap-1 text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
+                      <MapPin className="h-3 w-3" /> Visite a domicilio
+                    </span>
+                  )}
                 </div>
               </>
             )}
@@ -268,7 +501,7 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
         </div>
       </div>
 
-      {/* ── Tab bar ────────────────────────────────────────────────────── */}
+      {/* ── Tab bar ────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex border-b border-border mt-4">
           {visibleTabs.map((t) => (
@@ -287,11 +520,11 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
         </div>
       </div>
 
-      {/* ── Tab content ────────────────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* ── Tab content ────────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {tab === "chi-siamo" && (
-          <div className="space-y-8">
-            {/* Description — rich text editor for owner */}
+          <>
+            {/* Description */}
             <section>
               {editingDescription ? (
                 <Suspense fallback={<div className="h-48 border border-border rounded-lg animate-pulse bg-muted" />}>
@@ -301,7 +534,7 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
                     onImageUpload={uploadEditorImage}
                     onSave={saveDescription}
                     onCancel={() => setEditingDescription(false)}
-                    placeholder="Racconta la storia del tuo studio, l'approccio, i servizi che offri..."
+                    placeholder="Racconta la tua storia: dove ti sei laureato, da quanti anni eserciti, il tuo approccio, i servizi che offri..."
                   />
                 </Suspense>
               ) : vet.description ? (
@@ -326,16 +559,60 @@ export default function VetPublicProfileClient({ vet: initialVet, ownerUserId }:
               ) : null}
             </section>
 
-          </div>
+            {/* Contatti card (read-only; edits happen in the hero panel) */}
+            {hasContact && (
+              <Card>
+                <CardHeader><h2 className="font-semibold">Contatti</h2></CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  {vet.phone && (
+                    <a href={`tel:${vet.phone}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Phone className="h-4 w-4 text-muted-foreground" />{vet.phone}
+                    </a>
+                  )}
+                  {vet.whatsapp && (
+                    <a href={`https://wa.me/${vet.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Phone className="h-4 w-4 text-muted-foreground" />WhatsApp: {vet.whatsapp}
+                    </a>
+                  )}
+                  {vet.email_public && (
+                    <a href={`mailto:${vet.email_public}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Mail className="h-4 w-4 text-muted-foreground" />{vet.email_public}
+                    </a>
+                  )}
+                  {vet.website && (
+                    <a href={vet.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors truncate">
+                      <Globe className="h-4 w-4 text-muted-foreground" />{vet.website}
+                    </a>
+                  )}
+                  {vet.facebook_url && (
+                    <a href={vet.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Facebook className="h-4 w-4 text-muted-foreground" />Facebook
+                    </a>
+                  )}
+                  {vet.instagram_url && (
+                    <a href={vet.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Instagram className="h-4 w-4 text-muted-foreground" />Instagram
+                    </a>
+                  )}
+                  {vet.address && (
+                    <p className="flex items-center gap-2 sm:col-span-2 text-muted-foreground">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      {[vet.address, vet.city, vet.region].filter(Boolean).join(", ")}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </div>
   );
 }
 
-// Renders Tiptap output (HTML produced by RichTextEditor). Same approach as
-// ProProfileClient.tsx:1449 for breeders. Not sanitized at the boundary —
-// the only writers are the profile owner via the editor.
+// Renders Tiptap output (HTML produced by RichTextEditor). The only writers
+// are the profile owner via the editor — the same trust model used elsewhere
+// in this codebase (see ProProfileClient.tsx).
 function RichDescription({ html }: { html: string }) {
   return (
     <div

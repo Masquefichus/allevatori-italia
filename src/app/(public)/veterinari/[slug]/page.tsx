@@ -39,11 +39,13 @@ export default async function VeterinarioProfilePage({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createClient();
 
+  // Fetch regardless of approval so the owner can preview-edit their pending
+  // profile. Non-owners viewing an unapproved row are bounced client-side
+  // (auth is client-only — see CLAUDE.md "Auth Session" notes).
   const { data: vet } = await supabase
     .from("vet_profiles")
     .select("*")
     .eq("slug", slug)
-    .eq("is_approved", true)
     .maybeSingle();
 
   if (!vet) notFound();
@@ -86,7 +88,11 @@ export default async function VeterinarioProfilePage({ params }: PageProps) {
         </div>
       </div>
 
-      <VetPublicProfileClient vet={vet} ownerUserId={vet.user_id} />
+      <VetPublicProfileClient
+        vet={vet}
+        ownerUserId={vet.user_id}
+        isApproved={!!vet.is_approved}
+      />
     </>
   );
 }

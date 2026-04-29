@@ -13,32 +13,32 @@ import {
   Heart,
   User,
   Shield,
+  Receipt,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-const BREEDER_NAV = [
-  { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
-  { href: "/dashboard/profilo", label: "Profilo", icon: User },
-  { href: "/dashboard/annunci", label: "Cucciolate", icon: Megaphone },
-  { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
-  { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
-  { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
-];
+type NavItem = { href: string; label: string; icon: LucideIcon };
 
-const USER_NAV = [
+const SEEKER_NAV: NavItem[] = [
   { href: "/dashboard", label: "La mia area", icon: Search },
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
   { href: "/dashboard/salvati", label: "Preferiti", icon: Heart },
   { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 
+type AccountType = "seeker" | "service_pro" | "vet" | null;
+type Role = "breeder" | "user" | "admin" | null;
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading } = useAuth();
-  const [role, setRole] = useState<"breeder" | "user" | "admin" | null>(null);
+  const [role, setRole] = useState<Role>(null);
+  const [accountType, setAccountType] = useState<AccountType>(null);
+  const [publicProfileHref, setPublicProfileHref] = useState<string | null>(null);
 
   // Auth guard: redirect unauthenticated users
   useEffect(() => {
@@ -47,30 +47,83 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [loading, user, pathname, router]);
 
-  // Fetch role from Supabase for role-based navigation
+  // Fetch role + account_type
   useEffect(() => {
-    const fetchRole = async () => {
+    const fetchProfile = async () => {
       if (!user) return;
       const supabase = createClient();
       if (!supabase) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: profile } = await (supabase as any)
         .from("profiles")
-        .select("role")
+        .select("role, account_type")
         .eq("id", user.id)
         .single();
       setRole(profile?.role ?? "user");
+      setAccountType((profile?.account_type as AccountType) ?? "seeker");
     };
     if (user) {
-      fetchRole();
+      fetchProfile();
     }
   }, [user]);
+
+  // Fetch the public-profile slug for professionals (vet or breeder).
+  useEffect(() => {
+    if (!user || role === null) return;
+    const supabase = createClient();
+    if (!supabase) return;
+
+    if (accountType === "vet") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any)
+        .from("vet_profiles")
+        .select("slug")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }: { data: { slug: string } | null }) => {
+          if (data?.slug) setPublicProfileHref(`/veterinari/${data.slug}`);
+        });
+      return;
+    }
+
+    if (role === "breeder" || role === "admin") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any)
+        .from("breeder_profiles")
+        .select("slug")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }: { data: { slug: string } | null }) => {
+          if (data?.slug) setPublicProfileHref(`/allevatori/${data.slug}`);
+        });
+    }
+  }, [user, role, accountType]);
 
   if (loading || !user) {
     return <div className="min-h-screen bg-muted" />;
   }
 
-  const nav = role === "breeder" || role === "admin" ? BREEDER_NAV : USER_NAV;
+  const isBreeder = role === "breeder" || role === "admin";
+  const isVet = accountType === "vet";
+  const isProfessional = isBreeder || isVet;
+
+  const nav: NavItem[] = isProfessional
+    ? [
+        { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
+        ...(publicProfileHref
+          ? [{ href: publicProfileHref, label: "Profilo", icon: User }]
+          : []),
+        { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
+        { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
+        ...(isBreeder
+          ? [
+              { href: "/dashboard/annunci", label: "Cucciolate", icon: Megaphone },
+              { href: "/dashboard/abbonamento", label: "Commissioni", icon: Receipt },
+            ]
+          : []),
+        { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
+      ]
+    : SEEKER_NAV;
 
   return (
     <div className="min-h-screen bg-muted">

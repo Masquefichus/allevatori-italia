@@ -5,23 +5,17 @@ import { useState, useRef, useEffect } from "react";
 import {
   Menu, X, Dog, ChevronUp, ChevronDown,
   MessageCircle, Heart, Settings, LogOut,
-  LayoutDashboard, Megaphone, Star, ExternalLink, User, Shield,
+  LayoutDashboard, Megaphone, Star, User, Shield, Receipt,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
 import Button from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-const BREEDER_MENU = [
-  { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
-  { href: "/dashboard/profilo", label: "Profilo", icon: User },
-  { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
-  { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
-  { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
-];
+type MenuItem = { href: string; label: string; icon: LucideIcon };
 
-const USER_MENU = [
-  { href: "/dashboard/profilo", label: "Profilo", icon: User },
+const SEEKER_MENU: MenuItem[] = [
   { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
   { href: "/dashboard/salvati", label: "Preferiti", icon: Heart },
   { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
@@ -44,7 +38,8 @@ export default function Header() {
     }
   };
 
-  // Fetch slug for the "Profilo pubblico" link, branching on account_type.
+  // Fetch slug for the "Profilo" link (which points to the public profile for
+  // professionals — vet or breeder). Branches on account_type / role.
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -90,7 +85,27 @@ export default function Header() {
     ? profile.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()
     : (user?.email?.[0] ?? "?").toUpperCase();
 
-  const menuItems = (profile?.role === "breeder" || profile?.role === "admin") ? BREEDER_MENU : USER_MENU;
+  const isBreeder = profile?.role === "breeder" || profile?.role === "admin";
+  const isVet = profile?.account_type === "vet";
+  const isProfessional = isBreeder || isVet;
+
+  const menuItems: MenuItem[] = isProfessional
+    ? [
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        ...(publicProfileHref
+          ? [{ href: publicProfileHref, label: "Profilo", icon: User }]
+          : []),
+        { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
+        { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
+        ...(isBreeder
+          ? [
+              { href: "/dashboard/annunci", label: "Cucciolate", icon: Megaphone },
+              { href: "/dashboard/abbonamento", label: "Commissioni", icon: Receipt },
+            ]
+          : []),
+        { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
+      ]
+    : SEEKER_MENU;
   const isLoggedIn = !loading && (!!user || !!profile);
 
   return (
@@ -159,22 +174,6 @@ export default function Header() {
                         );
                       })}
                     </div>
-
-                    {publicProfileHref && (
-                      <>
-                        <div className="border-t border-border" />
-                        <div className="py-1">
-                          <Link
-                            href={publicProfileHref}
-                            onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-3 px-5 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                          >
-                            <ExternalLink className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                            Profilo pubblico
-                          </Link>
-                        </div>
-                      </>
-                    )}
 
                     {profile?.role === "admin" && (
                       <>
@@ -256,16 +255,6 @@ export default function Header() {
                       </Link>
                     );
                   })}
-                  {publicProfileHref && (
-                    <Link
-                      href={publicProfileHref}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 py-2 text-sm text-foreground"
-                    >
-                      <ExternalLink className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                      Profilo pubblico
-                    </Link>
-                  )}
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-3 py-2 text-sm text-foreground w-full mt-2 border-t border-border pt-3"

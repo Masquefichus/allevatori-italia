@@ -1008,6 +1008,13 @@ export default function ProProfileClient({
       breed_ids: selectedBreedIds,
       slug: newSlug,
       affisso: form.affisso?.trim() || null,
+      enci_number: form.enci_number.trim() || null,
+      phone: form.phone.trim() || null,
+      whatsapp: form.whatsapp.trim() || null,
+      email_public: form.email_public.trim() || null,
+      website: form.website.trim() || null,
+      facebook_url: form.facebook_url.trim() || null,
+      instagram_url: form.instagram_url.trim() || null,
       breed_club_memberships: (() => {
         // Only keep clubs relevant to current breeds
         const validSlugs = new Set<string>();
@@ -1247,6 +1254,18 @@ export default function ProProfileClient({
                   </label>
                 </div>
                 <Field label="Anno di fondazione" type="number" value={form.year_established} onChange={(v) => setForm({ ...form, year_established: v })} />
+                <Field label="Numero ENCI" value={form.enci_number} onChange={(v) => setForm({ ...form, enci_number: v })} />
+                <div className="pt-2 mt-2 border-t border-border">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Contatti</p>
+                  <div className="space-y-2">
+                    <Field label="Telefono" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+                    <Field label="WhatsApp" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
+                    <Field label="Email pubblica" type="email" value={form.email_public} onChange={(v) => setForm({ ...form, email_public: v })} />
+                    <Field label="Sito web" value={form.website} onChange={(v) => setForm({ ...form, website: v })} placeholder="https://" />
+                    <Field label="Facebook" value={form.facebook_url} onChange={(v) => setForm({ ...form, facebook_url: v })} placeholder="https://facebook.com/..." />
+                    <Field label="Instagram" value={form.instagram_url} onChange={(v) => setForm({ ...form, instagram_url: v })} placeholder="https://instagram.com/..." />
+                  </div>
+                </div>
               </div>
             ) : (
               <>
@@ -1267,6 +1286,12 @@ export default function ProProfileClient({
                   <p className="text-sm text-primary font-medium mt-1 flex items-center gap-1">
                     <CheckCircle className="h-3.5 w-3.5" />
                     Affisso: {breeder!.affisso}
+                  </p>
+                )}
+                {breeder!.enci_number && (
+                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    ENCI n° {breeder!.enci_number}
                   </p>
                 )}
                 {(breeder!.breed_club_memberships ?? []).length > 0 && (
@@ -1514,6 +1539,45 @@ export default function ProProfileClient({
                 <p className="text-sm text-muted-foreground">Nessuna foto.</p>
               )}
             </section>
+
+            {/* Contatti */}
+            {(breeder!.phone || breeder!.whatsapp || breeder!.email_public || breeder!.website || breeder!.facebook_url || breeder!.instagram_url) && (
+              <Card>
+                <CardHeader><h2 className="font-semibold">Contatti</h2></CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  {breeder!.phone && (
+                    <a href={`tel:${breeder!.phone}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Phone className="h-4 w-4 text-muted-foreground" />{breeder!.phone}
+                    </a>
+                  )}
+                  {breeder!.whatsapp && (
+                    <a href={`https://wa.me/${breeder!.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Phone className="h-4 w-4 text-muted-foreground" />WhatsApp: {breeder!.whatsapp}
+                    </a>
+                  )}
+                  {breeder!.email_public && (
+                    <a href={`mailto:${breeder!.email_public}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Mail className="h-4 w-4 text-muted-foreground" />{breeder!.email_public}
+                    </a>
+                  )}
+                  {breeder!.website && (
+                    <a href={breeder!.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors truncate">
+                      <Globe className="h-4 w-4 text-muted-foreground" />{breeder!.website}
+                    </a>
+                  )}
+                  {breeder!.facebook_url && (
+                    <a href={breeder!.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Facebook className="h-4 w-4 text-muted-foreground" />Facebook
+                    </a>
+                  )}
+                  {breeder!.instagram_url && (
+                    <a href={breeder!.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Instagram className="h-4 w-4 text-muted-foreground" />Instagram
+                    </a>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
           </div>
         )}
