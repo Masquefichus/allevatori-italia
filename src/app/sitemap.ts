@@ -7,6 +7,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [
     { url: SITE_URL, lastModified: new Date(), changeFrequency: "daily" as const, priority: 1 },
     { url: `${SITE_URL}/allevatori`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
+    { url: `${SITE_URL}/addestratori`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
+    { url: `${SITE_URL}/pensioni`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
+    { url: `${SITE_URL}/veterinari`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
     { url: `${SITE_URL}/razze`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
     { url: `${SITE_URL}/regioni`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.7 },
     { url: `${SITE_URL}/accedi`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },

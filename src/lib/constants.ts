@@ -6,6 +6,9 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:30
 export const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/allevatori", label: "Allevatori" },
+  { href: "/addestratori", label: "Addestratori" },
+  { href: "/pensioni", label: "Pensioni" },
+  { href: "/veterinari", label: "Veterinari" },
   { href: "/razze", label: "Razze" },
 ] as const;
 
@@ -74,6 +77,33 @@ export const HEALTH_SOURCE_LABELS: Record<string, string> = {
   fsa: "FSA",
   celemasche: "CeLeMaSche",
 };
+
+export const VET_SPECIALIZATIONS = [
+  "Medicina generale",
+  "Chirurgia",
+  "Ortopedia",
+  "Dermatologia",
+  "Oncologia",
+  "Cardiologia",
+  "Oftalmologia",
+  "Odontoiatria",
+  "Comportamento",
+  "Riproduzione",
+  "Medicina interna",
+  "Diagnostica per immagini",
+  "Anestesiologia",
+  "Animali esotici",
+  "Omeopatia / Agopuntura",
+  "Riabilitazione e fisioterapia",
+] as const;
+
+export const VET_LANGUAGES = [
+  "italiano",
+  "inglese",
+  "francese",
+  "tedesco",
+  "spagnolo",
+] as const;
 
 export const SUBSCRIPTION_PLANS = {
   base: {

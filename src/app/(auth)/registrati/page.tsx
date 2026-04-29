@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Dog, Mail, Lock, User, Building2 } from "lucide-react";
+import { Dog, Mail, Lock, User, Building2, Stethoscope } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card, { CardContent } from "@/components/ui/Card";
@@ -16,12 +15,11 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"user" | "breeder">("user");
+  const [accountType, setAccountType] = useState<"seeker" | "service_pro" | "vet">("seeker");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,10 +53,15 @@ export default function RegisterPage() {
       return;
     }
 
+    // Map account_type → legacy role column. profiles.role stays in
+    // {'user', 'breeder', 'admin'}; vets land on role='user' and the
+    // new account_type='vet' marks the vertical (handled in the DB trigger).
+    const legacyRole = accountType === "service_pro" ? "breeder" : "user";
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, role } },
+      options: { data: { full_name: fullName, role: legacyRole, account_type: accountType } },
     });
 
     if (error) {
@@ -106,31 +109,44 @@ export default function RegisterPage() {
             <p className="text-muted-foreground mt-1">Unisciti alla community di {SITE_NAME}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-2 mb-6">
             <button
               type="button"
-              onClick={() => setRole("user")}
+              onClick={() => setAccountType("seeker")}
               className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
-                role === "user" ? "border-primary bg-primary-light" : "border-border hover:border-gray-300"
+                "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
+                accountType === "seeker" ? "border-primary bg-primary-light" : "border-border hover:border-gray-300"
               )}
             >
-              <User className={cn("h-6 w-6", role === "user" ? "text-primary" : "text-muted-foreground")} />
-              <span className={cn("text-sm font-medium", role === "user" ? "text-primary-dark" : "text-foreground")}>
+              <User className={cn("h-5 w-5", accountType === "seeker" ? "text-primary" : "text-muted-foreground")} />
+              <span className={cn("text-xs font-medium text-center", accountType === "seeker" ? "text-primary-dark" : "text-foreground")}>
                 Cerco un cucciolo
               </span>
             </button>
             <button
               type="button"
-              onClick={() => setRole("breeder")}
+              onClick={() => setAccountType("service_pro")}
               className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
-                role === "breeder" ? "border-primary bg-primary-light" : "border-border hover:border-gray-300"
+                "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
+                accountType === "service_pro" ? "border-primary bg-primary-light" : "border-border hover:border-gray-300"
               )}
             >
-              <Building2 className={cn("h-6 w-6", role === "breeder" ? "text-primary" : "text-muted-foreground")} />
-              <span className={cn("text-sm font-medium", role === "breeder" ? "text-primary-dark" : "text-foreground")}>
-                Sono un allevatore
+              <Building2 className={cn("h-5 w-5", accountType === "service_pro" ? "text-primary" : "text-muted-foreground")} />
+              <span className={cn("text-xs font-medium text-center", accountType === "service_pro" ? "text-primary-dark" : "text-foreground")}>
+                Sono un professionista
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAccountType("vet")}
+              className={cn(
+                "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
+                accountType === "vet" ? "border-primary bg-primary-light" : "border-border hover:border-gray-300"
+              )}
+            >
+              <Stethoscope className={cn("h-5 w-5", accountType === "vet" ? "text-primary" : "text-muted-foreground")} />
+              <span className={cn("text-xs font-medium text-center", accountType === "vet" ? "text-primary-dark" : "text-foreground")}>
+                Sono un veterinario
               </span>
             </button>
           </div>
@@ -158,7 +174,11 @@ export default function RegisterPage() {
             <Turnstile onVerify={setTurnstileToken} onExpire={() => setTurnstileToken(null)} />
 
             <Button type="submit" isLoading={loading} disabled={!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken} className="w-full" size="lg">
-              {role === "breeder" ? "Registrati come Allevatore" : "Registrati"}
+              {accountType === "service_pro"
+                ? "Registrati come Professionista"
+                : accountType === "vet"
+                  ? "Registrati come Veterinario"
+                  : "Registrati"}
             </Button>
           </form>
 

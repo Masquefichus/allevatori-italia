@@ -35,11 +35,13 @@ export default function Footer() {
 
           {/* Trova un cane */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Trova un cane</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">Servizi</h3>
             <ul className="space-y-3 text-sm">
               <li><Link href="/allevatori" className="hover:text-white transition-colors">Allevatori</Link></li>
+              <li><Link href="/addestratori" className="hover:text-white transition-colors">Addestratori</Link></li>
+              <li><Link href="/pensioni" className="hover:text-white transition-colors">Pensioni</Link></li>
+              <li><Link href="/veterinari" className="hover:text-white transition-colors">Veterinari</Link></li>
               <li><Link href="/razze" className="hover:text-white transition-colors">Razze</Link></li>
-              <li><Link href="/regioni" className="hover:text-white transition-colors">Regioni</Link></li>
             </ul>
           </div>
 

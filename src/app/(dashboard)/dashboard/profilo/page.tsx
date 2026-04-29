@@ -13,8 +13,18 @@ import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
 import { razze } from "@/data/razze";
 import { getClubsForFciId, type BreedClub } from "@/lib/breed-clubs";
+import VetProfileClient from "@/components/profile/VetProfileClient";
 
 export default function ProfiloPage() {
+  const { profile } = useAuth();
+
+  if (profile?.account_type === "vet") {
+    return <VetProfileClient />;
+  }
+  return <BreederProfileEditor />;
+}
+
+function BreederProfileEditor() {
   const { user, loading: authLoading } = useAuth();
   const [profileId, setProfileId] = useState<string | null>(null);
 

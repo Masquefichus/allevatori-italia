@@ -8,6 +8,8 @@ export type SubscriptionStatus = "active" | "canceled" | "past_due" | "trialing"
 
 // ─── Row types (match database columns exactly) ───
 
+export type AccountType = "seeker" | "service_pro" | "vet";
+
 export interface Profile {
   id: string;
   email: string;
@@ -15,6 +17,7 @@ export interface Profile {
   phone: string | null;
   avatar_url: string | null;
   role: UserRole;
+  account_type: AccountType | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -201,6 +204,43 @@ export interface Subscription {
   updated_at: string;
 }
 
+export interface VetProfileRow {
+  id: string;
+  user_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  region: string | null;
+  province: string | null;
+  city: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  phone: string | null;
+  email_public: string | null;
+  website: string | null;
+  whatsapp: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  logo_url: string | null;
+  cover_image_url: string | null;
+  gallery_urls: string[];
+  albo_number: string | null;
+  albo_region: string | null;
+  albo_verified: boolean;
+  university: string | null;
+  graduation_year: number | null;
+  years_experience: number | null;
+  clinic_name: string | null;
+  emergency_available: boolean;
+  house_visits: boolean;
+  languages: string[];
+  specializations: string[];
+  is_approved: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // ─── Enriched types (with joined fields, for app usage) ───
 
 export interface BreederProfile extends BreederProfileRow {
@@ -254,6 +294,7 @@ export interface Database {
       conversations: TableDef<ConversationRow>;
       messages: TableDef<MessageRow>;
       subscriptions: TableDef<Subscription>;
+      vet_profiles: TableDef<VetProfileRow>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

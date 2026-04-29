@@ -30,7 +30,7 @@ const USER_MENU = [
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [breederSlug, setBreederSlug] = useState<string | null>(null);
+  const [publicProfileHref, setPublicProfileHref] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, profile, loading } = useAuth();
 
@@ -44,20 +44,35 @@ export default function Header() {
     }
   };
 
-  // Fetch breeder slug for public profile link
+  // Fetch slug for the "Profilo pubblico" link, branching on account_type.
   useEffect(() => {
-    if (!user || (profile?.role !== "breeder" && profile?.role !== "admin")) return;
+    if (!user) return;
     const supabase = createClient();
     if (!supabase) return;
-    (supabase as any)
-      .from("breeder_profiles")
-      .select("slug")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }: { data: { slug: string } | null }) => {
-        if (data?.slug) setBreederSlug(data.slug);
-      });
-  }, [user, profile?.role]);
+
+    if (profile?.account_type === "vet") {
+      (supabase as any)
+        .from("vet_profiles")
+        .select("slug")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }: { data: { slug: string } | null }) => {
+          if (data?.slug) setPublicProfileHref(`/veterinari/${data.slug}`);
+        });
+      return;
+    }
+
+    if (profile?.role === "breeder" || profile?.role === "admin") {
+      (supabase as any)
+        .from("breeder_profiles")
+        .select("slug")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }: { data: { slug: string } | null }) => {
+          if (data?.slug) setPublicProfileHref(`/allevatori/${data.slug}`);
+        });
+    }
+  }, [user, profile?.role, profile?.account_type]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -145,12 +160,12 @@ export default function Header() {
                       })}
                     </div>
 
-                    {breederSlug && (
+                    {publicProfileHref && (
                       <>
                         <div className="border-t border-border" />
                         <div className="py-1">
                           <Link
-                            href={`/allevatori/${breederSlug}`}
+                            href={publicProfileHref}
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-3 px-5 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                           >
@@ -241,9 +256,9 @@ export default function Header() {
                       </Link>
                     );
                   })}
-                  {breederSlug && (
+                  {publicProfileHref && (
                     <Link
-                      href={`/allevatori/${breederSlug}`}
+                      href={publicProfileHref}
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 py-2 text-sm text-foreground"
                     >
