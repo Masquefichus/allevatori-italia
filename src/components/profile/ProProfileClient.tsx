@@ -36,7 +36,7 @@ interface Boarding {
   id: string; user_id: string; slug: string; name: string;
   description: string | null; region: string | null; city: string | null;
   phone: string | null; email_public: string | null; website: string | null;
-  logo_url: string | null;
+  logo_url: string | null; pension_text: string | null;
 }
 type TabId = "chi-siamo" | "riproduttori" | "cucciolate" | "attesa" | "corsi" | "prenotazioni" | "recensioni";
 
@@ -302,7 +302,7 @@ export default function ProProfileClient({
       { id: "attesa" as const, label: "Lista d'attesa" },
     ] : []),
     ...(trainer ? [{ id: "corsi" as const, label: "Corsi" }] : []),
-    ...(boarding ? [{ id: "prenotazioni" as const, label: "Prenotazioni" }] : []),
+    ...(boarding ? [{ id: "prenotazioni" as const, label: "Pensione" }] : []),
     { id: "recensioni", label: "Recensioni" },
   ];
   const [editing, setEditing] = useState(false);
@@ -323,6 +323,10 @@ export default function ProProfileClient({
   const [coursesSaveError, setCoursesSaveError] = useState<string | null>(null);
   const [coursesText, setCoursesText] = useState(trainer?.courses_text ?? "");
   const [selectedCourseTypes, setSelectedCourseTypes] = useState<string[]>(trainer?.course_types ?? []);
+  const [editingPension, setEditingPension] = useState(false);
+  const [savingPension, setSavingPension] = useState(false);
+  const [pensionSaveError, setPensionSaveError] = useState<string | null>(null);
+  const [pensionText, setPensionText] = useState(boarding?.pension_text ?? "");
   const [proForm, setProForm] = useState({
     name: initPro?.name ?? "",
     description: initPro?.description ?? "",
@@ -1141,6 +1145,23 @@ export default function ProProfileClient({
     setSavingCourses(false);
     if (error) { setCoursesSaveError(error.message); return; }
     setEditingCourses(false);
+    router.refresh();
+  }
+
+  async function savePension() {
+    if (!boarding) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    setSavingPension(true);
+    setPensionSaveError(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from("boarding_profiles")
+      .update({ pension_text: pensionText.trim() || null })
+      .eq("id", boarding.id);
+    setSavingPension(false);
+    if (error) { setPensionSaveError(error.message); return; }
+    setEditingPension(false);
     router.refresh();
   }
 
@@ -2261,11 +2282,48 @@ export default function ProProfileClient({
         {/* ── TAB: Prenotazioni ──────────────────────────────────────────── */}
         {tab === "prenotazioni" && (
           <Card>
-            <CardHeader><h2 className="font-semibold">Prenotazioni</h2></CardHeader>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold">Pensione</h2>
+                {isOwner && !editingPension && (
+                  <button
+                    onClick={() => { setPensionText(boarding?.pension_text ?? ""); setEditingPension(true); }}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  >
+                    <Pencil className="h-3 w-3" /> Modifica
+                  </button>
+                )}
+              </div>
+            </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground italic">
-                Questa sezione è in costruzione. Presto troverai disponibilità, prezzi e prenotazioni.
-              </p>
+              {editingPension ? (
+                <div className="space-y-3">
+                  {pensionSaveError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">{pensionSaveError}</div>
+                  )}
+                  <textarea
+                    value={pensionText}
+                    onChange={(e) => setPensionText(e.target.value)}
+                    rows={8}
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
+                    placeholder="Descrivi i tuoi servizi di pensione: disponibilità, prezzi, struttura, orari di accoglienza..."
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={savePension} isLoading={savingPension}>
+                      <Save className="h-3.5 w-3.5" /> Salva
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditingPension(false)} disabled={savingPension}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ) : boarding?.pension_text ? (
+                <p className="text-sm text-foreground whitespace-pre-wrap">{boarding.pension_text}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  {isOwner ? "Nessun contenuto ancora inserito. Clicca Modifica per descrivere i tuoi servizi." : "Nessuna informazione disponibile al momento."}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
