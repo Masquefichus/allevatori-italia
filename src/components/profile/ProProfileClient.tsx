@@ -30,7 +30,8 @@ interface Trainer {
   id: string; user_id: string; slug: string; name: string;
   description: string | null; region: string | null; city: string | null;
   phone: string | null; email_public: string | null; website: string | null;
-  logo_url: string | null; courses_text: string | null; course_types: string[] | null;
+  logo_url: string | null; courses_text: string | null; course_types: string[] | null; course_other: string | null;
+  certification_types: string[] | null; certification_other: string | null; certification_text: string | null;
 }
 interface Boarding {
   id: string; user_id: string; slug: string; name: string;
@@ -317,12 +318,32 @@ export default function ProProfileClient({
   const proLogoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingProLogo, setUploadingProLogo] = useState(false);
   const initPro = trainer ?? boarding;
-  const COURSE_OPTIONS = ["Agility", "Soccorso", "Corse", "Flyball", "Dog dancing", "Juniorhandler", "Obedience", "Utilità e Difesa", "CAE-1", "Psicologia del cane", "Altri"] as const;
+  const COURSE_OPTIONS = ["Agility", "Soccorso", "Corse", "Flyball", "Dog dancing", "Juniorhandler", "Obedience", "Utilità e Difesa", "CAE-1", "Psicologia del cane", "Addestramento cani da caccia", "Addestramento cani da bestiame", "Addestramento detection"] as const;
   const [editingCourses, setEditingCourses] = useState(false);
   const [savingCourses, setSavingCourses] = useState(false);
   const [coursesSaveError, setCoursesSaveError] = useState<string | null>(null);
   const [coursesText, setCoursesText] = useState(trainer?.courses_text ?? "");
   const [selectedCourseTypes, setSelectedCourseTypes] = useState<string[]>(trainer?.course_types ?? []);
+  const [courseOtherText, setCourseOtherText] = useState(trainer?.course_other ?? "");
+  const CERT_OPTIONS = [
+    "CFRE (ENCI) - Addestratori per cani da utilità, compagnia, agility e sport",
+    "CFRE (ENCI) - Addestratori per cani da bestiame",
+    "CFRE (ENCI) - Addestratori per cani da caccia",
+    "CFRE (ENCI) - Conduttori cinofili di Esposizione",
+    "FISC - Brevetto",
+    "Certificazione UNI 11790:2020",
+    "Certificazione UNI 11847:2022",
+    "Patentino DTP-A",
+    "Patentino DTP-S",
+    "Patentino DTP-SU",
+    "Patentino DTP-B",
+  ] as const;
+  const [editingCerts, setEditingCerts] = useState(false);
+  const [savingCerts, setSavingCerts] = useState(false);
+  const [certsSaveError, setCertsSaveError] = useState<string | null>(null);
+  const [selectedCertTypes, setSelectedCertTypes] = useState<string[]>(trainer?.certification_types ?? []);
+  const [certOtherText, setCertOtherText] = useState(trainer?.certification_other ?? "");
+  const [certText, setCertText] = useState(trainer?.certification_text ?? "");
   const [proForm, setProForm] = useState({
     name: initPro?.name ?? "",
     description: initPro?.description ?? "",
@@ -1136,11 +1157,32 @@ export default function ProProfileClient({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
       .from("trainer_profiles")
-      .update({ courses_text: coursesText.trim() || null, course_types: selectedCourseTypes })
+      .update({ courses_text: coursesText.trim() || null, course_types: selectedCourseTypes, course_other: selectedCourseTypes.includes("Altro") ? courseOtherText.trim().slice(0, 20) || null : null })
       .eq("id", trainer.id);
     setSavingCourses(false);
     if (error) { setCoursesSaveError(error.message); return; }
     setEditingCourses(false);
+    router.refresh();
+  }
+
+  async function saveCerts() {
+    if (!trainer) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    setSavingCerts(true);
+    setCertsSaveError(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from("trainer_profiles")
+      .update({
+        certification_types: selectedCertTypes,
+        certification_other: selectedCertTypes.includes("Altro") ? certOtherText.trim().slice(0, 20) || null : null,
+        certification_text: certText.trim() || null,
+      })
+      .eq("id", trainer.id);
+    setSavingCerts(false);
+    if (error) { setCertsSaveError(error.message); return; }
+    setEditingCerts(false);
     router.refresh();
   }
 
@@ -2177,13 +2219,14 @@ export default function ProProfileClient({
 
         {/* ── TAB: Corsi ─────────────────────────────────────────────────── */}
         {tab === "corsi" && (
+          <div className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold">Corsi</h2>
                 {isOwner && !editingCourses && (
                   <button
-                    onClick={() => { setCoursesText(trainer?.courses_text ?? ""); setSelectedCourseTypes(trainer?.course_types ?? []); setEditingCourses(true); }}
+                    onClick={() => { setCoursesText(trainer?.courses_text ?? ""); setSelectedCourseTypes(trainer?.course_types ?? []); setCourseOtherText(trainer?.course_other ?? ""); setEditingCourses(true); }}
                     className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                   >
                     <Pencil className="h-3 w-3" /> Modifica
@@ -2214,6 +2257,29 @@ export default function ProProfileClient({
                         </label>
                       ))}
                     </div>
+                    <div className="mt-2 space-y-1">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          className="rounded border-border"
+                          checked={selectedCourseTypes.includes("Altro")}
+                          onChange={() => setSelectedCourseTypes((prev) =>
+                            prev.includes("Altro") ? prev.filter((c) => c !== "Altro") : [...prev, "Altro"]
+                          )}
+                        />
+                        Altro
+                      </label>
+                      {selectedCourseTypes.includes("Altro") && (
+                        <input
+                          type="text"
+                          maxLength={20}
+                          value={courseOtherText}
+                          onChange={(e) => setCourseOtherText(e.target.value)}
+                          placeholder="Specifica (max 20 caratteri)"
+                          className="ml-6 border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 w-64"
+                        />
+                      )}
+                    </div>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Note aggiuntive</p>
@@ -2238,11 +2304,16 @@ export default function ProProfileClient({
                 <div className="space-y-4">
                   {(trainer?.course_types ?? []).length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {(trainer?.course_types ?? []).map((type) => (
+                      {(trainer?.course_types ?? []).filter((t) => t !== "Altro").map((type) => (
                         <span key={type} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                           {type}
                         </span>
                       ))}
+                      {(trainer?.course_types ?? []).includes("Altro") && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                          {trainer?.course_other || "Altro"}
+                        </span>
+                      )}
                     </div>
                   )}
                   {trainer?.courses_text ? (
@@ -2256,6 +2327,117 @@ export default function ProProfileClient({
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold">Certificazioni</h2>
+                {isOwner && !editingCerts && (
+                  <button
+                    onClick={() => {
+                      setSelectedCertTypes(trainer?.certification_types ?? []);
+                      setCertOtherText(trainer?.certification_other ?? "");
+                      setCertText(trainer?.certification_text ?? "");
+                      setEditingCerts(true);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  >
+                    <Pencil className="h-3 w-3" /> Modifica
+                  </button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {editingCerts ? (
+                <div className="space-y-4">
+                  {certsSaveError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">{certsSaveError}</div>
+                  )}
+                  <div className="space-y-2">
+                    {CERT_OPTIONS.map((opt) => (
+                      <label key={opt} className="flex items-start gap-2 text-sm cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          className="rounded border-border mt-0.5 shrink-0"
+                          checked={selectedCertTypes.includes(opt)}
+                          onChange={() => setSelectedCertTypes((prev) =>
+                            prev.includes(opt) ? prev.filter((c) => c !== opt) : [...prev, opt]
+                          )}
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                    <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        className="rounded border-border shrink-0"
+                        checked={selectedCertTypes.includes("Altro")}
+                        onChange={() => setSelectedCertTypes((prev) =>
+                          prev.includes("Altro") ? prev.filter((c) => c !== "Altro") : [...prev, "Altro"]
+                        )}
+                      />
+                      Altro
+                    </label>
+                    {selectedCertTypes.includes("Altro") && (
+                      <input
+                        type="text"
+                        maxLength={20}
+                        value={certOtherText}
+                        onChange={(e) => setCertOtherText(e.target.value)}
+                        placeholder="Specifica (max 20 caratteri)"
+                        className="ml-6 border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 w-64"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Note aggiuntive</p>
+                    <textarea
+                      value={certText}
+                      onChange={(e) => setCertText(e.target.value)}
+                      rows={5}
+                      className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
+                      placeholder="Anni di esperienza, ambiti di applicazione, enti rilascianti..."
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={saveCerts} isLoading={savingCerts}>
+                      <Save className="h-3.5 w-3.5" /> Salva
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditingCerts(false)} disabled={savingCerts}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {(trainer?.certification_types ?? []).length > 0 ? (
+                    <>
+                      <div className="flex flex-wrap gap-2">
+                        {(trainer?.certification_types ?? []).filter((t) => t !== "Altro").map((type) => (
+                          <span key={type} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                            {type}
+                          </span>
+                        ))}
+                        {(trainer?.certification_types ?? []).includes("Altro") && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                            {trainer?.certification_other || "Altro"}
+                          </span>
+                        )}
+                      </div>
+                      {trainer?.certification_text && (
+                        <p className="text-sm text-foreground whitespace-pre-wrap">{trainer.certification_text}</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">
+                      {isOwner ? "Nessuna certificazione ancora inserita. Clicca Modifica per aggiungere le tue certificazioni." : "Nessuna certificazione disponibile al momento."}
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          </div>
         )}
 
         {/* ── TAB: Prenotazioni ──────────────────────────────────────────── */}

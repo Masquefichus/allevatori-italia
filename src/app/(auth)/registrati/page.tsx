@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
