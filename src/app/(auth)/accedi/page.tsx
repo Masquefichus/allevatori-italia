@@ -30,6 +30,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
   const errorParam = searchParams.get("error");
+  const registered = searchParams.get("registered") === "1";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +90,11 @@ function LoginForm() {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
+            {registered && (
+              <div className="bg-green-50 text-green-700 text-sm p-3 rounded-lg">
+                Account creato con successo! Accedi ora.
+              </div>
+            )}
             {(error || errorParam === "auth") && (
               <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg">
                 {error || "Il link di reset non è valido o è scaduto. Richiedine uno nuovo."}

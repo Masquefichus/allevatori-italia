@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import AddServiceClient from "./AddServiceClient";
+import AddBreederClient from "./AddBreederClient";
 
 const VALID_ROLES = ["allevatore", "addestratore", "pensione"] as const;
 type ServiceRole = (typeof VALID_ROLES)[number];
@@ -26,5 +27,6 @@ export default async function AggiungiServizioPage({ params }: { params: Promise
   const typedRole = role as ServiceRole;
   const copy = ROLE_COPY[typedRole];
 
+  if (typedRole === "allevatore") return <AddBreederClient />;
   return <AddServiceClient role={typedRole} label={copy.label} blurb={copy.blurb} />;
 }

@@ -13,10 +13,10 @@ type ReviewRow = {
 
 type ServiceRole = "allevatore" | "addestratore" | "pensione";
 
-const ROLE_META: Record<ServiceRole, { label: string; icon: typeof PawPrint; manageHref: string }> = {
-  allevatore:    { label: "Allevatore",    icon: PawPrint,       manageHref: "/dashboard" },
-  addestratore:  { label: "Addestratore",  icon: GraduationCap,  manageHref: "/dashboard/addestratore" },
-  pensione:      { label: "Pensione",      icon: Home,           manageHref: "/dashboard/pensione" },
+const ROLE_META: Record<ServiceRole, { label: string; icon: typeof PawPrint }> = {
+  allevatore:   { label: "Allevatore",   icon: PawPrint },
+  addestratore: { label: "Addestratore", icon: GraduationCap },
+  pensione:     { label: "Pensione",     icon: Home },
 };
 
 export default async function BreederDashboard({ userId }: { userId: string }) {
@@ -35,6 +35,17 @@ export default async function BreederDashboard({ userId }: { userId: string }) {
 
   const activeRoles = new Set<ServiceRole>((roleRows ?? []).map(r => r.role as ServiceRole));
   const allServiceRoles: ServiceRole[] = ["allevatore", "addestratore", "pensione"];
+
+  const [{ data: trainerRow }, { data: boardingRow }] = await Promise.all([
+    supabase.from("trainer_profiles").select("slug").eq("user_id", userId).maybeSingle(),
+    supabase.from("boarding_profiles").select("slug").eq("user_id", userId).maybeSingle(),
+  ]);
+
+  const manageHref: Record<ServiceRole, string> = {
+    allevatore:   bp?.slug ? `/allevatori/${bp.slug}` : "/dashboard/aggiungi-servizio/allevatore",
+    addestratore: trainerRow?.slug ? `/addestratori/${trainerRow.slug}` : "/dashboard/aggiungi-servizio/addestratore",
+    pensione:     boardingRow?.slug ? `/pensioni/${boardingRow.slug}` : "/dashboard/aggiungi-servizio/pensione",
+  };
 
   // Messaggi non letti
   const { data: convRows } = await supabase
@@ -249,7 +260,7 @@ export default async function BreederDashboard({ userId }: { userId: string }) {
             return (
               <Link
                 key={role}
-                href={meta.manageHref}
+                href={manageHref[role]}
                 className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors"
               >
                 <Icon className="h-5 w-5 text-primary shrink-0" />

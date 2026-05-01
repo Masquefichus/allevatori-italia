@@ -206,11 +206,15 @@ export default async function AllevatoriPage({
                         </div>
                         {breeder.breed_ids && breeder.breed_ids.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
-                            {(breeder.breed_ids as string[]).slice(0, 3).map((id: string) => (
-                              <Badge key={id} variant="outline">
-                                {breedMap[id] ?? id}
-                              </Badge>
-                            ))}
+                            {(breeder.breed_ids as string[])
+                              .map((id: string) => breedMap[id])
+                              .filter(Boolean)
+                              .slice(0, 3)
+                              .map((name) => (
+                                <Badge key={name} variant="outline">
+                                  {name}
+                                </Badge>
+                              ))}
                           </div>
                         )}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
