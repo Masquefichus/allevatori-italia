@@ -10,6 +10,7 @@ import Card, { CardContent } from "@/components/ui/Card";
 import ProProfileClient from "@/components/profile/ProProfileClient";
 import { loadBreederBundle } from "@/lib/profile/load-breeder-bundle";
 import PensioneMap from "./PensioneMap";
+import RequestBookingButton from "./RequestBookingButton";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -130,6 +131,19 @@ export default async function PensioneProfilePage({ params }: PageProps) {
 
       {/* Sezioni aggiuntive sotto al ProProfileClient */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 space-y-10">
+        {/* CTA prenotazione */}
+        <section className="bg-primary-light/30 border border-primary/20 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
+          <div>
+            <h2 className="font-serif text-xl text-foreground">
+              Disponibile per il tuo cane?
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Invia una richiesta di soggiorno: la struttura ti risponderà entro 48 ore.
+            </p>
+          </div>
+          <RequestBookingButton boardingId={boarding.id} boardingName={boarding.name} />
+        </section>
+
         {/* Mappa */}
         {hasLocation && (
           <section>

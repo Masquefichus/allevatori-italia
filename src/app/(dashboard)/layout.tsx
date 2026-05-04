@@ -15,6 +15,7 @@ import {
   Shield,
   Receipt,
   Plus,
+  CalendarDays,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -196,6 +197,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Per admin (legacy) lo mostriamo comunque, come prima.
   const showCucciolate =
     role === "admin" || activeServiceRoles.has("allevatore");
+  const showPrenotazioni = activeServiceRoles.has("pensione");
 
   const nav: NavItem[] = isProfessional
     ? [
@@ -203,6 +205,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         ...profileLinks,
         { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
         { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
+        ...(showPrenotazioni
+          ? [
+              {
+                href: "/dashboard/prenotazioni",
+                label: "Prenotazioni",
+                icon: CalendarDays,
+              },
+            ]
+          : []),
         ...(showCucciolate
           ? [
               { href: "/dashboard/annunci", label: "Cucciolate", icon: Megaphone },
