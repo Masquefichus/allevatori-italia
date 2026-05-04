@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Dog, Mail, Lock, User, Building2, Stethoscope } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card, { CardContent } from "@/components/ui/Card";
 import Turnstile from "@/components/ui/Turnstile";
-import { createClient } from "@/lib/supabase/client";
 import { SITE_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +20,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -46,32 +48,24 @@ export default function RegisterPage() {
       }
     }
 
-    const supabase = createClient();
-    if (!supabase) {
-      setError("Supabase non configurato. Aggiorna le variabili d'ambiente in .env.local.");
-      setLoading(false);
-      return;
-    }
-
-    // Map account_type → legacy role column. profiles.role stays in
-    // {'user', 'breeder', 'admin'}; vets land on role='user' and the
-    // new account_type='vet' marks the vertical (handled in the DB trigger).
     const legacyRole = accountType === "service_pro" ? "breeder" : "user";
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, role: legacyRole, account_type: accountType } },
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, full_name: fullName, role: legacyRole, account_type: accountType }),
     });
 
-    if (error) {
-      setError(error.message);
+    const json = await res.json();
+
+    if (!res.ok) {
+      setError(json.error ?? "Errore durante la registrazione.");
       setLoading(false);
       return;
     }
 
-    setSuccess(true);
-    setLoading(false);
+    router.push("/accedi?registered=1");
+    return;
   };
 
   if (success) {
@@ -79,16 +73,21 @@ export default function RegisterPage() {
       <div className="min-h-[80vh] flex items-center justify-center bg-muted px-4">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="h-8 w-8 text-green-600" />
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${needsConfirmation ? "bg-blue-100" : "bg-green-100"}`}>
+              <Mail className={`h-8 w-8 ${needsConfirmation ? "text-blue-600" : "text-green-600"}`} />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Controlla la tua email</h1>
+            <h1 className="text-2xl font-bold mb-2">
+              {needsConfirmation ? "Controlla la tua email" : "Account creato!"}
+            </h1>
             <p className="text-muted-foreground mb-6">
-              Abbiamo inviato un link di conferma a <strong>{email}</strong>.
-              Clicca sul link per attivare il tuo account.
+              {needsConfirmation ? (
+                <>Abbiamo inviato un link di conferma a <strong>{email}</strong>. Clicca sul link per attivare il tuo account.</>
+              ) : (
+                <>Il tuo account è stato creato con successo. Puoi accedere subito.</>
+              )}
             </p>
             <Link href="/accedi">
-              <Button variant="outline">Torna al login</Button>
+              <Button variant="outline">{needsConfirmation ? "Torna al login" : "Accedi ora"}</Button>
             </Link>
           </CardContent>
         </Card>
