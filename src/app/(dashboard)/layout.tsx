@@ -14,6 +14,7 @@ import {
   User,
   Shield,
   Receipt,
+  Plus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const SEEKER_NAV: NavItem[] = [
 
 type AccountType = "seeker" | "service_pro" | "vet" | null;
 type Role = "breeder" | "user" | "admin" | null;
+type ServiceRole = "allevatore" | "addestratore" | "pensione";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -38,7 +40,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, loading } = useAuth();
   const [role, setRole] = useState<Role>(null);
   const [accountType, setAccountType] = useState<AccountType>(null);
-  const [publicProfileHref, setPublicProfileHref] = useState<string | null>(null);
+  const [profileLinks, setProfileLinks] = useState<NavItem[]>([]);
+  const [activeServiceRoles, setActiveServiceRoles] = useState<Set<ServiceRole>>(
+    new Set()
+  );
 
   // Auth guard: redirect unauthenticated users
   useEffect(() => {
@@ -67,7 +72,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user]);
 
-  // Fetch the public-profile slug for professionals (vet or breeder).
+  // Fetch profile links for the sidebar.
+  // - vet: single link to vet_profiles slug
+  // - service_pro: read profile_roles, then build one link per active role
+  //   (allevatore→breeder_profiles, pensione→boarding_profiles, addestratore→trainer_profiles)
+  // - admin (legacy): single link to breeder_profiles slug, like before
   useEffect(() => {
     if (!user || role === null) return;
     const supabase = createClient();
@@ -81,12 +90,84 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .eq("user_id", user.id)
         .maybeSingle()
         .then(({ data }: { data: { slug: string } | null }) => {
-          if (data?.slug) setPublicProfileHref(`/veterinari/${data.slug}`);
+          if (data?.slug)
+            setProfileLinks([
+              { href: `/veterinari/${data.slug}`, label: "Profilo", icon: User },
+            ]);
         });
       return;
     }
 
-    if (role === "breeder" || role === "admin") {
+    if (accountType === "service_pro") {
+      (async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: roles } = await (supabase as any)
+          .from("profile_roles")
+          .select("role, is_active")
+          .eq("profile_id", user.id);
+
+        const active = new Set<ServiceRole>(
+          (roles ?? [])
+            .filter((r: { is_active: boolean }) => r.is_active)
+            .map((r: { role: ServiceRole }) => r.role)
+        );
+        setActiveServiceRoles(active);
+
+        // Recupera tutti gli slug attivi in parallelo
+        const queries = await Promise.all([
+          active.has("allevatore")
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (supabase as any)
+                .from("breeder_profiles")
+                .select("slug")
+                .eq("user_id", user.id)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+          active.has("pensione")
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (supabase as any)
+                .from("boarding_profiles")
+                .select("slug")
+                .eq("user_id", user.id)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+          active.has("addestratore")
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (supabase as any)
+                .from("trainer_profiles")
+                .select("slug")
+                .eq("user_id", user.id)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+        ]);
+
+        const allevatoreSlug = (queries[0] as { data?: { slug?: string } }).data?.slug;
+        const pensioneSlug = (queries[1] as { data?: { slug?: string } }).data?.slug;
+        const addestratoreSlug = (queries[2] as { data?: { slug?: string } })
+          .data?.slug;
+
+        // Una singola voce "Profilo" → primo URL disponibile.
+        // ProProfileClient mostra tab interne per gli altri ruoli.
+        // Priorità statica: allevatore → pensione → addestratore.
+        const firstHref = allevatoreSlug
+          ? `/allevatori/${allevatoreSlug}`
+          : pensioneSlug
+            ? `/pensioni/${pensioneSlug}`
+            : addestratoreSlug
+              ? `/addestratori/${addestratoreSlug}`
+              : null;
+
+        if (firstHref) {
+          setProfileLinks([{ href: firstHref, label: "Profilo", icon: User }]);
+        } else {
+          setProfileLinks([]);
+        }
+      })();
+      return;
+    }
+
+    // Admin (legacy): keep old behavior
+    if (role === "admin") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any)
         .from("breeder_profiles")
@@ -94,7 +175,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .eq("user_id", user.id)
         .maybeSingle()
         .then(({ data }: { data: { slug: string } | null }) => {
-          if (data?.slug) setPublicProfileHref(`/allevatori/${data.slug}`);
+          if (data?.slug)
+            setProfileLinks([
+              { href: `/allevatori/${data.slug}`, label: "Profilo", icon: User },
+            ]);
         });
     }
   }, [user, role, accountType]);
@@ -105,20 +189,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isBreeder = role === "breeder" || role === "admin";
   const isVet = accountType === "vet";
+  const isServicePro = accountType === "service_pro";
   const isProfessional = isBreeder || isVet;
+
+  // Per service_pro mostriamo Cucciolate solo se ha realmente il ruolo allevatore.
+  // Per admin (legacy) lo mostriamo comunque, come prima.
+  const showCucciolate =
+    role === "admin" || activeServiceRoles.has("allevatore");
 
   const nav: NavItem[] = isProfessional
     ? [
         { href: "/dashboard", label: "Panoramica", icon: LayoutDashboard },
-        ...(publicProfileHref
-          ? [{ href: publicProfileHref, label: "Profilo", icon: User }]
-          : []),
+        ...profileLinks,
         { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
         { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
-        ...(isBreeder
+        ...(showCucciolate
           ? [
               { href: "/dashboard/annunci", label: "Cucciolate", icon: Megaphone },
               { href: "/dashboard/abbonamento", label: "Commissioni", icon: Receipt },
+            ]
+          : []),
+        ...(isServicePro
+          ? [
+              {
+                href: "/dashboard/aggiungi-servizio",
+                label: "Aggiungi servizio",
+                icon: Plus,
+              },
             ]
           : []),
         { href: "/dashboard/impostazioni", label: "Impostazioni", icon: Settings },
