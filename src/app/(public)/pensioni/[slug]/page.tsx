@@ -113,6 +113,22 @@ export default async function PensioneProfilePage({ params }: PageProps) {
   return (
     <>
       {backNav}
+
+      {/* CTA prenotazione — visibile sopra al profilo per essere subito raggiungibile */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-4">
+        <section className="bg-primary-light/40 border border-primary/30 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
+          <div>
+            <h2 className="font-serif text-lg text-foreground">
+              Vuoi prenotare un soggiorno per il tuo cane?
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Invia una richiesta a {boarding.name}: ti risponderanno entro 48 ore.
+            </p>
+          </div>
+          <RequestBookingButton boardingId={boarding.id} boardingName={boarding.name} />
+        </section>
+      </div>
+
       <ProProfileClient
         urlRole="pensione"
         initialTab="chi-siamo"
@@ -131,19 +147,6 @@ export default async function PensioneProfilePage({ params }: PageProps) {
 
       {/* Sezioni aggiuntive sotto al ProProfileClient */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 space-y-10">
-        {/* CTA prenotazione */}
-        <section className="bg-primary-light/30 border border-primary/20 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
-          <div>
-            <h2 className="font-serif text-xl text-foreground">
-              Disponibile per il tuo cane?
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Invia una richiesta di soggiorno: la struttura ti risponderà entro 48 ore.
-            </p>
-          </div>
-          <RequestBookingButton boardingId={boarding.id} boardingName={boarding.name} />
-        </section>
-
         {/* Mappa */}
         {hasLocation && (
           <section>
