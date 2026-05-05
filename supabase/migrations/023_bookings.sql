@@ -4,7 +4,7 @@
 -- Status flow: pending → confirmed/declined/cancelled → completed.
 
 CREATE TABLE IF NOT EXISTS bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   boarding_id UUID NOT NULL REFERENCES boarding_profiles(id) ON DELETE CASCADE,
 
   -- Requester: optional logged-in user, plus denormalized contact
