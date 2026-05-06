@@ -16,7 +16,6 @@ export default async function AddestratoriPage() {
   const { data: trainers } = await supabase
     .from("trainer_profiles")
     .select("id, slug, name, description, region, city, logo_url")
-    .eq("is_approved", true)
     .order("created_at", { ascending: false });
 
   return (

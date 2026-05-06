@@ -67,20 +67,14 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Verifica che la pensione esista ed è approvata
+  // Verifica che la pensione esista e sia visibile (RLS gates su profile_roles.is_active).
   const { data: boarding, error: bErr } = await supabase
     .from("boarding_profiles")
-    .select("id, is_approved")
+    .select("id")
     .eq("id", data.boarding_id)
     .single();
   if (bErr || !boarding) {
-    return NextResponse.json({ error: "Pensione non trovata" }, { status: 404 });
-  }
-  if (!boarding.is_approved) {
-    return NextResponse.json(
-      { error: "Pensione non disponibile per prenotazioni" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Pensione non disponibile" }, { status: 404 });
   }
 
   const { data: inserted, error } = await supabase

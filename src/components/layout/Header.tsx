@@ -25,6 +25,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [publicProfileHref, setPublicProfileHref] = useState<string | null>(null);
+  const [activeRoles, setActiveRoles] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, profile, loading } = useAuth();
 
@@ -38,8 +39,8 @@ export default function Header() {
     }
   };
 
-  // Fetch slug for the "Profilo" link (which points to the public profile for
-  // professionals — vet or breeder). Branches on account_type / role.
+  // Fetch slug for the "Profilo" link. Vet → vet_profiles. Service pro → first
+  // active per-role profile (allevatore > pensione > addestratore in priority).
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -57,17 +58,36 @@ export default function Header() {
       return;
     }
 
-    if (profile?.role === "breeder" || profile?.role === "admin") {
-      (supabase as any)
-        .from("breeder_profiles")
-        .select("slug")
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }: { data: { slug: string } | null }) => {
-          if (data?.slug) setPublicProfileHref(`/allevatori/${data.slug}`);
-        });
+    if (profile?.account_type === "service_pro") {
+      (async () => {
+        const { data: roles } = await (supabase as any)
+          .from("profile_roles")
+          .select("role, is_active")
+          .eq("profile_id", user.id);
+        const active = new Set<string>(
+          (roles ?? [])
+            .filter((r: { is_active: boolean }) => r.is_active)
+            .map((r: { role: string }) => r.role),
+        );
+        setActiveRoles(active);
+
+        const lookups: Array<[string, string, string]> = [
+          ["allevatore", "breeder_profiles", "/allevatori"],
+          ["pensione", "boarding_profiles", "/pensioni"],
+          ["addestratore", "trainer_profiles", "/addestratori"],
+        ];
+        for (const [r, table, prefix] of lookups) {
+          if (!active.has(r)) continue;
+          const { data } = await (supabase as any)
+            .from(table).select("slug").eq("user_id", user.id).maybeSingle();
+          if (data?.slug) {
+            setPublicProfileHref(`${prefix}/${data.slug}`);
+            return;
+          }
+        }
+      })();
     }
-  }, [user, profile?.role, profile?.account_type]);
+  }, [user, profile?.account_type]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -85,9 +105,10 @@ export default function Header() {
     ? profile.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()
     : (user?.email?.[0] ?? "?").toUpperCase();
 
-  const isBreeder = profile?.role === "breeder" || profile?.role === "admin";
   const isVet = profile?.account_type === "vet";
-  const isProfessional = isBreeder || isVet;
+  const isServicePro = profile?.account_type === "service_pro";
+  const isProfessional = isVet || isServicePro;
+  const showCucciolate = activeRoles.has("allevatore");
 
   const menuItems: MenuItem[] = isProfessional
     ? [
@@ -97,7 +118,7 @@ export default function Header() {
           : []),
         { href: "/dashboard/messaggi", label: "Messaggi", icon: MessageCircle },
         { href: "/dashboard/recensioni", label: "Recensioni", icon: Star },
-        ...(isBreeder
+        ...(showCucciolate
           ? [
               { href: "/dashboard/annunci", label: "Cucciolate", icon: Megaphone },
               { href: "/dashboard/abbonamento", label: "Commissioni", icon: Receipt },

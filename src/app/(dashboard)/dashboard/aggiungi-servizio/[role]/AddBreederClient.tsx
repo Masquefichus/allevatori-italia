@@ -37,10 +37,8 @@ export default function AddBreederClient() {
     const supabase = createClient();
     if (!supabase) { setError("Supabase non configurato."); setSubmitting(false); return; }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Sessione non valida. Riaccedi."); setSubmitting(false); return; }
-
-    // Create the breeder profile via API
+    // /api/breeders POST routes through create_service_role_profile RPC,
+    // which atomically inserts breeder_profiles + activates profile_roles + sets account_type.
     const slug = slugify(form.kennel_name);
     const res = await fetch("/api/breeders", {
       method: "POST",
@@ -60,9 +58,6 @@ export default function AddBreederClient() {
       setSubmitting(false);
       return;
     }
-
-    // Add allevatore to profile_roles
-    await (supabase as any).from("profile_roles").insert({ profile_id: user.id, role: "allevatore", is_active: true, is_approved: true });
 
     router.push(`/allevatori/${slug}`);
   };

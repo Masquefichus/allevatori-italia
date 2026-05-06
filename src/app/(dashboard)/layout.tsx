@@ -167,36 +167,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return;
     }
 
-    // Admin (legacy): keep old behavior
-    if (role === "admin") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase as any)
-        .from("breeder_profiles")
-        .select("slug")
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }: { data: { slug: string } | null }) => {
-          if (data?.slug)
-            setProfileLinks([
-              { href: `/allevatori/${data.slug}`, label: "Profilo", icon: User },
-            ]);
-        });
-    }
+    // Nessun branch legacy admin: navigation gira su account_type + profile_roles.
+    // role='admin' resta solo come flag per il pannello admin più sotto.
   }, [user, role, accountType]);
 
   if (loading || !user) {
     return <div className="min-h-screen bg-muted" />;
   }
 
-  const isBreeder = role === "breeder" || role === "admin";
   const isVet = accountType === "vet";
   const isServicePro = accountType === "service_pro";
-  const isProfessional = isBreeder || isVet;
+  const isProfessional = isServicePro || isVet;
 
-  // Per service_pro mostriamo Cucciolate solo se ha realmente il ruolo allevatore.
-  // Per admin (legacy) lo mostriamo comunque, come prima.
-  const showCucciolate =
-    role === "admin" || activeServiceRoles.has("allevatore");
+  const showCucciolate = activeServiceRoles.has("allevatore");
   const showPrenotazioni = activeServiceRoles.has("pensione");
 
   const nav: NavItem[] = isProfessional

@@ -47,7 +47,6 @@ export default async function BreedDetailPage({ params }: BreedPageProps) {
     ? await supabase
         .from("breeder_profiles")
         .select("id, slug, kennel_name, city, region, is_premium, average_rating, review_count")
-        .eq("is_approved", true)
         .contains("breed_ids", [breedRow.id])
         .order("is_premium", { ascending: false })
         .order("average_rating", { ascending: false })

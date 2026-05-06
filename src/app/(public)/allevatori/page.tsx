@@ -24,8 +24,7 @@ export default async function AllevatoriPage({
 
   let query = supabase
     .from("breeder_profiles")
-    .select("*", { count: "exact" })
-    .eq("is_approved", true);
+    .select("*", { count: "exact" });
 
   if (params.region) query = query.eq("region", params.region);
   if (params.province) query = query.eq("province", params.province);
@@ -34,12 +33,12 @@ export default async function AllevatoriPage({
   // Cerca per nome allevamento OPPURE per razza (due query separate + merge ID)
   if (params.q) {
     const [{ data: byName }, { data: matchingBreeds }] = await Promise.all([
-      supabase.from("breeder_profiles").select("id").eq("is_approved", true).ilike("kennel_name", `%${params.q}%`),
+      supabase.from("breeder_profiles").select("id").ilike("kennel_name", `%${params.q}%`),
       supabase.from("breeds").select("id").ilike("name_it", `%${params.q}%`),
     ]);
     const breedIds = (matchingBreeds ?? []).map((b) => b.id);
     const byBreedData = breedIds.length > 0
-      ? (await supabase.from("breeder_profiles").select("id").eq("is_approved", true).overlaps("breed_ids", breedIds)).data
+      ? (await supabase.from("breeder_profiles").select("id").overlaps("breed_ids", breedIds)).data
       : [];
     const allIds = [...new Set([...(byName ?? []).map((b) => b.id), ...(byBreedData ?? []).map((b) => b.id)])];
     query = allIds.length > 0

@@ -18,7 +18,6 @@ export default async function HomePage() {
   const { data: featuredBreeders } = await supabase
     .from("breeder_profiles")
     .select("id, kennel_name, slug, region, city, logo_url, cover_image_url, enci_verified, average_rating, review_count, is_premium")
-    .eq("is_approved", true)
     .order("is_premium", { ascending: false })
     .order("average_rating", { ascending: false })
     .limit(6);

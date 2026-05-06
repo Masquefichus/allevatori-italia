@@ -17,8 +17,8 @@ export default function ProfiloRedirect() {
     if (loading) return;
 
     const isVet = profile?.account_type === "vet";
-    const isBreeder = profile?.role === "breeder" || profile?.role === "admin";
-    const isPro = isVet || isBreeder;
+    const isServicePro = profile?.account_type === "service_pro";
+    const isPro = isVet || isServicePro;
 
     if (!isPro) {
       router.replace("/dashboard/impostazioni");
@@ -31,18 +31,49 @@ export default function ProfiloRedirect() {
       return;
     }
 
-    const table = isVet ? "vet_profiles" : "breeder_profiles";
-    const publicPrefix = isVet ? "/veterinari" : "/allevatori";
+    if (isVet) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any)
+        .from("vet_profiles")
+        .select("slug")
+        .eq("user_id", profile.id)
+        .maybeSingle()
+        .then(({ data }: { data: { slug: string } | null }) => {
+          router.replace(data?.slug ? `/veterinari/${data.slug}` : "/dashboard");
+        });
+      return;
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any)
-      .from(table)
-      .select("slug")
-      .eq("user_id", profile.id)
-      .maybeSingle()
-      .then(({ data }: { data: { slug: string } | null }) => {
-        router.replace(data?.slug ? `${publicPrefix}/${data.slug}` : "/dashboard");
-      });
+    // service_pro: pick the first active per-role profile we find.
+    (async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: roles } = await (supabase as any)
+        .from("profile_roles")
+        .select("role, is_active")
+        .eq("profile_id", profile.id);
+      const active = new Set<string>(
+        (roles ?? [])
+          .filter((r: { is_active: boolean }) => r.is_active)
+          .map((r: { role: string }) => r.role),
+      );
+
+      const lookups: Array<[string, string, string]> = [
+        ["allevatore", "breeder_profiles", "/allevatori"],
+        ["pensione", "boarding_profiles", "/pensioni"],
+        ["addestratore", "trainer_profiles", "/addestratori"],
+      ];
+      for (const [r, table, prefix] of lookups) {
+        if (!active.has(r)) continue;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await (supabase as any)
+          .from(table).select("slug").eq("user_id", profile.id).maybeSingle();
+        if (data?.slug) {
+          router.replace(`${prefix}/${data.slug}`);
+          return;
+        }
+      }
+      router.replace("/dashboard");
+    })();
   }, [loading, profile, router]);
 
   return (

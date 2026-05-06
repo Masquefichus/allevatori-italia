@@ -30,8 +30,9 @@ export default async function BreederDashboard({ userId }: { userId: string }) {
 
   const { data: roleRows } = await supabase
     .from("profile_roles")
-    .select("role")
-    .eq("profile_id", userId);
+    .select("role, is_active")
+    .eq("profile_id", userId)
+    .eq("is_active", true);
 
   const activeRoles = new Set<ServiceRole>((roleRows ?? []).map(r => r.role as ServiceRole));
   const allServiceRoles: ServiceRole[] = ["allevatore", "addestratore", "pensione"];

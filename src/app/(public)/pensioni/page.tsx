@@ -33,7 +33,6 @@ export default async function PensioniPage() {
     .select(
       "id, slug, name, description, region, province, city, logo_url, gallery_urls"
     )
-    .eq("is_approved", true)
     .order("created_at", { ascending: false });
 
   const list = boardings ?? [];

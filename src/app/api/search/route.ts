@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
     supabase
       .from("breeder_profiles")
       .select("kennel_name, slug")
-      .eq("is_approved", true)
       .ilike("kennel_name", `%${q}%`)
       .order("kennel_name")
       .limit(4),

@@ -60,7 +60,7 @@ export function useAuth() {
     profile,
     loading,
     isAuthenticated: !!user,
-    isBreeder: profile?.role === "breeder",
+    isServicePro: profile?.account_type === "service_pro",
     isAdmin: profile?.role === "admin",
     signOut,
   };

@@ -19,6 +19,12 @@ export default async function PrenotazioniPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/accedi?redirect=/dashboard/prenotazioni");
 
+  // Gate sul ruolo pensione attivo (sorgente canonica = profile_roles).
+  const { hasActiveRole } = await import("@/lib/profile/active-roles");
+  if (!(await hasActiveRole(supabase, user.id, "pensione"))) {
+    redirect("/dashboard/aggiungi-servizio");
+  }
+
   // Recupera le pensioni dell'utente
   const { data: boardings } = await supabase
     .from("boarding_profiles")

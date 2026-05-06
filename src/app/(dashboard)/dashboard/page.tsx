@@ -10,11 +10,11 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, full_name")
+    .select("account_type, full_name")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role === "breeder" || profile?.role === "admin") {
+  if (profile?.account_type === "service_pro") {
     return <BreederDashboard userId={user.id} />;
   }
 

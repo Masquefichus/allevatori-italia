@@ -39,60 +39,48 @@ export default function AddServiceClient({ role, label, blurb }: { role: Service
       return;
     }
 
-    const { error: roleError } = await supabase
-      .from("profile_roles")
-      .insert({ profile_id: user.id, role, is_active: true, is_approved: true });
-
-    // 23505 = unique violation → role already exists, treat as idempotent success
-    if (roleError && roleError.code !== "23505") {
-      setError(roleError.message);
+    // allevatore is created via AddBreederClient + /api/breeders, not here.
+    if (role === "allevatore") {
+      setError("Usa il flusso allevatore dedicato.");
       setSubmitting(false);
       return;
     }
 
-    // For addestratore/pensione, also scaffold a minimal profile row so the
-    // public ServicesBand pill can link to a real page. allevatore uses a
-    // separate onboarding flow and isn't created here.
-    if (role !== "allevatore") {
-      const table = ROLE_PROFILE_TABLE[role];
+    // Derive name + slug from existing breeder profile if the user has one,
+    // else from full_name. Slug uniqueness is per-table.
+    const table = ROLE_PROFILE_TABLE[role];
+    const { data: breeder } = await (supabase as any)
+      .from("breeder_profiles")
+      .select("kennel_name, slug, region, province, city")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-      // Derive name + slug from existing breeder profile if the user has one,
-      // else from their full_name. Slug uniqueness is per-table.
-      const { data: breeder } = await supabase
-        .from("breeder_profiles")
-        .select("kennel_name, slug, region, province, city")
-        .eq("user_id", user.id)
-        .maybeSingle();
+    const { data: profile } = await (supabase as any)
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single();
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user.id)
-        .single();
+    const baseName = breeder?.kennel_name ?? profile?.full_name ?? "Profilo";
+    const baseSlug = breeder?.slug ?? slugify(baseName);
+    const { data: existing } = await (supabase as any).from(table).select("id").eq("slug", baseSlug).maybeSingle();
+    const finalSlug = existing ? `${baseSlug}-${user.id.slice(0, 8)}` : baseSlug;
 
-      const baseName = breeder?.kennel_name ?? profile?.full_name ?? "Profilo";
-      const baseSlug = breeder?.slug ?? slugify(baseName);
+    // Atomic: inserts the per-role row + activates profile_roles + sets account_type.
+    const { error: rpcError } = await (supabase as any).rpc("create_service_role_profile", {
+      p_role: role,
+      p_name: baseName,
+      p_slug: finalSlug,
+      p_region: breeder?.region ?? null,
+      p_province: breeder?.province ?? null,
+      p_city: breeder?.city ?? null,
+    });
 
-      // Collision-proof slug: append short user-id suffix if base is taken
-      const { data: existing } = await supabase.from(table).select("id").eq("slug", baseSlug).maybeSingle();
-      const finalSlug = existing ? `${baseSlug}-${user.id.slice(0, 8)}` : baseSlug;
-
-      const { error: profileError } = await supabase
-        .from(table)
-        .insert({
-          user_id: user.id,
-          name: baseName,
-          slug: finalSlug,
-          region: breeder?.region ?? null,
-          province: breeder?.province ?? null,
-          city: breeder?.city ?? null,
-        });
-
-      if (profileError && profileError.code !== "23505") {
-        setError(profileError.message);
-        setSubmitting(false);
-        return;
-      }
+    // 23505 = unique violation → role already exists, treat as idempotent success
+    if (rpcError && (rpcError as { code?: string }).code !== "23505") {
+      setError(rpcError.message);
+      setSubmitting(false);
+      return;
     }
 
     setDone(true);

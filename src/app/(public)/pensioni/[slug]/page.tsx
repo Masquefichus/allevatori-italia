@@ -58,7 +58,6 @@ export default async function PensioneProfilePage({ params }: PageProps) {
     ? await supabase
         .from("boarding_profiles")
         .select("id, slug, name, city, region, logo_url, gallery_urls")
-        .eq("is_approved", true)
         .eq("region", boarding.region)
         .neq("id", boarding.id)
         .limit(3)

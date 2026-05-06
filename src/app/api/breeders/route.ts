@@ -14,8 +14,7 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     let query = supabase
       .from("breeder_profiles")
-      .select("*, profile:profiles(*)", { count: "exact" })
-      .eq("is_approved", true);
+      .select("*, profile:profiles(*)", { count: "exact" });
 
     if (region) query = query.eq("region", region);
     if (breed) query = query.contains("breed_ids", [breed]);
@@ -60,26 +59,21 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { data, error } = await supabase
-      .from("breeder_profiles")
-      .insert({
-        user_id: user.id,
-        ...body,
-        is_approved: false,
-        is_premium: false,
-      })
-      .select()
-      .single();
+
+    // Atomic: inserts breeder_profiles + activates profile_roles + sets account_type.
+    // The RPC runs as SECURITY DEFINER under auth.uid(), so RLS still applies.
+    const { data: breederId, error } = await supabase.rpc("create_service_role_profile", {
+      p_role: "allevatore",
+      p_name: body.kennel_name,
+      p_slug: body.slug,
+      p_region: body.region ?? null,
+      p_province: body.province ?? null,
+      p_city: body.city ?? null,
+    });
 
     if (error) throw error;
 
-    // Update user role to breeder
-    await supabase
-      .from("profiles")
-      .update({ role: "breeder" })
-      .eq("id", user.id);
-
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json({ id: breederId }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Errore nella creazione" }, { status: 500 });
   }
