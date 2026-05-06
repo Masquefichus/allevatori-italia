@@ -114,21 +114,6 @@ export default async function PensioneProfilePage({ params }: PageProps) {
     <>
       {backNav}
 
-      {/* CTA prenotazione — visibile sopra al profilo per essere subito raggiungibile */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-4">
-        <section className="bg-primary-light/40 border border-primary/30 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
-          <div>
-            <h2 className="font-serif text-lg text-foreground">
-              Vuoi prenotare un soggiorno per il tuo cane?
-            </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Invia una richiesta a {boarding.name}: ti risponderanno entro 48 ore.
-            </p>
-          </div>
-          <RequestBookingButton boardingId={boarding.id} boardingName={boarding.name} />
-        </section>
-      </div>
-
       <ProProfileClient
         urlRole="pensione"
         initialTab="chi-siamo"
@@ -143,6 +128,21 @@ export default async function PensioneProfilePage({ params }: PageProps) {
         ownerUserId={boarding.user_id}
         ChatModalComponent={null}
         ReviewFormComponent={null}
+        BookingCTAComponent={
+          <Card>
+            <CardContent className="p-5 flex flex-col md:flex-row items-start md:items-center gap-4 justify-between bg-primary-light/40 border border-primary/30 rounded-2xl">
+              <div>
+                <h2 className="font-serif text-lg text-foreground">
+                  Vuoi prenotare un soggiorno per il tuo cane?
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Invia una richiesta a {boarding.name}: ti risponderanno entro 48 ore.
+                </p>
+              </div>
+              <RequestBookingButton boardingId={boarding.id} boardingName={boarding.name} />
+            </CardContent>
+          </Card>
+        }
       />
 
       {/* Sezioni aggiuntive sotto al ProProfileClient */}

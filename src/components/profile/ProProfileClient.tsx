@@ -113,6 +113,7 @@ interface Props {
   initialTab: TabId;
   ChatModalComponent: React.ReactNode;
   ReviewFormComponent: React.ReactNode;
+  BookingCTAComponent?: React.ReactNode;
 }
 
 function SortablePhoto({ url, index, onCrop, onRemove }: { url: string; index: number; onCrop: (i: number) => void; onRemove: (i: number) => void }) {
@@ -289,6 +290,7 @@ export default function ProProfileClient({
   urlRole, breeder: initialBreeder, breeds: initialBreeds, allBreeds,
   litters: initialLitters, breedingDogs: initialBreedingDogs, reviews,
   trainer, boarding, ownerUserId, initialTab, ChatModalComponent, ReviewFormComponent,
+  BookingCTAComponent,
 }: Props) {
   const { user } = useAuth();
   const router = useRouter();
@@ -2442,14 +2444,16 @@ export default function ProProfileClient({
 
         {/* ── TAB: Prenotazioni ──────────────────────────────────────────── */}
         {tab === "prenotazioni" && (
-          <Card>
-            <CardHeader><h2 className="font-semibold">Prenotazioni</h2></CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground italic">
-                Questa sezione è in costruzione. Presto troverai disponibilità, prezzi e prenotazioni.
-              </p>
-            </CardContent>
-          </Card>
+          BookingCTAComponent ?? (
+            <Card>
+              <CardHeader><h2 className="font-semibold">Prenotazioni</h2></CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground italic">
+                  Questa sezione è in costruzione. Presto troverai disponibilità, prezzi e prenotazioni.
+                </p>
+              </CardContent>
+            </Card>
+          )
         )}
 
         {/* ── TAB: Recensioni ────────────────────────────────────────────── */}
