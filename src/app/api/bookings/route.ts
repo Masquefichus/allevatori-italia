@@ -77,6 +77,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Pensione non disponibile" }, { status: 404 });
   }
 
+  // Verifica disponibilità: nessun giorno deve essere bloccato o pieno
+  // (eslint-disable-next-line: la function check_availability ritorna una table)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: availability, error: aErr } = await (supabase as any).rpc("check_availability", {
+    p_boarding_id: data.boarding_id,
+    p_from: data.check_in,
+    p_to: data.check_out,
+  });
+  if (aErr) {
+    return NextResponse.json(
+      { error: "Errore verifica disponibilità: " + aErr.message },
+      { status: 500 }
+    );
+  }
+  type AvailRow = { day: string; occupied: number; capacity: number; is_blocked: boolean };
+  const rows = (availability ?? []) as AvailRow[];
+  const blocked = rows.find((r) => r.is_blocked);
+  if (blocked) {
+    return NextResponse.json(
+      { error: `La struttura non è disponibile in alcune date selezionate (es. ${blocked.day}).` },
+      { status: 409 }
+    );
+  }
+  const full = rows.find((r) => r.occupied >= r.capacity);
+  if (full) {
+    return NextResponse.json(
+      {
+        error: `Posti esauriti per le date selezionate (es. ${full.day}: ${full.occupied}/${full.capacity}).`,
+      },
+      { status: 409 }
+    );
+  }
+
   const { data: inserted, error } = await supabase
     .from("bookings")
     .insert({

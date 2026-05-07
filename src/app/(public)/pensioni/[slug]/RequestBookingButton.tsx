@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CalendarPlus, X, CheckCircle2, Loader2 } from "lucide-react";
+import { CalendarPlus, X, CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
 import Card, { CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -72,6 +72,65 @@ function BookingModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  // Live availability check sulle date selezionate
+  const [availStatus, setAvailStatus] = useState<
+    "idle" | "loading" | "available" | "unavailable" | "error"
+  >("idle");
+  const [availMessage, setAvailMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!checkIn || !checkOut) {
+      setAvailStatus("idle");
+      setAvailMessage(null);
+      return;
+    }
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      setAvailStatus("idle");
+      setAvailMessage(null);
+      return;
+    }
+
+    const ctrl = new AbortController();
+    setAvailStatus("loading");
+    setAvailMessage(null);
+
+    fetch(
+      `/api/bookings/availability?boarding_id=${boardingId}&from=${checkIn}&to=${checkOut}`,
+      { signal: ctrl.signal }
+    )
+      .then(async (r) => {
+        const j = await r.json();
+        if (!r.ok) {
+          setAvailStatus("error");
+          setAvailMessage(j.error || "Errore verifica disponibilità");
+          return;
+        }
+        type Day = { day: string; occupied: number; capacity: number; is_blocked: boolean };
+        const days = (j.days || []) as Day[];
+        const blocked = days.find((d) => d.is_blocked);
+        const full = days.find((d) => d.occupied >= d.capacity);
+        if (blocked) {
+          setAvailStatus("unavailable");
+          setAvailMessage(`La struttura non accetta soggiorni il ${blocked.day}.`);
+        } else if (full) {
+          setAvailStatus("unavailable");
+          setAvailMessage(
+            `Posti esauriti il ${full.day} (${full.occupied}/${full.capacity}).`
+          );
+        } else {
+          setAvailStatus("available");
+          setAvailMessage(null);
+        }
+      })
+      .catch((err) => {
+        if (err?.name === "AbortError") return;
+        setAvailStatus("error");
+        setAvailMessage("Errore verifica disponibilità");
+      });
+
+    return () => ctrl.abort();
+  }, [checkIn, checkOut, boardingId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -170,6 +229,26 @@ function BookingModal({
                     </FormField>
                   </div>
 
+                  {/* Feedback disponibilità in tempo reale */}
+                  {availStatus === "loading" && (
+                    <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Verifico disponibilità…
+                    </p>
+                  )}
+                  {availStatus === "available" && (
+                    <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2 inline-flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Date disponibili — invia la richiesta per confermare.
+                    </p>
+                  )}
+                  {availStatus === "unavailable" && (
+                    <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded p-2 inline-flex items-center gap-1.5">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      {availMessage}
+                    </p>
+                  )}
+
                   <div className="border-t border-border pt-3">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                       Il tuo cane
@@ -266,7 +345,11 @@ function BookingModal({
                     <Button variant="outline" onClick={onClose} type="button">
                       Annulla
                     </Button>
-                    <Button type="submit" isLoading={submitting}>
+                    <Button
+                      type="submit"
+                      isLoading={submitting}
+                      disabled={availStatus === "unavailable" || availStatus === "loading"}
+                    >
                       {submitting ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />

@@ -4,6 +4,7 @@ import { CalendarDays, Inbox } from "lucide-react";
 import Card, { CardContent } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
 import BookingsListClient from "./BookingsListClient";
+import CalendarTabClient from "./CalendarTabClient";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function PrenotazioniPage({
   // Recupera le pensioni dell'utente
   const { data: boardings } = await supabase
     .from("boarding_profiles")
-    .select("id, name, slug")
+    .select("id, name, slug, capacity")
     .eq("user_id", user.id);
 
   if (!boardings || boardings.length === 0) {
@@ -81,13 +82,20 @@ export default async function PrenotazioniPage({
     ).length,
   };
 
-  const tab = (sp.tab ?? "pending") as "pending" | "confirmed" | "archive";
+  const tab = (sp.tab ?? "pending") as "pending" | "confirmed" | "archive" | "calendar";
 
   const filtered = bookings.filter((b) => {
     if (tab === "pending") return b.status === "pending";
     if (tab === "confirmed") return b.status === "confirmed";
-    return ["declined", "cancelled", "completed"].includes(b.status);
+    if (tab === "archive") return ["declined", "cancelled", "completed"].includes(b.status);
+    return false;
   });
+
+  const boardingsLite = boardings.map((b) => ({
+    id: b.id,
+    name: b.name,
+    capacity: (b as { capacity?: number }).capacity ?? 10,
+  }));
 
   return (
     <div className="space-y-6">
@@ -119,6 +127,12 @@ export default async function PrenotazioniPage({
           count={counts.confirmed}
         />
         <TabLink
+          href="/dashboard/prenotazioni?tab=calendar"
+          active={tab === "calendar"}
+          label="Calendario"
+          count={0}
+        />
+        <TabLink
           href="/dashboard/prenotazioni?tab=archive"
           active={tab === "archive"}
           label="Archivio"
@@ -126,7 +140,9 @@ export default async function PrenotazioniPage({
         />
       </div>
 
-      {filtered.length === 0 ? (
+      {tab === "calendar" ? (
+        <CalendarTabClient boardings={boardingsLite} />
+      ) : filtered.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-sm text-muted-foreground">
             {tab === "pending"

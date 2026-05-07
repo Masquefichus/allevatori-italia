@@ -38,6 +38,7 @@ interface Boarding {
   description: string | null; region: string | null; city: string | null;
   phone: string | null; email_public: string | null; website: string | null;
   logo_url: string | null;
+  capacity?: number | null;
 }
 type TabId = "chi-siamo" | "riproduttori" | "cucciolate" | "attesa" | "corsi" | "prenotazioni" | "recensioni";
 
@@ -354,6 +355,7 @@ export default function ProProfileClient({
     phone: initPro?.phone ?? "",
     email_public: initPro?.email_public ?? "",
     website: initPro?.website ?? "",
+    capacity: boarding?.capacity ?? 10,
   });
 
   const [isSaved, setIsSaved] = useState(false);
@@ -1110,8 +1112,7 @@ export default function ProProfileClient({
     setSavingPro(true);
     setProSaveError(null);
     const table = trainer ? "trainer_profiles" : "boarding_profiles";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any).from(table).update({
+    const baseUpdate: Record<string, unknown> = {
       name: proForm.name.trim(),
       description: proForm.description.trim() || null,
       city: proForm.city.trim() || null,
@@ -1119,7 +1120,18 @@ export default function ProProfileClient({
       phone: proForm.phone.trim() || null,
       email_public: proForm.email_public.trim() || null,
       website: proForm.website.trim() || null,
-    }).eq("id", initPro.id);
+    };
+    if (boarding) {
+      const cap = Number(proForm.capacity);
+      if (!Number.isFinite(cap) || cap < 1) {
+        setProSaveError("La capienza deve essere un numero ≥ 1");
+        setSavingPro(false);
+        return;
+      }
+      baseUpdate.capacity = Math.floor(cap);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from(table).update(baseUpdate).eq("id", initPro.id);
     if (error) { setProSaveError(error.message); setSavingPro(false); return; }
     setEditingPro(false);
     setSavingPro(false);
@@ -1286,7 +1298,7 @@ export default function ProProfileClient({
               </div>
               {isOwner && !editingPro && (
                 <button
-                  onClick={() => { setProForm({ name: pro.name, description: pro.description ?? "", city: pro.city ?? "", region: pro.region ?? "", phone: pro.phone ?? "", email_public: pro.email_public ?? "", website: pro.website ?? "" }); setEditingPro(true); setTab("chi-siamo"); }}
+                  onClick={() => { setProForm({ name: pro.name, description: pro.description ?? "", city: pro.city ?? "", region: pro.region ?? "", phone: pro.phone ?? "", email_public: pro.email_public ?? "", website: pro.website ?? "", capacity: boarding?.capacity ?? 10 }); setEditingPro(true); setTab("chi-siamo"); }}
                   className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 shrink-0 mt-1"
                 >
                   <Pencil className="h-3 w-3" /> Modifica
@@ -1583,7 +1595,7 @@ export default function ProProfileClient({
                     <h2 className="font-semibold">Chi siamo</h2>
                     {isOwner && !editingPro && (
                       <button
-                        onClick={() => { setProForm({ name: pro.name, description: pro.description ?? "", city: pro.city ?? "", region: pro.region ?? "", phone: pro.phone ?? "", email_public: pro.email_public ?? "", website: pro.website ?? "" }); setEditingPro(true); }}
+                        onClick={() => { setProForm({ name: pro.name, description: pro.description ?? "", city: pro.city ?? "", region: pro.region ?? "", phone: pro.phone ?? "", email_public: pro.email_public ?? "", website: pro.website ?? "", capacity: boarding?.capacity ?? 10 }); setEditingPro(true); }}
                         className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                       >
                         <Pencil className="h-3 w-3" /> Modifica
@@ -1628,6 +1640,28 @@ export default function ProProfileClient({
                             className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                         </div>
                       </div>
+                      {boarding && (
+                        <div className="pt-2 border-t border-border">
+                          <label className="text-sm text-muted-foreground mb-1 block">
+                            Capienza (numero massimo di cani contemporaneamente)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={proForm.capacity}
+                            onChange={(e) =>
+                              setProForm({
+                                ...proForm,
+                                capacity: parseInt(e.target.value || "0", 10),
+                              })
+                            }
+                            className="w-32 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Le richieste pubbliche vengono bloccate quando una data raggiunge questo numero.
+                          </p>
+                        </div>
+                      )}
                       <div className="pt-2 border-t border-border space-y-2">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contatti</p>
                         {[
