@@ -125,3 +125,15 @@ AS $$
 $$;
 
 GRANT EXECUTE ON FUNCTION is_range_available(UUID, DATE, DATE) TO anon, authenticated;
+
+-- ── 5. RLS: owner può inserire bookings con qualsiasi status sulla propria pensione
+-- (la policy esistente "Anyone can request a booking" copre solo status=pending,
+--  serve un'altra policy per le prenotazioni manuali che partono come 'confirmed').
+DROP POLICY IF EXISTS "Owner inserts own boarding bookings" ON bookings;
+CREATE POLICY "Owner inserts own boarding bookings"
+  ON bookings FOR INSERT
+  WITH CHECK (
+    boarding_id IN (
+      SELECT id FROM boarding_profiles WHERE user_id = auth.uid()
+    )
+  );
